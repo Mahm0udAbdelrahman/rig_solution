@@ -55,8 +55,29 @@
             <div class="row" style="direction: rtl;">
                 @if (Storage::disk('public')->exists($folder.'/'.$imageurl.'.pdf'))
                     <button type="button" id="print" class="btn btn-secondary btn-print btn-lg ml-1">Print Page <i class="la la-paper-plane-o mr-50"></i></button>
-                    <a class="btn btn-primary btn-print btn-lg ml-1" target="_blank" href="{{URL('storage/'.$folder.'/'.$imageurl.'.pdf')}}">Download PDF <i class="la la-paper-plane-o mr-50"></i></a>
                 @endif
+
+                <div class="btn-group ml-1" style="direction: ltr;">
+                    <button type="button" class="btn btn-primary btn-print btn-lg dropdown-toggle" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                        <i class="la la-download mr-50"></i> Download <i class="la la-angle-down ml-50"></i>
+                    </button>
+                    <div class="dropdown-menu dropdown-menu-right">
+                        @if (Storage::disk('public')->exists($folder.'/'.$imageurl.'.pdf'))
+                            <a class="dropdown-item" target="_blank" href="{{URL('storage/'.$folder.'/'.$imageurl.'.pdf')}}">
+                                <i class="la la-file-pdf-o text-danger mr-1" style="font-size: 1.2rem;"></i> Download PDF
+                            </a>
+                        @else
+                            <span class="dropdown-item disabled text-muted">
+                                <i class="la la-file-pdf-o mr-1" style="font-size: 1.2rem;"></i> Download PDF (Upload PDF first)
+                            </span>
+                        @endif
+                        <div class="dropdown-divider"></div>
+                        <a class="dropdown-item" href="{{ route('lregister.exportExcel', $lregister->id) }}">
+                            <i class="la la-file-excel-o text-success mr-1" style="font-size: 1.2rem;"></i> Download Excel
+                        </a>
+                    </div>
+                </div>
+
                 <button type="button" id="uploadpdf" class="btn btn-dark btn-print btn-lg">Upload / Update PDF <i class="la la-paper-plane-o"></i></button>
             </div>
         </div>
@@ -152,7 +173,7 @@
       contentType: false
     }).then(function () {
       return imagesArray;
-    }
+    });
   }
 
   function convert_pdf(images)

@@ -1,4 +1,4 @@
-﻿@extends('layouts.app')
+@extends('layouts.app')
 
 @include('layouts.styles.forms')
 
@@ -292,6 +292,19 @@
 																														<td>Sub Total</td>
 																														<td class="text-right subtotal"> 0.00 <span class="months">USD</span></td>
 																												</tr>
+																												<tr class="warning">
+																														<td class="text-bold-800">
+																																<label style="display: inline-block; float: left; padding-top: 8px; margin-bottom: 0;">Discount</label>
+																																<div style="display: flex; align-items: center; float: left; margin-left: 15px;">
+																																		<select name="discount_type" class="form-control discount_type" style="width: 85px; padding: 2px 5px; height: 32px; margin-right: 5px;">
+																																				<option value="percentage">%</option>
+																																				<option value="amount">Amount</option>
+																																		</select>
+																																		<input type="number" step="0.01" min="0" name="discount_value" class="form-control discount_value" style="width: 85px; height: 32px; padding: 2px 5px;" value="0" placeholder="0">
+																																</div>
+																														</td>
+																														<td class="text-bold-800 text-right discount_amount">- 0.00 <span class="months">$</span></td>
+																												</tr>
 																												<tr class="success">
 																														<td>
 																																<div class="form-group mb-0">
@@ -431,11 +444,27 @@
 								sum += toNumber($(this).val());
 						});
 
-						var taxAmount = (sum * type2) / 100;
-						var withholdingAmount = (sum * t) / 100;
-						var totalAmount = sum + taxAmount - withholdingAmount;
+						var discountType = $('.discount_type').val() || 'percentage';
+						var discountVal = toNumber($('.discount_value').val());
+						var discountAmount = 0;
+
+						if (discountType === 'percentage') {
+								discountAmount = (sum * discountVal) / 100;
+						} else {
+								discountAmount = discountVal;
+						}
+						if (discountAmount > sum) {
+								discountAmount = sum;
+						}
+
+						var netSubtotal = Math.max(0, sum - discountAmount);
+
+						var taxAmount = (netSubtotal * type2) / 100;
+						var withholdingAmount = (netSubtotal * t) / 100;
+						var totalAmount = netSubtotal + taxAmount - withholdingAmount;
 
 						$(".subtotal").text(formatMoney(sum) + " " + type);
+						$(".discount_amount").text("- " + formatMoney(discountAmount) + " " + type);
 						$(".tax").text(formatMoney(taxAmount) + " " + type);
 						$(".discountTaxAfter").text("- " + formatMoney(withholdingAmount) + " " + type);
 						$(".total").text(formatMoney(totalAmount) + " " + type);
@@ -484,6 +513,10 @@
 
 				$('.discountTax').on("change", function () {
 						t = toNumber(this.value);
+						updateSummary();
+				});
+
+				$('.discount_type, .discount_value').on("change keyup input", function () {
 						updateSummary();
 				});
 

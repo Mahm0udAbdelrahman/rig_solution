@@ -24,12 +24,6 @@
 										@endif
 								</div>
 								<div class="col-3 pr-0 text-right address" >
-										<p class="text-bold-700 white">3053 Mahmoud Madkor st; 2nd Floor #11
-										El-Maerag City, Cairo</p>
-										<p class="text-bold-700 white" >Phone/Fax: +20 2 24477058</p>
-										<p class="text-bold-700 white">Cell phone: +20 1032703368</p>
-										<p class="text-bold-700 white">Email: rse@rigsolutionz.com</p>
-										<p class="text-bold-700 white">Website: www.rigsolutionz.com</p>
 										@if (str_contains($page_text, 'Invoice'))
 												<p class="text-bold-700 white" style="font-size: 1.37rem;">Tax ID No.: 210-838-655</p>
 										@endif

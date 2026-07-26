@@ -135,9 +135,13 @@
 				<div class="col-sm-4 col-12 border-dark">
 						@php
 								$subTotal = (float) $invoice->sub_total;
+								$discountType = $invoice->discount_type ?? 'percentage';
+								$discountValue = (float) ($invoice->discount_value ?? 0);
+								$discountAmount = (float) ($invoice->discount_amount ?? 0);
+								$netSubTotal = max(0, $subTotal - $discountAmount);
 								$taxAmount = (float) $invoice->tax;
 								$withholdingRate = (float) $invoice->withholding;
-								$withholdingAmount = ($subTotal * $withholdingRate) / 100;
+								$withholdingAmount = ($netSubTotal * $withholdingRate) / 100;
 								$totalAmount = (float) $invoice->total;
 						@endphp
 						<div class="table-responsive">
@@ -147,6 +151,12 @@
 														<td>Sub Total</td>
 														<td class="text-right subtotal" style="font-weight: 700 !important;"> {{number_format($subTotal, 2, '.', '')}}  <span class="months">{{$invoice->type}}</span></td>
 												</tr>
+												@if($discountAmount > 0)
+												<tr class="pink">
+														<td>Discount @if($discountType == 'percentage')({{number_format($discountValue, 2, '.', '')}}%)@endif</td>
+														<td class="text-right discount" style="font-weight: 700 !important;">- {{number_format($discountAmount, 2, '.', '')}} <span class="months">{{$invoice->type}}</span></td>
+												</tr>
+												@endif
 												<tr class="pink">
 														<td>TAX (@if($taxAmount == 0) 0% @else 14% @endif)</td>
 														<td class="text-right tax" style="font-weight: 700 !important;"> {{number_format($taxAmount, 2, '.', '')}}  <span class="months">{{$invoice->type}}</span></td>

@@ -114,10 +114,10 @@
     <h6 class="bg-dark white text-bold-600 pl-1 mb-0 border-dark col-2 middle">Equipment No:</h6>
     <div class="border-dark pl-1 mb-0 text-16 black col-10">
         <div class="row">
-            @foreach($model->equipment_no as $item)
+            @foreach($model->equipment_no ?? [] as $item)
                 {{--<div style="margin-right: 4px; margin-left: 4px;">--}}
                 <p class="border-dark pl-1 mb-0 text-16 black"
-                   style="min-width: 75px;">{{$item['equipment_no_value']}}</p>
+                   style="min-width: 75px;">{{is_array($item) ? ($item['equipment_no_value'] ?? '') : ''}}</p>
                 {{--</div>--}}
             @endforeach
         </div>

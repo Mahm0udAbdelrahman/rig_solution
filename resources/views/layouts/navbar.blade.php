@@ -163,30 +163,46 @@
                       || auth()->user()->canany(['create', 'viewAny'], \App\Models\Inspection\Calibration\CalibrationTorque::class)
                       || auth()->user()->canany(['create', 'viewAny'], \App\Models\Inspection\Calibration\CalibrationPressureTest::class)
                       || auth()->user()->canany(['create', 'viewAny'], \App\Models\Inspection\Calibration\CalibrationYoke::class);
-                  $canInspectionTab = $canInspectionLifting || $canInspectionNdt || $canInspectionTubular || $canInspectionDropObject || $canInspectionCalibration;
-              @endphp
-              @if($canInspectionTab)
-              <li class=" nav-item {{ Request::segment(2) === 'inspection' ? 'active' : '' }}"><a href=""><i class="la la-certificate"></i><span class="menu-title" data-i18n="Dashboard">Inspections</span></a>
-                <ul class="menu-content">
-                    <li><a class="menu-item {{ request()->routeIs('inspection.all') ? 'active' : '' }}" href="{{ route('inspection.all') }}"><i class="la la-list"></i><span data-i18n="All Items">All Inspections</span></a></li>
-                    @if($canInspectionLifting)
-                    <li><a class="menu-item {{ request()->routeIs('inspection.catalog.lifting') || request()->routeIs('crane.*') || request()->routeIs('crane2.*') || request()->routeIs('overheadCrane.*') || request()->routeIs('overheadCrane2.*') || request()->routeIs('forklift.*') || request()->routeIs('forklift2.*') || request()->routeIs('throughExamination.*') || request()->routeIs('defect.*') || request()->routeIs('lregister.*') ? 'active' : '' }}" href="{{ route('inspection.catalog.lifting') }}"><i class="la la-level-up"></i><span data-i18n="All Items">Lifting</span></a></li>
-                    @endif
-                    @if($canInspectionNdt)
-                    <li><a class="menu-item {{ request()->routeIs('inspection.catalog.ndt') || request()->routeIs('mpipt.*') || request()->routeIs('visual.*') || request()->routeIs('ultrasonic.*') || request()->routeIs('summary.*') || request()->routeIs('attached.*') || request()->routeIs('witnessHydro.*') || request()->routeIs('highPressure.*') || request()->routeIs('high2Pressure.*') || request()->routeIs('high3Pressure.*') || request()->routeIs('treatingIron.*') || request()->routeIs('drawingInspection.*') || request()->routeIs('nregister.*') ? 'active' : '' }}" href="{{ route('inspection.catalog.ndt') }}"><i class="la la-search"></i><span data-i18n="All Items">NDT</span></a></li>
-                    @endif
-                    @if($canInspectionTubular)
-                    <li><a class="menu-item {{ request()->routeIs('inspection.catalog.tubular') || request()->routeIs('pipesSummaryReports.*') || request()->routeIs('drillPipe.*') || request()->routeIs('heavyWeightPipe.*') || request()->routeIs('drillCollar.*') || request()->routeIs('subsDimensional.*') || request()->routeIs('tubingString.*') || request()->routeIs('stabilizerInspection.*') || request()->routeIs('reamerInspection.*') || request()->routeIs('linkInspection.*') || request()->routeIs('pbl.*') || request()->routeIs('tubingCasing.*') ? 'active' : '' }}" href="{{ route('inspection.catalog.tubular') }}"><i class="la la-link"></i><span data-i18n="All Items">Tubular</span></a></li>
-                    @endif
-                    @if($canInspectionDropObject)
-                    <li><a class="menu-item {{ request()->routeIs('inspection.catalog.dropObject') || request()->routeIs('dropObject.*') ? 'active' : '' }}" href="{{ route('inspection.catalog.dropObject') }}"><i class="la la-cube"></i><span data-i18n="All Items">Drop Object</span></a></li>
-                    @endif
-                    @if($canInspectionCalibration)
-                    <li><a class="menu-item {{ request()->routeIs('inspection.catalog.calibration') || request()->routeIs('calibrationPressureGauge.*') || request()->routeIs('calibrationPressureTest.*') || request()->routeIs('calibrationYoke.*') || request()->routeIs('calibrationTorque.*') ? 'active' : '' }}" href="{{ route('inspection.catalog.calibration') }}"><i class="la la-sliders"></i><span data-i18n="All Items">Calibration</span></a></li>
-                    @endif
-                </ul>
-              </li>
-              @endif
+                   $canInspectionTab = $canInspectionLifting || $canInspectionNdt || $canInspectionTubular || $canInspectionDropObject;
+               @endphp
+               @if($canInspectionTab)
+               <li class=" nav-item {{ Request::segment(2) === 'inspection' && Request::segment(3) !== 'calibration' ? 'active' : '' }}"><a href=""><i class="la la-certificate"></i><span class="menu-title" data-i18n="Dashboard">Inspections</span></a>
+                 <ul class="menu-content">
+                     <li><a class="menu-item {{ request()->routeIs('inspection.all') ? 'active' : '' }}" href="{{ route('inspection.all') }}"><i class="la la-list"></i><span data-i18n="All Items">All Inspections</span></a></li>
+                     @if($canInspectionLifting)
+                     <li><a class="menu-item {{ Request::segment(3) === 'lifting' ? 'active' : '' }}" href="{{ route('inspection.catalog.lifting') }}"><i class="la la-level-up"></i><span data-i18n="All Items">Lifting</span></a></li>
+                     @endif
+                     @if($canInspectionNdt)
+                     <li><a class="menu-item {{ Request::segment(3) === 'ndt' ? 'active' : '' }}" href="{{ route('inspection.catalog.ndt') }}"><i class="la la-search"></i><span data-i18n="All Items">NDT</span></a></li>
+                     @endif
+                     @if($canInspectionTubular)
+                     <li><a class="menu-item {{ Request::segment(3) === 'tubular' ? 'active' : '' }}" href="{{ route('inspection.catalog.tubular') }}"><i class="la la-link"></i><span data-i18n="All Items">Tubular</span></a></li>
+                     @endif
+                     @if($canInspectionDropObject)
+                     <li><a class="menu-item {{ Request::segment(3) === 'drop-object' || Request::segment(3) === 'dropObject' ? 'active' : '' }}" href="{{ route('inspection.catalog.dropObject') }}"><i class="la la-cube"></i><span data-i18n="All Items">Drop Object</span></a></li>
+                     @endif
+                 </ul>
+               </li>
+               @endif
+               @if($canInspectionCalibration)
+               <li class=" nav-item {{ Request::segment(3) === 'calibration' ? 'active' : '' }}"><a href=""><i class="la la-sliders"></i><span class="menu-title" data-i18n="Dashboard">Calibration</span></a>
+                 <ul class="menu-content">
+                     <li><a class="menu-item {{ request()->routeIs('inspection.catalog.calibration') ? 'active' : '' }}" href="{{ route('inspection.catalog.calibration') }}"><i class="la la-list"></i><span data-i18n="All Items">All Calibrations</span></a></li>
+                     @can('viewAny', 'App\Models\Inspection\Calibration\CalibrationPressureGauge')
+                     <li><a class="menu-item {{ Request::segment(4) === 'calibrationPressureGauge' ? 'active' : '' }}" href="{{ route('calibrationPressureGauge.index') }}"><i class="la la-dashboard"></i><span data-i18n="All Items">Pressure Gauge</span></a></li>
+                     @endcan
+                     @can('viewAny', 'App\Models\Inspection\Calibration\CalibrationTorque')
+                     <li><a class="menu-item {{ Request::segment(4) === 'calibrationTorque' ? 'active' : '' }}" href="{{ route('calibrationTorque.index') }}"><i class="la la-rotate-right"></i><span data-i18n="All Items">Torque</span></a></li>
+                     @endcan
+                     @can('viewAny', 'App\Models\Inspection\Calibration\CalibrationPressureTest')
+                     <li><a class="menu-item {{ Request::segment(4) === 'calibrationPressureTest' ? 'active' : '' }}" href="{{ route('calibrationPressureTest.index') }}"><i class="la la-tachometer"></i><span data-i18n="All Items">Pressure Test</span></a></li>
+                     @endcan
+                     @can('viewAny', 'App\Models\Inspection\Calibration\CalibrationYoke')
+                     <li><a class="menu-item {{ Request::segment(4) === 'calibrationYoke' ? 'active' : '' }}" href="{{ route('calibrationYoke.index') }}"><i class="la la-magnet"></i><span data-i18n="All Items">Yoke</span></a></li>
+                     @endcan
+                 </ul>
+               </li>
+               @endif
               <!---------------------------------------------------------------------------------->
               @if(auth()->user()->canany(['create', 'viewAny'], \App\Models\Persons\Supplier::class) ||
                   auth()->user()->canany(['create', 'viewAny'], \App\Models\Persons\Client::class) ||
@@ -353,7 +369,16 @@
                         <a class="menu-item {{request()->routeIs('inspectionLogo.index') ? 'active' : ''}}"
                            href="{{route('inspectionLogo.index')}}">
                             <i class="la la-comment-o"></i>
-                            <span data-i18n="All Items">Inspection Logos</span>
+                            <span data-i18n="All Items">Header Logos</span>
+                        </a>
+                    </li>
+                    @endcan
+                    @canany(['create', 'viewAny'], \App\Models\GeneralInfo\Specification::class)
+                    <li>
+                        <a class="menu-item {{request()->routeIs('footer-address.*') ? 'active' : ''}}"
+                           href="{{route('footer-address.edit')}}">
+                            <i class="la la-map-marker"></i>
+                            <span data-i18n="All Items">Footer Address</span>
                         </a>
                     </li>
                     @endcan

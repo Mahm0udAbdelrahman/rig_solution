@@ -108,6 +108,7 @@ Route::group(
                     /**/
                     // *********** Invoices *************  //
                     Route::get('invoice/getDataForDataTable', [App\Http\Controllers\Dashboard\WorkFlow\InvoiceController::class, 'getDataForDataTable'])->name('getDataForDataTable.invoice');
+                    Route::get('invoice/{invoice}/export-excel', [App\Http\Controllers\Dashboard\WorkFlow\InvoiceController::class, 'exportExcel'])->name('invoice.exportExcel');
                     Route::resource('invoice', App\Http\Controllers\Dashboard\WorkFlow\InvoiceController::class);
                     // *********** Payments *************  //
                     Route::get('payment/getDataForDataTable', [App\Http\Controllers\Dashboard\WorkFlow\PaymentController::class, 'getDataForDataTable'])->name('getDataForDataTable.payment');
@@ -236,6 +237,8 @@ Route::group(
                 Route::resource('specification', App\Http\Controllers\Dashboard\GeneralInfo\SpecificationController::class);
                 Route::resource('footer-values', App\Http\Controllers\Dashboard\GeneralInfo\FooterValueController::class);
                 Route::resource('inspectionLogo', App\Http\Controllers\Dashboard\GeneralInfo\InspectionLogoController::class);
+                Route::get('footer-address', [App\Http\Controllers\Dashboard\GeneralInfo\FooterAddressController::class, 'edit'])->name('footer-address.edit');
+                Route::post('footer-address', [App\Http\Controllers\Dashboard\GeneralInfo\FooterAddressController::class, 'update'])->name('footer-address.update');
             }
         );
 
@@ -305,6 +308,7 @@ Route::group(
                         /**/
                         Route::get('lregister/getDataForDataTable', [App\Http\Controllers\Dashboard\Inspection\Lifting\LregisterController::class, 'getDataForDataTable'])->name('getDataForDataTable.lregister');
                         Route::get('lregister/{lregister}/getForShow', [App\Http\Controllers\Dashboard\Inspection\Lifting\LregisterController::class, 'getForShow'])->name('getDataForDataTable.getForShow');
+                        Route::get('lregister/{lregister}/export-excel', [App\Http\Controllers\Dashboard\Inspection\Lifting\LregisterController::class, 'exportExcel'])->name('lregister.exportExcel');
                         Route::resource('lregister', App\Http\Controllers\Dashboard\Inspection\Lifting\LregisterController::class);
                     }
                 );
@@ -369,6 +373,7 @@ Route::group(
 						/**/
 						// new 12 NDT Register
 						Route::get('nregister/getDataForDataTable', [NregisterController::class, 'getDataForDataTable'])->name('getDataForDataTable.nregister');
+						Route::get('nregister/{nregister}/export-excel', [NregisterController::class, 'exportExcel'])->name('nregister.exportExcel');
 						Route::resource('nregister', NregisterController::class);
 						Route::get('nregister/{nregister}/publish', [NregisterController::class, 'publish'])->name('publish.nregister');
 						Route::patch('nregister/{nregister}/publish', [NregisterController::class, 'publishSubmit'])->name('nregister.publishSubmit');

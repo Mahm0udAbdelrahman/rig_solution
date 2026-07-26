@@ -532,60 +532,7 @@
                         </div>
                     </div>
                 </div>
-				
-				<div class="card">
-					<div class="card-content">
-						<div class="card-body bg-light bg-lighten-2 rounded-top">
-                            <div class="weather-details text-center">
-                                <span class="font-medium-4 text-bold-500 blue-grey darken-4">Calibration</span>
-                            </div>
-                        </div>
-						<div class="card-footer border-0">
-                            <ul class="list-group">
-								<li class="list-group-item pt-0 pb-0">
-                                    <div class="row">
-																				@can('viewAny', 'App\Models\Inspection\Calibration\CalibrationPressureGauge')
-                                            <a class="col-10 pt-1 pb-1" class="col-10" href="{{route('calibrationPressureGauge.index')}}"
-                                               class="text-bold-500 blue-grey darken-4">01 - Calibration Certificate (Pressure Gauge)</a>
-                                            @can('create', 'App\Models\Inspection\Calibration\CalibrationPressureGauge')
-                                                <a class="col-2 btn btn-icon btn-pure success waves-effect waves-light pt-1 pb-1"
-                                                   href="{{route('calibrationPressureGauge.create')}}"><i
-                                                            class="la la-plus-square"></i></a>
-                                            @endcan
-                                        @endcan
-                                        @can('viewAny', 'App\Models\Inspection\Calibration\CalibrationTorque')
-                                            <a class="col-10 pt-1 pb-1" class="col-10" href="{{route('calibrationTorque.index')}}"
-                                               class="text-bold-500 blue-grey darken-4">02 - Calibration Certificate (Torque)</a>
-                                            @can('create', 'App\Models\Inspection\Calibration\CalibrationTorque')
-                                                <a class="col-2 btn btn-icon btn-pure success waves-effect waves-light pt-1 pb-1"
-                                                   href="{{route('calibrationTorque.create')}}"><i
-                                                            class="la la-plus-square"></i></a>
-                                            @endcan
-                                        @endcan
-                                        @can('viewAny', 'App\Models\Inspection\Calibration\CalibrationPressureTest')
-                                            <a class="col-10 pt-1 pb-1" class="col-10" href="{{route('calibrationPressureTest.index')}}"
-                                               class="text-bold-500 blue-grey darken-4">03 - Calibration Certificate (Pressure Test)</a>
-                                            @can('create', 'App\Models\Inspection\Calibration\CalibrationPressureTest')
-                                                <a class="col-2 btn btn-icon btn-pure success waves-effect waves-light pt-1 pb-1"
-                                                   href="{{route('calibrationPressureTest.create')}}"><i
-                                                            class="la la-plus-square"></i></a>
-                                            @endcan
-                                        @endcan
-                                        @can('viewAny', 'App\Models\Inspection\Calibration\CalibrationYoke')
-                                            <a class="col-10 pt-1 pb-1" class="col-10" href="{{route('calibrationYoke.index')}}"
-                                               class="text-bold-500 blue-grey darken-4">04 - Calibration Certificate (Yoke)</a>
-                                            @can('create', 'App\Models\Inspection\Calibration\CalibrationYoke')
-                                                <a class="col-2 btn btn-icon btn-pure success waves-effect waves-light pt-1 pb-1"
-                                                   href="{{route('calibrationYoke.create')}}"><i
-                                                            class="la la-plus-square"></i></a>
-                                            @endcan
-                                        @endcan
-                                    </div>
-                                </li>
-							</ul>
-						</div>
-					</div>
-				</div>
+
             </div>
         </div>
         </div>

@@ -108,15 +108,6 @@ abstract class AbstractLiftingReportWorksheetRenderer
         $this->mergeText($sheet, 'B'.$row.':E'.$row, $title, 16, true, Alignment::HORIZONTAL_CENTER);
         $row++;
         $this->mergeText($sheet, 'B'.$row.':E'.$row, $subtitle, 10, false, Alignment::HORIZONTAL_CENTER);
-        $this->mergeText(
-            $sheet,
-            'F1:F3',
-            "Head Office: Block# 3053 | Hamdy Ramadan street\n2nd Floor #2 | El-Mearag City | Maadi | Cairo | Egypt\n+20 2 24477058 | +20 1032703368\nrse@rigsolutionz.com\nwww.rigsolutionz.com",
-            8,
-            false,
-            Alignment::HORIZONTAL_RIGHT
-        );
-        $sheet->getStyle('F1:F3')->getAlignment()->setVertical(Alignment::VERTICAL_TOP);
         $sheet->getRowDimension(1)->setRowHeight(26);
         $sheet->getRowDimension(2)->setRowHeight(22);
         $sheet->getRowDimension(3)->setRowHeight(36);
@@ -418,21 +409,17 @@ abstract class AbstractLiftingReportWorksheetRenderer
 
     protected function addFooterBrandStrip(Worksheet $sheet, int $row): int
     {
-        $path = public_path('app-assets/images/footer-v2.png');
-        if (!is_file($path)) {
-            return $row;
-        }
-
-        $sheet->mergeCells('B'.$row.':E'.$row);
-        $sheet->getRowDimension($row)->setRowHeight(44);
-
-        $drawing = new Drawing();
-        $drawing->setPath($path);
-        $drawing->setHeight(38);
-        $drawing->setCoordinates('B'.$row);
-        $drawing->setOffsetX(10);
-        $drawing->setOffsetY(3);
-        $drawing->setWorksheet($sheet);
+        $footerAddress = \App\Models\GeneralInfo\FooterAddress::getFooterAddress();
+        $text = implode(" | ", array_filter([
+            $footerAddress->address_line_1,
+            $footerAddress->address_line_2,
+            $footerAddress->phone,
+            $footerAddress->mobile,
+            $footerAddress->email,
+            $footerAddress->website,
+        ]));
+        $this->mergeText($sheet, 'A'.$row.':F'.$row, $text, 8, true, Alignment::HORIZONTAL_CENTER);
+        $sheet->getRowDimension($row)->setRowHeight(20);
 
         return $row + 1;
     }

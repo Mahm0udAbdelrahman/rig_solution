@@ -14,6 +14,7 @@ use App\Models\Persons\Client;
 use App\Models\User;
 use App\Models\WorkFlow\JobRequest;
 use App\Models\Inspection\InspectionReport;
+use App\Services\WorkFlow\FileManagerInspectionWorkbookExportService;
 
 use Barryvdh\DomPDF\Facade\Pdf as PDF2;
 use h4cc\WKHTMLToPDF\WKHTMLToPDF as PDF0;
@@ -66,17 +67,22 @@ class LregisterController extends Controller
             ->addColumn('revision_count', function ($row) {
                 return $this->inspectionRevisionCountValueByRow($row);
             })
-->addColumn(
+        ->addColumn(
             'client',
             function ($row) {
                 $report_code = '';
-                if (Auth::user()->can('view', Client::find($row->job_request->client->id))) {
-                        $report_code .= '<a href='.route('client.show', $row->job_request->client->id).'>';
+                $client = ($row->job_request && $row->job_request->client) ? $row->job_request->client : null;
+                if (!$client) {
+                    return 'N/A';
+                }
+                
+                if (Auth::user()->can('view', $client)) {
+                        $report_code .= '<a href='.route('client.show', $client->id).'>';
                 }
 
-                $report_code .= $row->job_request->client->name;
+                $report_code .= $client->name;
 
-                if (Auth::user()->can('view', Client::find($row->job_request->client->id))) {
+                if (Auth::user()->can('view', $client)) {
                       $report_code .= '</a>';
                 }
 
@@ -295,6 +301,20 @@ class LregisterController extends Controller
         ]);
 
     }//end show()
+
+
+    public function exportExcel(Lregister $lregister, FileManagerInspectionWorkbookExportService $exportService)
+    {
+        if (!$lregister->report) {
+            return redirect()->back()->with('error', 'Report record not found.');
+        }
+
+        try {
+            return $exportService->downloadForReport($lregister->report);
+        } catch (\Throwable $e) {
+            return redirect()->back()->with('error', $e->getMessage());
+        }
+    }
 
 
                 /**

@@ -214,6 +214,50 @@
       <div class="content-wrapper">
           <div class="content-body">
 
+{{--
+<!-- upload actions top -->
+@if($user_id_approved != Null || strpos( $folder, 'workflow' ) || Route::currentRouteName() == "defect.show" ||
+Route::currentRouteName() == "nregister.show" || Route::currentRouteName() == "drawingInspection.show")
+<div class="card no-print mb-2">
+	<div class="card-content">
+		<div class="card-body">
+			<div class="row" style="direction: rtl;">
+				@can('create', App\Models\WorkFlow\MailCenter::class)
+				<a class="btn btn-info btn-print btn-lg ml-1" href="{{ route('mailCenter.compose.related', ['relatedType' => 'inspection_report', 'relatedId' => $for_approve_url]) }}">Send via Rig MailCenter <i class="la la-envelope-o mr-50"></i></a>
+				@endcan
+				@if (!empty($pdf_exists))
+				<button type="button" id="print" class="btn btn-secondary btn-print btn-lg ml-1">Print Page <i
+						class="la la-paper-plane-o mr-50"></i></button>
+				@endif
+
+				<div class="btn-group ml-1" style="direction: ltr;">
+					<button type="button" class="btn btn-primary btn-print btn-lg dropdown-toggle" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+						<i class="la la-download mr-50"></i> Download <i class="la la-angle-down ml-50"></i>
+					</button>
+					<div class="dropdown-menu dropdown-menu-right shadow-lg p-1" style="min-width: 210px; border-radius: 8px;">
+						<h6 class="dropdown-header text-bold-600 px-1 mb-0" style="color: #4B4B4B;"><i class="la la-download"></i> Choose Format:</h6>
+						<div class="dropdown-divider my-1"></div>
+						@if (!empty($pdf_exists))
+						<a class="dropdown-item py-2 px-1" target="_blank" href="{{ $pdf_download_url ?? URL('storage/'.$folder.'/'.$imageurl.'.pdf') }}" style="font-size: 14px; border-radius: 5px;">
+							<i class="la la-file-pdf-o text-danger font-medium-3 mr-1" style="vertical-align: middle;"></i> <strong>PDF</strong> Document
+						</a>
+						@else
+						<span class="dropdown-item py-2 px-1 disabled text-muted" style="font-size: 14px; border-radius: 5px;">
+							<i class="la la-file-pdf-o text-muted font-medium-3 mr-1" style="vertical-align: middle;"></i> <strong>PDF</strong> (Upload PDF first)
+						</span>
+						@endif
+						<a class="dropdown-item py-2 px-1" href="{{ route('nregister.exportExcel', $model->id) }}" style="font-size: 14px; border-radius: 5px;">
+							<i class="la la-file-excel-o text-success font-medium-3 mr-1" style="vertical-align: middle;"></i> <strong>Excel</strong> Spreadsheet
+						</a>
+					</div>
+				</div>
+				<button type="button" id="uploadpdf" class="btn btn-dark btn-print btn-lg">Upload / Update PDF <i
+						class="la la-paper-plane-o"></i></button>
+			</div>
+		</div>
+	</div>
+</div>
+@endif  --}}
 
 <!-------------------------- BEGIN: Content--------------------------------------->
 @php $index = 1; @endphp
@@ -239,9 +283,22 @@ Route::currentRouteName() == "nregister.show" || Route::currentRouteName() == "d
 				@if (!empty($pdf_exists))
 				<button type="button" id="print" class="btn btn-secondary btn-print btn-lg ml-1">Print Page <i
 						class="la la-paper-plane-o mr-50"></i></button>
-				<a class="btn btn-primary btn-print btn-lg ml-1" target="_blank"
-					href="{{ $pdf_download_url ?? URL('storage/'.$folder.'/'.$imageurl.'.pdf') }}">Download PDF <i
-						class="la la-paper-plane-o mr-50"></i></a>
+
+				<div class="btn-group ml-1" style="direction: ltr;">
+					<button type="button" class="btn btn-primary btn-print btn-lg dropdown-toggle" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+						<i class="la la-download mr-50"></i> Download <i class="la la-angle-down ml-50"></i>
+					</button>
+					<div class="dropdown-menu dropdown-menu-right shadow-lg p-1" style="min-width: 210px; border-radius: 8px;">
+						<h6 class="dropdown-header text-bold-600 px-1 mb-0" style="color: #4B4B4B;"><i class="la la-download"></i> Choose Format:</h6>
+						<div class="dropdown-divider my-1"></div>
+						<a class="dropdown-item py-2 px-1" target="_blank" href="{{ $pdf_download_url ?? URL('storage/'.$folder.'/'.$imageurl.'.pdf') }}" style="font-size: 14px; border-radius: 5px;">
+							<i class="la la-file-pdf-o text-danger font-medium-3 mr-1" style="vertical-align: middle;"></i> <strong>PDF</strong> Document
+						</a>
+						<a class="dropdown-item py-2 px-1" href="{{ route('nregister.exportExcel', $model->id) }}" style="font-size: 14px; border-radius: 5px;">
+							<i class="la la-file-excel-o text-success font-medium-3 mr-1" style="vertical-align: middle;"></i> <strong>Excel</strong> Spreadsheet
+						</a>
+					</div>
+				</div>
 				@endif
 				<button type="button" id="uploadpdf" class="btn btn-dark btn-print btn-lg">Upload / Update PDF <i
 						class="la la-paper-plane-o"></i></button>
@@ -268,8 +325,8 @@ Route::currentRouteName() == "nregister.show" || Route::currentRouteName() == "d
 	<span class="float-md-left d-block d-md-inline-block">
 		Copyright &copy; {{date('Y')}} <a class="text-bold-800 grey darken-2" href="#" target="_blank">{{config('app.name')}}</a>
 	</span>
-	<span class="float-md-right d-none d-lg-block">
-		Made By Keen Deer<span id="scroll-top"></span>
+	{{--  <span class="float-md-right d-none d-lg-block">
+		Made By Keen Deer<span id="scroll-top"></span>  --}}
 	</span>
 </p>
 </footer>
@@ -421,7 +478,33 @@ Route::currentRouteName() == "nregister.show" || Route::currentRouteName() == "d
 			.then(convert_pdf)
 			.then(function (data) {
 				setPdfUploadState(false);
-				toastr.info('Good Job !', data.success, { positionClass: 'toast-bottom-left', "showMethod": "slideDown", "hideMethod": "slideUp", "progressBar": true, timeOut: 1000, fadeOut: 1000, onHidden: function () { window.location.reload(); } });
+				if ($('.btn-group').length === 0) {
+					var pdfUrl = "{{ $pdf_download_url ?? URL('storage/'.$folder.'/'.$imageurl.'.pdf') }}";
+					var excelUrl = "{{ route('nregister.exportExcel', $model->id) }}";
+					var buttonsHtml = 
+						'<button type="button" id="print" class="btn btn-secondary btn-print btn-lg ml-1">Print Page <i class="la la-paper-plane-o mr-50"></i></button>' +
+						'<div class="btn-group ml-1" style="direction: ltr;">' +
+							'<button type="button" class="btn btn-primary btn-print btn-lg dropdown-toggle" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">' +
+								'<i class="la la-download mr-50"></i> Download <i class="la la-angle-down ml-50"></i>' +
+							'</button>' +
+							'<div class="dropdown-menu dropdown-menu-right shadow-lg p-1" style="min-width: 210px; border-radius: 8px;">' +
+								'<h6 class="dropdown-header text-bold-600 px-1 mb-0" style="color: #4B4B4B;"><i class="la la-download"></i> Choose Format:</h6>' +
+								'<div class="dropdown-divider my-1"></div>' +
+								'<a class="dropdown-item py-2 px-1" target="_blank" href="' + pdfUrl + '" style="font-size: 14px; border-radius: 5px;">' +
+									'<i class="la la-file-pdf-o text-danger font-medium-3 mr-1" style="vertical-align: middle;"></i> <strong>PDF</strong> Document' +
+								'</a>' +
+								'<a class="dropdown-item py-2 px-1" href="' + excelUrl + '" style="font-size: 14px; border-radius: 5px;">' +
+									'<i class="la la-file-excel-o text-success font-medium-3 mr-1" style="vertical-align: middle;"></i> <strong>Excel</strong> Spreadsheet' +
+								'</a>' +
+							'</div>' +
+						'</div>';
+					$('#uploadpdf').before(buttonsHtml);
+				}
+
+				toastr.info('Good Job !', (data && data.success) ? data.success : 'PDF Uploaded Successfully !', { positionClass: 'toast-bottom-left', "showMethod": "slideDown", "hideMethod": "slideUp", "progressBar": true, timeOut: 1500 });
+				setTimeout(function () {
+					window.location.reload();
+				}, 600);
 			})
 			.catch(function (error) {
 				setPdfUploadState(false);
@@ -445,7 +528,33 @@ Route::currentRouteName() == "nregister.show" || Route::currentRouteName() == "d
 					.then(convert_pdf)
 					.then(function (data) {
 						setPdfUploadState(false);
-						toastr.info('Good Job !', data.success, { positionClass: 'toast-bottom-left', "showMethod": "slideDown", "hideMethod": "slideUp", "progressBar": true, timeOut: 1000, fadeOut: 1000, onHidden: function () { window.location.reload(); } });
+						if ($('.btn-group').length === 0) {
+							var pdfUrl = "{{ $pdf_download_url ?? URL('storage/'.$folder.'/'.$imageurl.'.pdf') }}";
+							var excelUrl = "{{ route('nregister.exportExcel', $model->id) }}";
+							var buttonsHtml = 
+								'<button type="button" id="print" class="btn btn-secondary btn-print btn-lg ml-1">Print Page <i class="la la-paper-plane-o mr-50"></i></button>' +
+								'<div class="btn-group ml-1" style="direction: ltr;">' +
+									'<button type="button" class="btn btn-primary btn-print btn-lg dropdown-toggle" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">' +
+										'<i class="la la-download mr-50"></i> Download <i class="la la-angle-down ml-50"></i>' +
+									'</button>' +
+									'<div class="dropdown-menu dropdown-menu-right shadow-lg p-1" style="min-width: 210px; border-radius: 8px;">' +
+										'<h6 class="dropdown-header text-bold-600 px-1 mb-0" style="color: #4B4B4B;"><i class="la la-download"></i> Choose Format:</h6>' +
+										'<div class="dropdown-divider my-1"></div>' +
+										'<a class="dropdown-item py-2 px-1" target="_blank" href="' + pdfUrl + '" style="font-size: 14px; border-radius: 5px;">' +
+											'<i class="la la-file-pdf-o text-danger font-medium-3 mr-1" style="vertical-align: middle;"></i> <strong>PDF</strong> Document' +
+										'</a>' +
+										'<a class="dropdown-item py-2 px-1" href="' + excelUrl + '" style="font-size: 14px; border-radius: 5px;">' +
+											'<i class="la la-file-excel-o text-success font-medium-3 mr-1" style="vertical-align: middle;"></i> <strong>Excel</strong> Spreadsheet' +
+										'</a>' +
+									'</div>' +
+								'</div>';
+							$('#uploadpdf').before(buttonsHtml);
+						}
+
+						toastr.info('Good Job !', (data && data.success) ? data.success : 'PDF Uploaded Successfully !', { positionClass: 'toast-bottom-left', "showMethod": "slideDown", "hideMethod": "slideUp", "progressBar": true, timeOut: 1500 });
+						setTimeout(function () {
+							window.location.reload();
+						}, 600);
 					})
 					.catch(function (error) {
 						setPdfUploadState(false);

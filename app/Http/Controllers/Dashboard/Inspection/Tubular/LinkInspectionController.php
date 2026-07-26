@@ -26,7 +26,9 @@ class LinkInspectionController extends Controller
      */
     public function index()
     {
-        $reports = LinkInspection::count();
+        $reports = LinkInspection::query();
+        $this->applyPreferredInspectionFamilyRowConstraint($reports, 'link_inspections', LinkInspection::class);
+        $reports = $reports->count();
         return view('layouts.inspection.tubular.linkInspection.index', ['page_name' => $this->page_name('All', $this->page_name), 'reports' => $reports]);
     }
 
@@ -43,6 +45,7 @@ class LinkInspectionController extends Controller
             ->withAggregate('job_request','code')
             ->orderBy('job_request_code', 'Desc');
 
+        $this->applyPreferredInspectionFamilyRowConstraint($data, 'link_inspections', LinkInspection::class);
         $this->applyInspectionApprovalPresetFilter($data, request('smart_preset'));
 
         return Datatables::eloquent($data)
@@ -238,7 +241,7 @@ class LinkInspectionController extends Controller
     public function store(Request $request)
     {
         $data  = $request->all();
-//        dd($data);
+        // dd($data);
         $created = LinkInspection::create($data);
         $code = $data['code'];
         if ($created) {

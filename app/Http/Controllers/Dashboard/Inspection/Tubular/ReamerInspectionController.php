@@ -46,7 +46,7 @@ class ReamerInspectionController extends Controller
         $this->applyInspectionApprovalPresetFilter($data, request('smart_preset'));
 
         return Datatables::eloquent($data)
-            
+
             ->addColumn('approval_status', function ($row) {
                 return $this->inspectionApprovalStatusValueByRow($row);
             })
@@ -219,6 +219,7 @@ class ReamerInspectionController extends Controller
     {
         $jobrequests = DB::table('job_requests')->select('id','code')->orderBy('id', 'desc')->get();
         $specifications = Specification::getTubularSpecifications();
+        
 
         return view('layouts.inspection.tubular.reamerInspection.add', [
             'page_name' => $this->page_name(0, $this->page_name),

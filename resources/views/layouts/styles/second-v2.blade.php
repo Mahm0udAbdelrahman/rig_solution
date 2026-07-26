@@ -1,3 +1,6 @@
+@php
+	$footerAddress = $footerAddress ?? \App\Models\GeneralInfo\FooterAddress::getFooterAddress();
+@endphp
 @section('second_paper')
 
 	<div class="card donw">
@@ -28,22 +31,7 @@
 							<p class="text-bold-600 text-center mb-0 white" style="font-size: 1.8rem !important;">{{$page_text ?? ''}}</p>
 						@endif
 					</div>
-					<div class="col-3 pr-0 text-right address" style="font-size: 10px;">
-						<div class="text-bold-700 white" style="display: flex; flex-direction: column; align-items: flex-end; text-align: right;  width: 105%; margin-left: -12px;">
-							<p>Head Office: Block# 3053|Hamdy Ramadan street</p>
-							<p>2nd Floor #2 |El-Mearag City|Maadi|Cairo|Egypt</p>
-							<p>
-								<i class="ft-phone"></i> : +20 2 24477058 |
-								<i class="ft-smartphone"></i> : +20 1032703368
-							</p>
-							<p>
-								<i class="ft-mail"></i> : rse@rigsolutionz.com
-							</p>
-							<p>
-								Website: <a href="www.rigsolutionz.com">www.rigsolutionz.com</a>
-							</p>
-						</div>
-					</div>
+					<div class="col-3 pr-0 text-right address"></div>
 				</div>
 				@stack('page_content_second')
 				<div class="row" style="font-size: 12px; color: black; font-weight: 600; margin-top: 3px;">
@@ -77,12 +65,17 @@
 					</div>
 					<div class="col-1 p-0 pl-1 border-dark">2 of 2</div>
 				</div>
-				<div class="row mt-1">
-					<div class="col-3 text-bold-600 pl-0">{{--{{$iso_number}}--}}</div>
-					<div class="col-6">
-						<img src="{{asset('app-assets/images/footer-v2.png')}}" style="width: 40em; height: 3.5em;" />
+				<div class="row mt-1 text-center" style="font-size: 10px; font-weight: 700; color: #000; justify-content: center; width: 100%;">
+					<div class="col-12 text-center">
+						<p class="mb-0">{{ $footerAddress->address_line_1 }}</p>
+						<p class="mb-0">{{ $footerAddress->address_line_2 }}</p>
+						<p class="mb-0">
+							<i class="ft-phone"></i> : {{ $footerAddress->phone }} |
+							<i class="ft-smartphone"></i> : {{ $footerAddress->mobile }} |
+							<i class="ft-mail"></i> : {{ $footerAddress->email }} |
+							Website: <a href="http://{{ str_replace(['http://', 'https://'], '', $footerAddress->website) }}" target="_blank">{{ $footerAddress->website }}</a>
+						</p>
 					</div>
-					<div class="col-3 text-right text-bold-600 pr-0"></div>
 				</div>
 			</div>
 		</div>

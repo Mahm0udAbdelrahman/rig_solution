@@ -21,6 +21,7 @@
         "laravel/tinker": "^2.7",
         "laravel/ui": "^4.1",
         "milon/barcode": "^9.0",
+        "phpoffice/phpspreadsheet": "^5.9",
         "pusher/pusher-php-server": "7.0.2",
         "yajra/laravel-datatables": "^9.0"
     },

@@ -19,7 +19,7 @@ class InspectionLogoController extends Controller
         $inspectionLogos = InspectionLogo::all();
 		// dd($inspectionLogos[0]->related_inspections);
         return view('layouts.organization.inspectionLogo.index', [
-            'page_name' => 'All Custom Inspection Logos',
+            'page_name' => 'All Custom Header Logos',
             'dataList' => $inspectionLogos,
 			'inspectionModels' => InspectionLogo::getAllInspectionModels()
         ]);
@@ -35,7 +35,7 @@ class InspectionLogoController extends Controller
 		$inspectionOptions = InspectionLogo::getAllInspectionModels();
 		// dd($inspectionOptions);
         return view('layouts.organization.inspectionLogo.create', [
-            'page_name' => 'Create Inspection Logo',
+            'page_name' => 'Create Header Logo',
             'inspectionModels' => InspectionLogo::getAllInspectionModels()
         ]);
     }
@@ -78,7 +78,7 @@ class InspectionLogoController extends Controller
     {
         return view('layouts.organization.inspectionLogo.edit', [
             'model' => $inspectionLogo,
-            'page_name' => 'Edit Inspection Logo',
+            'page_name' => 'Edit Header Logo',
 			'inspectionModels' => InspectionLogo::getAllInspectionModels($inspectionLogo)
 
         ]);

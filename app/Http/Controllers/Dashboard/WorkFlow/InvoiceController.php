@@ -611,10 +611,19 @@ class InvoiceController extends Controller
       }
 
 			$subTotal = $this->normalizeMoney($request->subtotal);
+			$discountType = $request->input('discount_type') === 'amount' ? 'amount' : 'percentage';
+			$discountValue = $this->normalizeMoney($request->input('discount_value'));
+			if ($discountType === 'percentage') {
+				$discountAmount = round(($subTotal * $discountValue) / 100, 2);
+			} else {
+				$discountAmount = min($subTotal, round($discountValue, 2));
+			}
+			$netSubTotal = max(0, $subTotal - $discountAmount);
+
 			$taxAmount = $this->normalizeMoney($request->tax);
 			$withholdingRate = $this->normalizeRate($request->discountTaxAfter);
-			$withholdingAmount = round(($subTotal * $withholdingRate) / 100, 2);
-			$totalAmount = round(($subTotal + $taxAmount) - $withholdingAmount, 2);
+			$withholdingAmount = round(($netSubTotal * $withholdingRate) / 100, 2);
+			$totalAmount = round(($netSubTotal + $taxAmount) - $withholdingAmount, 2);
 
       $store_invoice = DB::transaction(function () use (
 					$invoiceCompanyType,
@@ -622,6 +631,9 @@ class InvoiceController extends Controller
 					$request,
 					$contract,
 					$subTotal,
+					$discountType,
+					$discountValue,
+					$discountAmount,
 					$withholdingRate,
 					$taxAmount,
 					$totalAmount
@@ -635,6 +647,9 @@ class InvoiceController extends Controller
 			        'items' => json_encode($request['items']),
 			        'terms' => json_encode($request['payments']),
 			        'sub_total' => $subTotal,
+			        'discount_type' => $discountType,
+			        'discount_value' => $discountValue,
+			        'discount_amount' => $discountAmount,
 			        'withholding' => $withholdingRate,
 			        'tax' => $taxAmount,
 			        'total' => $totalAmount,
@@ -737,18 +752,30 @@ class InvoiceController extends Controller
 	      }
 
 				$subTotal = $this->normalizeMoney($request->subtotal);
+				$discountType = $request->input('discount_type') === 'amount' ? 'amount' : 'percentage';
+				$discountValue = $this->normalizeMoney($request->input('discount_value'));
+				if ($discountType === 'percentage') {
+					$discountAmount = round(($subTotal * $discountValue) / 100, 2);
+				} else {
+					$discountAmount = min($subTotal, round($discountValue, 2));
+				}
+				$netSubTotal = max(0, $subTotal - $discountAmount);
+
 				$taxAmount = $this->normalizeMoney($request->tax);
 				$withholdingRate = $this->normalizeRate($request->discountTaxAfter);
-				$withholdingAmount = round(($subTotal * $withholdingRate) / 100, 2);
-				$totalAmount = round(($subTotal + $taxAmount) - $withholdingAmount, 2);
+				$withholdingAmount = round(($netSubTotal * $withholdingRate) / 100, 2);
+				$totalAmount = round(($netSubTotal + $taxAmount) - $withholdingAmount, 2);
 
-	      $update_invoice = DB::transaction(function () use ($request, $invoice, $contract, $subTotal, $taxAmount, $withholdingRate, $totalAmount) {
+	      $update_invoice = DB::transaction(function () use ($request, $invoice, $contract, $subTotal, $discountType, $discountValue, $discountAmount, $taxAmount, $withholdingRate, $totalAmount) {
 						$updated = Invoice::where('id', $invoice->id)->update([
 			        'cpo' => $request->cpo,
 			        'contract' => $contract,
 			        'items' => json_encode($request['items']),
 			        'terms' => json_encode($request['payments']),
 			        'sub_total' => $subTotal,
+			        'discount_type' => $discountType,
+			        'discount_value' => $discountValue,
+			        'discount_amount' => $discountAmount,
 			        'tax' => $taxAmount,
 			        'withholding' => $withholdingRate,
 			        'total' => $totalAmount,
@@ -791,5 +818,261 @@ class InvoiceController extends Controller
 								'success' => $remove_snap_shots_pdf.$this->action_message(2, $this->page_name)
 						]);
 				}
+    }
+
+    /**
+     * Export Invoice as Excel file.
+     *
+     * @param  \App\Models\WorkFlow\Invoice  $invoice
+     * @return \Symfony\Component\HttpFoundation\StreamedResponse
+     */
+    public function exportExcel(Invoice $invoice)
+    {
+        if (class_exists(\PhpOffice\PhpSpreadsheet\Spreadsheet::class)) {
+            $spreadsheet = new \PhpOffice\PhpSpreadsheet\Spreadsheet();
+            $sheet = $spreadsheet->getActiveSheet();
+            $sheet->setTitle('Invoice ' . $invoice->code);
+
+            // Header Style
+            $titleStyle = [
+                'font' => ['bold' => true, 'size' => 14, 'color' => ['rgb' => 'FFFFFF']],
+                'fill' => ['fillType' => \PhpOffice\PhpSpreadsheet\Style\Fill::FILL_SOLID, 'startColor' => ['rgb' => '00A5BB']],
+                'alignment' => ['horizontal' => \PhpOffice\PhpSpreadsheet\Style\Alignment::HORIZONTAL_CENTER, 'vertical' => \PhpOffice\PhpSpreadsheet\Style\Alignment::VERTICAL_CENTER],
+            ];
+
+            $headerStyle = [
+                'font' => ['bold' => true, 'color' => ['rgb' => 'FFFFFF']],
+                'fill' => ['fillType' => \PhpOffice\PhpSpreadsheet\Style\Fill::FILL_SOLID, 'startColor' => ['rgb' => '1E293B']],
+                'alignment' => ['horizontal' => \PhpOffice\PhpSpreadsheet\Style\Alignment::HORIZONTAL_CENTER, 'vertical' => \PhpOffice\PhpSpreadsheet\Style\Alignment::VERTICAL_CENTER],
+            ];
+
+            $labelStyle = [
+                'font' => ['bold' => true],
+                'fill' => ['fillType' => \PhpOffice\PhpSpreadsheet\Style\Fill::FILL_SOLID, 'startColor' => ['rgb' => 'F1F5F9']],
+            ];
+
+            // Title
+            $sheet->mergeCells('A1:E1');
+            $sheet->setCellValue('A1', 'RIG SOLUTION ENGINEERING - INVOICE No. ' . $invoice->code);
+            $sheet->getStyle('A1:E1')->applyFromArray($titleStyle);
+            $sheet->getRowDimension(1)->setRowHeight(32);
+
+            // Client Info
+            $row = 3;
+            $clientName = optional(optional($invoice->jobRequest)->client)->name ?? '';
+            $taxCard = optional(optional($invoice->jobRequest)->client)->tax_card ?? '';
+            $location = optional(optional($invoice->jobRequest)->client)->location ?? '';
+            $deptLoc = $invoice->jobRequest && $invoice->jobRequest->clientDepartment
+                ? $invoice->jobRequest->clientDepartment->name . ' / ' . $invoice->jobRequest->deploc
+                : optional($invoice->jobRequest)->deploc;
+
+            $sheet->setCellValue('A' . $row, 'Client:');
+            $sheet->setCellValue('B' . $row, $clientName);
+            $sheet->setCellValue('D' . $row, 'Tax Card:');
+            $sheet->setCellValue('E' . $row, $taxCard);
+            $sheet->getStyle('A' . $row)->applyFromArray($labelStyle);
+            $sheet->getStyle('D' . $row)->applyFromArray($labelStyle);
+
+            $row++;
+            $sheet->setCellValue('A' . $row, 'Address:');
+            $sheet->setCellValue('B' . $row, $location);
+            $sheet->getStyle('A' . $row)->applyFromArray($labelStyle);
+
+            $row++;
+            $sheet->setCellValue('A' . $row, 'Dept / Location:');
+            $sheet->setCellValue('B' . $row, $deptLoc);
+            $sheet->setCellValue('D' . $row, 'Date:');
+            $sheet->setCellValue('E' . $row, date('d-m-Y', strtotime($invoice->created_at->toDateString())));
+            $sheet->getStyle('A' . $row)->applyFromArray($labelStyle);
+            $sheet->getStyle('D' . $row)->applyFromArray($labelStyle);
+
+            // Order Info
+            $row += 2;
+            $sheet->setCellValue('A' . $row, 'JCF No');
+            $sheet->setCellValue('B' . $row, (optional($invoice->jobRequest)->qutation ? 'Quotation No' : 'Contract No'));
+            $sheet->setCellValue('C' . $row, 'Client P.O');
+            $sheet->setCellValue('D' . $row, 'Currency Code');
+            $sheet->getStyle("A{$row}:D{$row}")->applyFromArray($headerStyle);
+
+            $row++;
+            $contractOrQutation = optional($invoice->jobRequest)->qutation ? optional($invoice->jobRequest->qutation)->code : $invoice->contract;
+            $sheet->setCellValue('A' . $row, optional($invoice->jobRequest)->code);
+            $sheet->setCellValue('B' . $row, $contractOrQutation);
+            $sheet->setCellValue('C' . $row, $invoice->cpo);
+            $sheet->setCellValue('D' . $row, $invoice->type);
+            $sheet->getStyle("A{$row}:D{$row}")->getAlignment()->setHorizontal(\PhpOffice\PhpSpreadsheet\Style\Alignment::HORIZONTAL_CENTER);
+
+            // Items Table
+            $row += 2;
+            $itemsStartRow = $row;
+            $sheet->setCellValue('A' . $row, 'Code');
+            $sheet->setCellValue('B' . $row, 'Description');
+            $sheet->setCellValue('C' . $row, 'QTY');
+            $sheet->setCellValue('D' . $row, 'Price');
+            $sheet->setCellValue('E' . $row, 'Amount');
+            $sheet->getStyle("A{$row}:E{$row}")->applyFromArray($headerStyle);
+            $sheet->getRowDimension($row)->setRowHeight(24);
+
+            $items = json_decode($invoice->items) ?? [];
+            foreach ($items as $item) {
+                $row++;
+                $priceText = (isset($item->iper) && $item->iper !== "null" && !empty($item->iper))
+                    ? $item->price . ' / ' . ucwords($item->iper)
+                    : ($item->price ?? '');
+
+                $sheet->setCellValue('A' . $row, $item->icode ?? '');
+                $sheet->setCellValue('B' . $row, $item->idesc ?? '');
+                $sheet->setCellValue('C' . $row, $item->pquantity ?? '');
+                $sheet->setCellValue('D' . $row, $priceText);
+                $sheet->setCellValue('E' . $row, $item->pamount ?? '');
+
+                $sheet->getStyle("A{$row}")->getAlignment()->setHorizontal(\PhpOffice\PhpSpreadsheet\Style\Alignment::HORIZONTAL_CENTER);
+                $sheet->getStyle("C{$row}:E{$row}")->getAlignment()->setHorizontal(\PhpOffice\PhpSpreadsheet\Style\Alignment::HORIZONTAL_CENTER);
+            }
+
+            $tableBorderStyle = [
+                'borders' => [
+                    'allBorders' => ['borderStyle' => \PhpOffice\PhpSpreadsheet\Style\Border::BORDER_THIN, 'color' => ['rgb' => 'CBD5E1']],
+                ],
+            ];
+            $sheet->getStyle("A{$itemsStartRow}:E{$row}")->applyFromArray($tableBorderStyle);
+
+            // Summary / Totals
+            $row += 2;
+            $subTotal = (float) $invoice->sub_total;
+            $discountType = $invoice->discount_type ?? 'percentage';
+            $discountValue = (float) ($invoice->discount_value ?? 0);
+            $discountAmount = (float) ($invoice->discount_amount ?? 0);
+            $netSubTotal = max(0, $subTotal - $discountAmount);
+            $taxAmount = (float) $invoice->tax;
+            $withholdingRate = (float) $invoice->withholding;
+            $withholdingAmount = ($netSubTotal * $withholdingRate) / 100;
+            $totalAmount = (float) $invoice->total;
+
+            $wordsText = "Only " . $invoice->numberTowords($invoice->total) . " " . $invoice->type;
+            $sheet->mergeCells("A{$row}:C{$row}");
+            $sheet->setCellValue("A{$row}", $wordsText);
+            $sheet->getStyle("A{$row}")->getFont()->setBold(true);
+
+            $sheet->setCellValue("D{$row}", 'Sub Total');
+            $sheet->setCellValue("E{$row}", number_format($subTotal, 2, '.', '') . ' ' . $invoice->type);
+            $sheet->getStyle("D{$row}")->applyFromArray($labelStyle);
+
+            if ($discountAmount > 0) {
+                $row++;
+                $discLabel = 'Discount ' . ($discountType == 'percentage' ? '(' . number_format($discountValue, 2, '.', '') . '%)' : '');
+                $sheet->setCellValue("D{$row}", $discLabel);
+                $sheet->setCellValue("E{$row}", '- ' . number_format($discountAmount, 2, '.', '') . ' ' . $invoice->type);
+                $sheet->getStyle("D{$row}")->applyFromArray($labelStyle);
+            }
+
+            $row++;
+            $taxLabel = 'TAX (' . ($taxAmount == 0 ? '0%' : '14%') . ')';
+            $sheet->setCellValue("D{$row}", $taxLabel);
+            $sheet->setCellValue("E{$row}", number_format($taxAmount, 2, '.', '') . ' ' . $invoice->type);
+            $sheet->getStyle("D{$row}")->applyFromArray($labelStyle);
+
+            $row++;
+            $sheet->setCellValue("D{$row}", 'Withholding TAX (' . number_format($withholdingRate, 2, '.', '') . '%)');
+            $sheet->setCellValue("E{$row}", '- ' . number_format($withholdingAmount, 2, '.', '') . ' ' . $invoice->type);
+            $sheet->getStyle("D{$row}")->applyFromArray($labelStyle);
+
+            $row++;
+            $totalStyle = [
+                'font' => ['bold' => true, 'color' => ['rgb' => 'FFFFFF']],
+                'fill' => ['fillType' => \PhpOffice\PhpSpreadsheet\Style\Fill::FILL_SOLID, 'startColor' => ['rgb' => '00A5BB']],
+            ];
+            $sheet->setCellValue("D{$row}", 'Total');
+            $sheet->setCellValue("E{$row}", number_format($totalAmount, 2, '.', '') . ' ' . $invoice->type);
+            $sheet->getStyle("D{$row}:E{$row}")->applyFromArray($totalStyle);
+
+            // Auto-fit columns
+            foreach (range('A', 'E') as $col) {
+                $sheet->getColumnDimension($col)->setAutoSize(true);
+            }
+
+            $filename = 'Invoice-' . $invoice->code . '.xlsx';
+
+            return response()->streamDownload(function () use ($spreadsheet) {
+                $writer = new \PhpOffice\PhpSpreadsheet\Writer\Xlsx($spreadsheet);
+                $writer->save('php://output');
+                $spreadsheet->disconnectWorksheets();
+                unset($spreadsheet);
+            }, $filename, [
+                'Content-Type' => 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+            ]);
+        }
+
+        // Native CSV Fallback if PhpSpreadsheet is not installed
+        $fileName = 'Invoice-' . $invoice->code . '.csv';
+
+        return response()->streamDownload(function () use ($invoice) {
+            $out = fopen('php://output', 'w');
+            fwrite($out, "\xEF\xBB\xBF");
+
+            $writeRow = function (array $row) use ($out) {
+                fputcsv($out, $row);
+            };
+
+            $clientName = optional(optional($invoice->jobRequest)->client)->name ?? '';
+            $taxCard = optional(optional($invoice->jobRequest)->client)->tax_card ?? '';
+            $location = optional(optional($invoice->jobRequest)->client)->location ?? '';
+            $deptLoc = $invoice->jobRequest && $invoice->jobRequest->clientDepartment
+                ? $invoice->jobRequest->clientDepartment->name . ' / ' . $invoice->jobRequest->deploc
+                : optional($invoice->jobRequest)->deploc;
+
+            $writeRow(['RIG SOLUTION ENGINEERING - INVOICE No. ' . $invoice->code]);
+            $writeRow([]);
+            $writeRow(['Client:', $clientName, '', 'Tax Card:', $taxCard]);
+            $writeRow(['Address:', $location]);
+            $writeRow(['Dept / Loc:', $deptLoc, '', 'Date:', date('d-m-Y', strtotime($invoice->created_at->toDateString()))]);
+            $writeRow([]);
+
+            $contractOrQutation = optional($invoice->jobRequest)->qutation ? optional($invoice->jobRequest->qutation)->code : $invoice->contract;
+            $writeRow(['JCF No', (optional($invoice->jobRequest)->qutation ? 'Quotation No' : 'Contract No'), 'Client P.O', 'Currency Code']);
+            $writeRow([optional($invoice->jobRequest)->code, $contractOrQutation, $invoice->cpo, $invoice->type]);
+            $writeRow([]);
+
+            $writeRow(['Code', 'Description', 'QTY', 'Price', 'Amount']);
+            $items = json_decode($invoice->items) ?? [];
+            foreach ($items as $item) {
+                $priceText = (isset($item->iper) && $item->iper !== "null" && !empty($item->iper))
+                    ? $item->price . ' / ' . ucwords($item->iper)
+                    : ($item->price ?? '');
+                $writeRow([
+                    $item->icode ?? '',
+                    $item->idesc ?? '',
+                    $item->pquantity ?? '',
+                    $priceText,
+                    $item->pamount ?? ''
+                ]);
+            }
+            $writeRow([]);
+
+            $subTotal = (float) $invoice->sub_total;
+            $discountType = $invoice->discount_type ?? 'percentage';
+            $discountValue = (float) ($invoice->discount_value ?? 0);
+            $discountAmount = (float) ($invoice->discount_amount ?? 0);
+            $netSubTotal = max(0, $subTotal - $discountAmount);
+            $taxAmount = (float) $invoice->tax;
+            $withholdingRate = (float) $invoice->withholding;
+            $withholdingAmount = ($netSubTotal * $withholdingRate) / 100;
+            $totalAmount = (float) $invoice->total;
+
+            $wordsText = "Only " . $invoice->numberTowords($invoice->total) . " " . $invoice->type;
+
+            $writeRow(['Words:', $wordsText, '', 'Sub Total:', number_format($subTotal, 2, '.', '') . ' ' . $invoice->type]);
+            if ($discountAmount > 0) {
+                $discLabel = 'Discount ' . ($discountType == 'percentage' ? '(' . number_format($discountValue, 2, '.', '') . '%)' : '');
+                $writeRow(['', '', '', $discLabel, '- ' . number_format($discountAmount, 2, '.', '') . ' ' . $invoice->type]);
+            }
+            $writeRow(['', '', '', 'TAX (' . ($taxAmount == 0 ? '0%' : '14%') . '):', number_format($taxAmount, 2, '.', '') . ' ' . $invoice->type]);
+            $writeRow(['', '', '', 'Withholding TAX (' . number_format($withholdingRate, 2, '.', '') . '%):', '- ' . number_format($withholdingAmount, 2, '.', '') . ' ' . $invoice->type]);
+            $writeRow(['', '', '', 'Total:', number_format($totalAmount, 2, '.', '') . ' ' . $invoice->type]);
+
+            fclose($out);
+        }, $fileName, [
+            'Content-Type' => 'text/csv; charset=UTF-8',
+        ]);
     }
 }

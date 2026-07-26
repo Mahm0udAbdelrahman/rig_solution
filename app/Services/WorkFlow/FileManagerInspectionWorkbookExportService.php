@@ -97,6 +97,17 @@ class FileManagerInspectionWorkbookExportService
         );
     }
 
+    public function downloadForReport(InspectionReport $report)
+    {
+        $revisions = $this->resolveRevisionReports($report);
+        $primaryReport = $revisions->isNotEmpty() ? $revisions->first() : $report;
+
+        return $this->excelExportService->downloadUsingBuilder(
+            $this->buildFilename($primaryReport),
+            fn (Spreadsheet $spreadsheet) => $this->buildWorkbook($spreadsheet, $primaryReport)
+        );
+    }
+
     public function storeTemporaryWorkbook(FileManager $fileRow): array
     {
         if (!$this->supportsFile($fileRow)) {

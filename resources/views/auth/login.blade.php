@@ -62,7 +62,7 @@
                                             <h4 class="brand-text">{{config('app.name')}}</h4>
                                         </div>
                                     </div>
-                                    <h6 class="card-subtitle line-on-side text-muted text-center font-small-3 pt-2"><span>Login with <a href="https://keendeer.com" target="_blank">Keen Deer | Dashboard</a></span>
+                                    {{--  <h6 class="card-subtitle line-on-side text-muted text-center font-small-3 pt-2"><span>Login with <a href="https://keendeer.com" target="_blank">Keen Deer | Dashboard</a></span>  --}}
                                     </h6>
                                 </div>
                                 <div class="card-content">

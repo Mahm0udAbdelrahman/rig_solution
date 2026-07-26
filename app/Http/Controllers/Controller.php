@@ -113,7 +113,7 @@ class Controller extends BaseController
 
         $reports_related = collect();
         $approved_reports_related = collect();
-        $approvedRevisionIndex = 0;
+        $approvedRevisionIndex = 1;
         $select_report = null;
         if (is_string($reportClass) && class_exists($reportClass) && $jobRequestId > 0 && $currentCode !== '') {
             $select_report = $reportClass::query()
@@ -321,6 +321,11 @@ class Controller extends BaseController
     {
         $preset = $this->normalizeInspectionPreset($smartPreset ?? request('smart_preset', ''));
         if (!in_array($preset, ['approved', 'unapproved', 'need_publish', 'published', 'unpublished'], true)) {
+            $model = method_exists($query, 'getModel') ? $query->getModel() : null;
+            $table = $model && method_exists($model, 'getTable') ? (string) $model->getTable() : '';
+            if ($table !== '') {
+                $this->applyLatestInspectionFamilyRowConstraint($query, $table);
+            }
             $this->applyInspectionRequestedOrdering($query);
             return;
         }
@@ -1220,17 +1225,14 @@ class Controller extends BaseController
         $isDuplicated = stripos((string) $report->code, 'duplicated') !== false;
         $isApproved = !empty($report->user_id_approved);
 
-        if ($supportsRevision && !$isDuplicated && $isApproved) {
+        if ($supportsRevision && !$isDuplicated) {
+            $label = 'REV' . $approvedRevisionIndex;
             $approvedRevisionIndex++;
-            return 'REV' . $approvedRevisionIndex;
+            return $label;
         }
 
         if ($isDuplicated) {
             return 'PENDING PUBLISH';
-        }
-
-        if ($supportsRevision) {
-            return 'NEED APPROVE';
         }
 
         return $isApproved ? 'APPROVED' : 'PENDING';

@@ -9,6 +9,7 @@ use App\Models\Inspection\Ndt\Mpipt;
 use App\Models\Inspection\Ndt\Nregister;
 use App\Models\Persons\Client;
 use App\Models\Persons\Supplier;
+use App\Services\WorkFlow\FileManagerInspectionWorkbookExportService;
 
 use DB, DataTables, Storage, Auth, Crypt;
 
@@ -324,6 +325,20 @@ class NregisterController extends Controller
 	{
 		return redirect()->route('nregister.show', $nregister);
 	}
+
+	public function exportExcel(Nregister $nregister, FileManagerInspectionWorkbookExportService $exportService)
+	{
+		if (!$nregister->report) {
+			return redirect()->back()->with('error', 'Report record not found.');
+		}
+
+		try {
+			return $exportService->downloadForReport($nregister->report);
+		} catch (\Throwable $e) {
+			return redirect()->back()->with('error', $e->getMessage());
+		}
+	}
+
 	/**
 	 * Remove the specified resource from storage.
 	 *

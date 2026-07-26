@@ -108,11 +108,13 @@
         <h6 class="bg-dark white text-bold-600 pl-1 mb-0 border-dark col-2 middle">Equipment Used:</h6>
         <div class="border-dark pl-1 mb-0 text-16 black col-10">
             <div class="row skin skin-square">
-                @forelse($model->equipment_no as $item)
+                @forelse($model->equipment_no ?? [] as $item)
                     @php
-                        $equipmentLabel = $item['equipment_used'] === 'Other'
-                            ? ($item['other_equipment'] ?: 'Other')
-                            : ($item['equipment_used'] ?: 'N/A');
+                        $equipmentLabel = is_array($item)
+                            ? ($item['equipment_used'] === 'Other'
+                                ? ($item['other_equipment'] ?: 'Other')
+                                : ($item['equipment_used'] ?: 'N/A'))
+                            : 'N/A';
                     @endphp
                     <div class="specinsp" style=" min-width: 145px;">
                         <p class="border-dark pl-1 mb-0 text-16 black" style="min-width: 105px;">
@@ -132,9 +134,9 @@
         <h6 class="bg-dark white text-bold-600 pl-1 mb-0 border-dark col-2 middle">Equipment No:</h6>
         <div class="border-dark pl-1 mb-0 text-16 black col-10">
             <div class="row">
-                @forelse($model->equipment_no as $item)
+                @forelse($model->equipment_no ?? [] as $item)
                     <p class="border-dark pl-1 mb-0 text-16 black"
-                       style="min-width: 145px;">{{$item['equipment_no_value'] ?: 'N/A'}}</p>
+                       style="min-width: 145px;">{{(is_array($item) ? $item['equipment_no_value'] : '') ?: 'N/A'}}</p>
                 @empty
                     <p class="border-dark pl-1 mb-0 text-16 black"
                        style="min-width: 145px;">N/A</p>

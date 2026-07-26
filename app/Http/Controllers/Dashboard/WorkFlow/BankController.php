@@ -745,6 +745,17 @@ class BankController extends Controller
             'note' => ['nullable', 'string'],
         ]);
 
+        $payload = array_merge([
+            'job_request_id' => null,
+            'payment_id' => null,
+            'counter_account_id' => null,
+            'transaction_date' => null,
+            'reference_no' => null,
+            'status' => 'draft',
+            'is_posted' => null,
+            'note' => null,
+        ], $payload);
+
         if (!empty($payload['payment_id'])) {
             $payment = Payment::find($payload['payment_id']);
             if (!$payment) {
@@ -789,9 +800,9 @@ class BankController extends Controller
         }
     }
 
-    private function resolveStatusAndPosting(?BankTransaction $transaction, string $requestedStatus, int $requestedIsPosted): array
+    private function resolveStatusAndPosting(?BankTransaction $transaction, ?string $requestedStatus, int $requestedIsPosted): array
     {
-        $status = $requestedStatus !== '' ? $requestedStatus : 'draft';
+        $status = ($requestedStatus !== null && $requestedStatus !== '') ? $requestedStatus : 'draft';
         $isPosted = (int)$requestedIsPosted;
         $approvedBy = null;
         $approvedAt = null;

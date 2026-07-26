@@ -90,12 +90,6 @@
 														@endif
 												</div>
 												<div class="col-3 pr-0 text-right address" >
-														<p class="text-bold-700 white">3053 Mahmoud Madkor st; 2nd Floor #11
-														El-Maerag City, Cairo</p>
-														<p class="text-bold-700 white" >Phone/Fax: +20 2 24477058</p>
-														<p class="text-bold-700 white">Cell phone: +20 1032703368</p>
-														<p class="text-bold-700 white">Email: rse@rigsolutionz.com</p>
-														<p class="text-bold-700 white">Website: www.rigsolutionz.com</p>
 														@if (str_contains($page_text, 'Invoice'))
 																@if ($invoice->invoice_company_type == \App\Models\WorkFlow\Invoice::$INVOICE_LTD_TYPE)
 																	<p class="text-bold-700 white" style="font-size: 1.37rem;">Tax ID No.: 709-320-108</p>
@@ -134,6 +128,7 @@
 					if (!empty($for_approve_url) && isset($folder) && str_contains((string) $folder, 'pdf/inspection') && Route::has('inspection.approval.pdf')) {
 						$downloadPdfUrl = route('inspection.approval.pdf', $for_approve_url);
 					}
+					$downloadExcelUrl = $downloadExcelUrl ?? (isset($invoice) ? route('invoice.exportExcel', $invoice->id) : null);
 				@endphp
 				@if($user_id_approved != Null || $hasApprovedVersionForPdf || strpos( $folder, 'workflow' ) || Route::currentRouteName() == "defect.show")
 				<div class="card no-print mt-2">
@@ -143,9 +138,31 @@
 										@if($mailcenterComposeUrl && auth()->user()->can('create', App\Models\WorkFlow\MailCenter::class))
 											<a class="btn btn-info btn-print btn-lg ml-1" href="{{ $mailcenterComposeUrl }}">Send via Rig MailCenter <i class="la la-envelope-o mr-50"></i></a>
 										@endif
-										@if (Storage::disk('public')->exists($folder.'/'.$imageurl.'.pdf'))
+										@if (Storage::disk('public')->exists($folder.'/'.$imageurl.'.pdf') || !empty($downloadExcelUrl))
 											<button type="button" id="print" class="btn btn-secondary btn-print btn-lg ml-1">Print Page <i class="la la-paper-plane-o mr-50"></i></button>
-											<a class="btn btn-primary btn-print btn-lg ml-1" target="_blank" href="{{ $downloadPdfUrl }}">Download PDF <i class="la la-paper-plane-o mr-50"></i></a>
+											<div class="btn-group ml-1">
+												<button type="button" class="btn btn-primary btn-print btn-lg dropdown-toggle" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+													Download <i class="la la-download mr-50"></i>
+												</button>
+												<div class="dropdown-menu dropdown-menu-right shadow-lg p-1" style="min-width: 210px; border-radius: 8px;">
+													<h6 class="dropdown-header text-bold-600 px-1 mb-0" style="color: #4B4B4B;"><i class="la la-download"></i> Choose Format / اختر الصيغة:</h6>
+													<div class="dropdown-divider my-1"></div>
+													@if (Storage::disk('public')->exists($folder.'/'.$imageurl.'.pdf'))
+													<a class="dropdown-item py-2 px-1" target="_blank" href="{{ $downloadPdfUrl }}" style="font-size: 14px; border-radius: 5px;">
+														<i class="la la-file-pdf-o text-danger font-medium-3 mr-1" style="vertical-align: middle;"></i> <strong>PDF</strong> Document
+													</a>
+													@endif
+													@if (!empty($downloadExcelUrl))
+													<a class="dropdown-item py-2 px-1" href="{{ $downloadExcelUrl }}" style="font-size: 14px; border-radius: 5px;">
+														<i class="la la-file-excel-o text-success font-medium-3 mr-1" style="vertical-align: middle;"></i> <strong>Excel</strong> Spreadsheet
+													</a>
+													@else
+													<a class="dropdown-item py-2 px-1 js-export-page-excel" href="javascript:void(0);" style="font-size: 14px; border-radius: 5px;">
+														<i class="la la-file-excel-o text-success font-medium-3 mr-1" style="vertical-align: middle;"></i> <strong>Excel</strong> Spreadsheet
+													</a>
+													@endif
+												</div>
+											</div>
 										@endif
 										<button type="button" id="uploadpdf" class="btn btn-dark btn-print btn-lg">Upload / Update PDF <i class="la la-paper-plane-o"></i></button>
 							      </div>
@@ -270,6 +287,345 @@
 							$('.donw [data-type="code"][data-id="'+ id +'"]').append(' - ' + label).css('font-size', '100%');
 						}
 					}
+					$(document).on('click', '.js-export-page-excel', function(e) {
+						e.preventDefault();
+						var pageElement = document.querySelector('.donw') || document.querySelector('.page_in') || document.querySelector('body');
+						if (!pageElement) return;
+
+						var clone = pageElement.cloneNode(true);
+						clone.querySelectorAll('.no-print').forEach(function(el) { el.remove(); });
+
+						var headers = [];
+						var values = [];
+						var keyValuePairs = [];
+
+						function addPair(h, v) {
+								h = String(h || '').replace(/[\n\r]+/g, ' ').replace(/\s+/g, ' ').trim().replace(/:$/, '');
+								v = String(v || '').replace(/[\n\r]+/g, ' ').replace(/\s+/g, ' ').trim();
+								if (!h || !v) return;
+								if (h.length > 90) h = h.substring(0, 90) + '...';
+
+								var finalHeader = h;
+								var count = 1;
+								while (headers.includes(finalHeader)) {
+										count++;
+										finalHeader = h + ' (' + count + ')';
+								}
+
+								headers.push(finalHeader);
+								values.push(v);
+								keyValuePairs.push({ label: finalHeader, value: v });
+						}
+
+						var rows = clone.querySelectorAll('.row');
+						rows.forEach(function(row) {
+								var children = Array.from(row.children);
+								var curLabel = '';
+								var curVal = '';
+
+								for (var i = 0; i < children.length; i++) {
+										var child = children[i];
+										var text = child.innerText.replace(/\s+/g, ' ').trim();
+										if (!text) continue;
+
+										var isBg = child.classList.contains('bg-dark') || child.querySelector('.bg-dark') || child.tagName === 'H6';
+
+										if (isBg) {
+												if (curLabel && curVal) {
+														addPair(curLabel, curVal);
+														curLabel = '';
+														curVal = '';
+												}
+												curLabel = text;
+										} else {
+												if (curLabel) {
+														curVal = curVal ? curVal + ' | ' + text : text;
+												}
+										}
+								}
+								if (curLabel && curVal) {
+										addPair(curLabel, curVal);
+								}
+						});
+
+						var tables = clone.querySelectorAll('table');
+						tables.forEach(function(tbl) {
+								var tblRows = tbl.querySelectorAll('tr');
+								tblRows.forEach(function(tr) {
+										var cells = tr.querySelectorAll('td, th');
+										if (cells.length >= 2) {
+												var c1 = cells[0].innerText.trim();
+												var c2 = Array.from(cells).slice(1).map(function(c) { return c.innerText.trim(); }).filter(Boolean).join(' | ');
+												if (c1 && c2 && c1.length < 60) {
+														addPair(c1, c2);
+												}
+										}
+								});
+						});
+
+						function escapeHtml(str) {
+								return String(str || '')
+										.replace(/&/g, '&amp;')
+										.replace(/</g, '&lt;')
+										.replace(/>/g, '&gt;')
+										.replace(/"/g, '&quot;');
+						}
+
+						var table1Html = '<h3 style="font-family:Calibri, Arial, sans-serif; font-size:12pt; color:#1E293B;">Inspection Record Summary</h3>' +
+								'<table border="1" cellspacing="0" cellpadding="6" style="border-collapse:collapse; width:100%; font-family:Calibri, Arial, sans-serif; font-size:10pt;">' +
+								'<thead><tr style="background-color:#1E293B; color:#FFFFFF; font-weight:bold; text-align:center;">';
+
+						headers.forEach(function(h) {
+								table1Html += '<th style="background-color:#1E293B; color:#FFFFFF; padding:6px 10px; border:1px solid #000000; text-align:center; white-space:nowrap;">' + escapeHtml(h) + '</th>';
+						});
+
+						table1Html += '</tr></thead><tbody><tr style="text-align:center;">';
+
+						values.forEach(function(v) {
+								table1Html += '<td style="padding:6px 10px; border:1px solid #000000; text-align:center; vertical-align:middle;">' + escapeHtml(v) + '</td>';
+						});
+
+						table1Html += '</tr></tbody></table>';
+
+						var table2Html = '<br/><br/><h3 style="font-family:Calibri, Arial, sans-serif; font-size:12pt; color:#00A5BB;">Record Field Details (Key - Value List)</h3>' +
+								'<table border="1" cellspacing="0" cellpadding="6" style="border-collapse:collapse; width:700px; font-family:Calibri, Arial, sans-serif; font-size:10pt;">' +
+								'<thead><tr style="background-color:#00A5BB; color:#FFFFFF; font-weight:bold;">' +
+								'<th style="background-color:#00A5BB; color:#FFFFFF; padding:6px 10px; border:1px solid #000000; width:280px; text-align:left;">Field Name / Column</th>' +
+								'<th style="background-color:#00A5BB; color:#FFFFFF; padding:6px 10px; border:1px solid #000000; width:420px; text-align:left;">Value / Record</th>' +
+								'</tr></thead><tbody>';
+
+						keyValuePairs.forEach(function(pair, idx) {
+								var bg = (idx % 2 === 0) ? '#F8FAFC' : '#FFFFFF';
+								table2Html += '<tr style="background-color:' + bg + ';">' +
+										'<td style="padding:6px 10px; border:1px solid #000000; font-weight:bold; background-color:#F1F5F9;">' + escapeHtml(pair.label) + '</td>' +
+										'<td style="padding:6px 10px; border:1px solid #000000;">' + escapeHtml(pair.value) + '</td>' +
+										'</tr>';
+						});
+
+						table2Html += '</tbody></table>';
+
+						var excelStyles = '<style>' +
+								'body { font-family: Calibri, "Segoe UI", Arial, sans-serif; font-size: 10pt; color: #000000; background-color: #ffffff; padding: 15px; }\n' +
+								'table { border-collapse: collapse !important; margin-bottom: 15px !important; }\n' +
+								'th { font-weight: bold !important; font-size: 10pt !important; }\n' +
+								'td { font-size: 10pt !important; }\n' +
+								'</style>';
+
+						var htmlHeader = '<html xmlns:o="urn:schemas-microsoft-com:office:office" xmlns:x="urn:schemas-microsoft-com:office:excel" xmlns="http://www.w3.org/TR/REC-html40">' +
+								'<head><meta charset="utf-8"/>' +
+								'<!--[if gte mso 9]><xml><' + 'x:ExcelWorkbook><' + 'x:ExcelWorksheets><' + 'x:ExcelWorksheet><' + 'x:Name>Report Data</' + 'x:Name><' + 'x:WorksheetOptions><' + 'x:DisplayGridlines/></' + 'x:WorksheetOptions></' + 'x:ExcelWorksheet></' + 'x:ExcelWorksheets></' + 'x:ExcelWorkbook></xml><![endif]-->' +
+						formData.append('pdf', blob);
+						formData.append('imageurl', '{{$imageurl}}');
+						formData.append('folder', '{{$folder}}');
+						@if(!empty($for_approve_url))
+						formData.append('report_id', '{{$for_approve_url}}');
+						@endif
+						$.ajax({
+								headers: {'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')},
+								type: 'POST',
+								url: "{{route('report.generatePdf')}}",
+								cache: false,
+								data: formData,
+								processData: false,
+								contentType: false,
+								success: function(data){
+										toastr.info('Good Job !', data.success, { positionClass: 'toast-bottom-left', "showMethod": "slideDown", "hideMethod": "slideUp", "progressBar": true, timeOut: 1000, fadeOut: 1000, onHidden: function () { window.location.reload(); } });
+								},
+						});
+				}
+
+				function print_pdf()
+				{
+						printWindow = window.open("{{ $downloadPdfUrl }}");
+						printWindow.window.print();
+				}
+
+				$(document).on('click','#uploadpdf',function(){
+						take_snap_shot()
+								.then(function (images) {
+										return convert_pdf(images);
+								})
+								.catch(function () {
+										toastr.error('Capture failed', 'Unable to build the full PDF', { positionClass: 'toast-bottom-left', "showMethod": "slideDown", "hideMethod": "slideUp", "progressBar": true, timeOut: 3000, fadeOut: 1000 });
+								});
+				});
+
+				$('#print').click(function(){
+						print_pdf();
+				});
+
+				$(document).bind("keyup ", function(e){
+					console.log(e.keyCode);
+					if (e.keyCode == 80)
+					{
+						if (document.getElementById("print"))
+						{
+							print_pdf();
+						}
+						else
+						{
+							take_snap_shot().then(function (images) {
+									return convert_pdf(images);
+							});
+						}
+						return false;
+					}
+				});
+
+				$('[data-type="versions"]').each(function(key){
+					var id = $('.donw [data-type="code"]').data('id');
+					var number = $(this).data('number');
+					var label = String($(this).data('label') || '');
+					if(number == id)
+					{
+						if (label.toUpperCase().indexOf('REV') === 0) {
+							$('.donw [data-type="code"][data-id="'+ id +'"]').append(' - ' + label).css('font-size', '100%');
+						}
+					}
+				});
+				$(document).on('click', '.js-export-page-excel', function(e) {
+						e.preventDefault();
+						var pageElement = document.querySelector('.donw') || document.querySelector('.page_in') || document.querySelector('body');
+						if (!pageElement) return;
+
+						var clone = pageElement.cloneNode(true);
+						clone.querySelectorAll('.no-print').forEach(function(el) { el.remove(); });
+
+						var headers = [];
+						var values = [];
+						var keyValuePairs = [];
+
+						function addPair(h, v) {
+								h = String(h || '').replace(/[\n\r]+/g, ' ').replace(/\s+/g, ' ').trim().replace(/:$/, '');
+								v = String(v || '').replace(/[\n\r]+/g, ' ').replace(/\s+/g, ' ').trim();
+								if (!h || !v) return;
+								if (h.length > 90) h = h.substring(0, 90) + '...';
+
+								var finalHeader = h;
+								var count = 1;
+								while (headers.includes(finalHeader)) {
+										count++;
+										finalHeader = h + ' (' + count + ')';
+								}
+
+								headers.push(finalHeader);
+								values.push(v);
+								keyValuePairs.push({ label: finalHeader, value: v });
+						}
+
+						var rows = clone.querySelectorAll('.row');
+						rows.forEach(function(row) {
+								var children = Array.from(row.children);
+								var curLabel = '';
+								var curVal = '';
+
+								for (var i = 0; i < children.length; i++) {
+										var child = children[i];
+										var text = child.innerText.replace(/\s+/g, ' ').trim();
+										if (!text) continue;
+
+										var isBg = child.classList.contains('bg-dark') || child.querySelector('.bg-dark') || child.tagName === 'H6';
+
+										if (isBg) {
+												if (curLabel && curVal) {
+														addPair(curLabel, curVal);
+														curLabel = '';
+														curVal = '';
+												}
+												curLabel = text;
+										} else {
+												if (curLabel) {
+														curVal = curVal ? curVal + ' | ' + text : text;
+												}
+										}
+								}
+								if (curLabel && curVal) {
+										addPair(curLabel, curVal);
+								}
+						});
+
+						var tables = clone.querySelectorAll('table');
+						tables.forEach(function(tbl) {
+								var tblRows = tbl.querySelectorAll('tr');
+								tblRows.forEach(function(tr) {
+										var cells = tr.querySelectorAll('td, th');
+										if (cells.length >= 2) {
+												var c1 = cells[0].innerText.trim();
+												var c2 = Array.from(cells).slice(1).map(function(c) { return c.innerText.trim(); }).filter(Boolean).join(' | ');
+												if (c1 && c2 && c1.length < 60) {
+														addPair(c1, c2);
+												}
+										}
+								});
+						});
+
+						function escapeHtml(str) {
+								return String(str || '')
+										.replace(/&/g, '&amp;')
+										.replace(/</g, '&lt;')
+										.replace(/>/g, '&gt;')
+										.replace(/"/g, '&quot;');
+						}
+
+						var table1Html = '<h3 style="font-family:Calibri, Arial, sans-serif; font-size:12pt; color:#1E293B;">Inspection Record Summary</h3>' +
+								'<table border="1" cellspacing="0" cellpadding="6" style="border-collapse:collapse; width:100%; font-family:Calibri, Arial, sans-serif; font-size:10pt;">' +
+								'<thead><tr style="background-color:#1E293B; color:#FFFFFF; font-weight:bold; text-align:center;">';
+
+						headers.forEach(function(h) {
+								table1Html += '<th style="background-color:#1E293B; color:#FFFFFF; padding:6px 10px; border:1px solid #000000; text-align:center; white-space:nowrap;">' + escapeHtml(h) + '</th>';
+						});
+
+						table1Html += '</tr></thead><tbody><tr style="text-align:center;">';
+
+						values.forEach(function(v) {
+								table1Html += '<td style="padding:6px 10px; border:1px solid #000000; text-align:center; vertical-align:middle;">' + escapeHtml(v) + '</td>';
+						});
+
+						table1Html += '</tr></tbody></table>';
+
+						var table2Html = '<br/><br/><h3 style="font-family:Calibri, Arial, sans-serif; font-size:12pt; color:#00A5BB;">Record Field Details (Key - Value List)</h3>' +
+								'<table border="1" cellspacing="0" cellpadding="6" style="border-collapse:collapse; width:700px; font-family:Calibri, Arial, sans-serif; font-size:10pt;">' +
+								'<thead><tr style="background-color:#00A5BB; color:#FFFFFF; font-weight:bold;">' +
+								'<th style="background-color:#00A5BB; color:#FFFFFF; padding:6px 10px; border:1px solid #000000; width:280px; text-align:left;">Field Name / Column</th>' +
+								'<th style="background-color:#00A5BB; color:#FFFFFF; padding:6px 10px; border:1px solid #000000; width:420px; text-align:left;">Value / Record</th>' +
+								'</tr></thead><tbody>';
+
+						keyValuePairs.forEach(function(pair, idx) {
+								var bg = (idx % 2 === 0) ? '#F8FAFC' : '#FFFFFF';
+								table2Html += '<tr style="background-color:' + bg + ';">' +
+										'<td style="padding:6px 10px; border:1px solid #000000; font-weight:bold; background-color:#F1F5F9;">' + escapeHtml(pair.label) + '</td>' +
+										'<td style="padding:6px 10px; border:1px solid #000000;">' + escapeHtml(pair.value) + '</td>' +
+										'</tr>';
+						});
+
+						table2Html += '</tbody></table>';
+
+						var excelStyles = '<style>' +
+								'body { font-family: Calibri, "Segoe UI", Arial, sans-serif; font-size: 10pt; color: #000000; background-color: #ffffff; padding: 15px; }\n' +
+								'table { border-collapse: collapse !important; margin-bottom: 15px !important; }\n' +
+								'th { font-weight: bold !important; font-size: 10pt !important; }\n' +
+								'td { font-size: 10pt !important; }\n' +
+								'</style>';
+
+						var htmlHeader = '<html xmlns:o="urn:schemas-microsoft-com:office:office" xmlns:x="urn:schemas-microsoft-com:office:excel" xmlns="http://www.w3.org/TR/REC-html40">' +
+								'<head><meta charset="utf-8"/>' +
+								'<!--[if gte mso 9]><xml><' + 'x:ExcelWorkbook><' + 'x:ExcelWorksheets><' + 'x:ExcelWorksheet><' + 'x:Name>Report Data</' + 'x:Name><' + 'x:WorksheetOptions><' + 'x:DisplayGridlines/></' + 'x:WorksheetOptions></' + 'x:ExcelWorksheet></' + 'x:ExcelWorksheets></' + 'x:ExcelWorkbook></xml><![endif]-->' +
+								excelStyles +
+								'</head><body>';
+
+						var fullHtml = htmlHeader + table1Html + table2Html + '</body></html>';
+
+						var blob = new Blob(['\ufeff' + fullHtml], {
+								type: 'application/vnd.ms-excel;charset=utf-8'
+						});
+						var url = URL.createObjectURL(blob);
+						var a = document.createElement('a');
+						a.href = url;
+						a.download = '{{ $imageurl ?? "document" }}' + '.xls';
+						document.body.appendChild(a);
+						a.click();
+						document.body.removeChild(a);
+						URL.revokeObjectURL(url);
 				});
 
 		</script>

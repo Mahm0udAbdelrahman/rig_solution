@@ -344,7 +344,7 @@ class JobRequestController extends Controller
 								$data->where('jcf_statuses.comment', 'in');
 								break;
 						case 'completed':
-								$data->where('jcf_statuses.comment', 'cm');
+								$data->where('jcf_statuses.comment', 'cm')->whereNull('invoices.code');
 								break;
 						case 'canceled':
 								$data->where('jcf_statuses.comment', 'cc');
@@ -617,7 +617,7 @@ class JobRequestController extends Controller
 								})
 							->filterColumn('inspector', function($query, $keyword){
 									$query->whereRaw("inspector_employees.name like ?", ["%{$keyword}%"]);
-							})	
+							})
 							->filterColumn('other_action', function($query, $keyword){
 								$this->applyJcfStatusFilterByKeyword($query, $keyword);
 							})

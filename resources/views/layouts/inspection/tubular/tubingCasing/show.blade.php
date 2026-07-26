@@ -70,14 +70,14 @@
             @foreach($specificationOptions as $key => $value)
                 @if($key != 'S-008')
                     <div class="specinsp" style="margin-left: 8px;">
-          <span class="noncheckedfrom {{in_array($key, $model->specification)? 'checked' : ''}}"
+          <span class="noncheckedfrom {{in_array($key, is_array($model->specification) ? $model->specification : [])? 'checked' : ''}}"
                 style="position: relative;top: 3px;"></span>
                         <label>{{$value}}</label>
                     </div>
                 @endif
             @endforeach
             <div class="specinsp" style="margin-left: 8px;">
-          <span class="noncheckedfrom {{in_array('S-008', $model->specification)? 'checked' : ''}}"
+          <span class="noncheckedfrom {{in_array('S-008', is_array($model->specification) ? $model->specification : [])? 'checked' : ''}}"
                 style="position: relative;top: 3px;"></span>
                 <label>Other</label>
             </div>
@@ -93,7 +93,7 @@
         <div class="row skin skin-square">
             @foreach($inspectionMethods as $item)
                 <div class="specinsp" style="margin-left: 8px;">
-          <span class="noncheckedfrom {{in_array($item, $model->inspection_method)? 'checked' : ''}}"
+          <span class="noncheckedfrom {{in_array($item, is_array($model->inspection_method) ? $model->inspection_method : [])? 'checked' : ''}}"
                 style="position: relative;top: 3px;"></span>
                     <label>{{$item}}</label>
                 </div>
@@ -111,10 +111,10 @@
     <h6 class="bg-dark white text-bold-600 pl-1 mb-0 border-dark col-2 middle">Equipment Used:</h6>
     <div class="border-dark pl-1 mb-0 text-16 black col-10">
         <div class="row skin skin-square">
-            @foreach($model->equipment_no as $item)
+            @foreach($model->equipment_no ?? [] as $item)
                 <div class="specinsp" style=" min-width: 145px;">
                     {{--<span class="noncheckedfrom checked" style="position: relative;top: 3px;"></span>--}}
-                    @if(array_key_exists('equipment_used', $item))
+                    @if(is_array($item) && array_key_exists('equipment_used', $item))
                         <p class="border-dark pl-1 mb-0 text-16 black" style="min-width: 105px;">
                             {{$item['equipment_used'] == 'Other'? $item['other_equipment'] : $item['equipment_used'] }}
                         </p>
@@ -129,10 +129,10 @@
     <h6 class="bg-dark white text-bold-600 pl-1 mb-0 border-dark col-2 middle">Equipment No:</h6>
     <div class="border-dark pl-1 mb-0 text-16 black col-10">
         <div class="row">
-            @foreach($model->equipment_no as $item)
+            @foreach($model->equipment_no ?? [] as $item)
                 {{--<div style="margin-right: 4px; margin-left: 4px;">--}}
                 <p class="border-dark pl-1 mb-0 text-16 black"
-                   style="min-width: 145px;">{{$item['equipment_no_value']}}</p>
+                   style="min-width: 145px;">{{is_array($item) ? ($item['equipment_no_value'] ?? '') : ''}}</p>
                 {{--</div>--}}
             @endforeach
         </div>

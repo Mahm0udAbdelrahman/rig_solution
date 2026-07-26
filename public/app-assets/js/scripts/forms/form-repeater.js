@@ -13,6 +13,18 @@
 	// Default
 	$('.repeater-default').repeater();
 
+	// Equipment repeater used in tubular inspection forms
+	$('.repeater').not('.repeater-default, .file-repeater, .contact-repeater').repeater({
+		show: function () {
+			$(this).slideDown();
+		},
+		hide: function(remove) {
+			if (confirm('Are you sure you want to remove this item?')) {
+				$(this).slideUp(remove);
+			}
+		}
+	});
+
 	// Custom Show / Hide Configurations
 	$('.file-repeater, .contact-repeater').repeater({
 		show: function () {

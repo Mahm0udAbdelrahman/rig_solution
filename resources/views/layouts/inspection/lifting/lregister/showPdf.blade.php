@@ -1,3 +1,6 @@
+@php
+    $footerAddress = $footerAddress ?? \App\Models\GeneralInfo\FooterAddress::getFooterAddress();
+@endphp
 <!DOCTYPE html>
 <html>
 <head>
@@ -126,13 +129,7 @@
                             <div>{{ $page_text }}</div>
                         @endif
                     </td>
-                    <td style="width: 30%;" class="right header-contact">
-                        <div><strong>Head Office: Block# 3053|Hamdy Ramadan street</strong></div>
-                        <div><strong>2nd Floor #2 |El-Mearag City|Maadi|Cairo|Egypt</strong></div>
-                        <div><strong>+20 2 24477058 | +20 1032703368</strong></div>
-                        <div><strong>rse@rigsolutionz.com</strong></div>
-                        <div><strong>www.rigsolutionz.com</strong></div>
-                    </td>
+                    <td style="width: 30%;" class="right header-contact"></td>
                 </tr>
             </table>
 
@@ -279,10 +276,12 @@
                     <td class="page-no">{{ $loop->iteration }} of {{ $total }}</td>
                 </tr>
             </table>
-            <table class="borderless" style="margin-top: 4px;">
+            <table class="borderless" style="margin-top: 4px; text-align: center; width: 100%;">
                 <tr>
-                    <td class="center">
-                        <img src="{{ $footer_image_path }}" alt="footer" class="footer-image">
+                    <td class="center" style="font-size: 9px; font-weight: bold;">
+                        <div>{{ $footerAddress->address_line_1 }}</div>
+                        <div>{{ $footerAddress->address_line_2 }}</div>
+                        <div>{{ $footerAddress->phone }} | {{ $footerAddress->mobile }} | {{ $footerAddress->email }} | {{ $footerAddress->website }}</div>
                     </td>
                 </tr>
             </table>
