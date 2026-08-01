@@ -58,15 +58,16 @@
 
                     <div class="btn-group ml-1" style="direction: ltr;">
                         <button type="button" class="btn btn-primary btn-print btn-lg dropdown-toggle" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
-                            <i class="la la-download mr-50"></i> Download <i class="la la-angle-down ml-50"></i>
+                            <i class="la la-download mr-50"></i> Download
                         </button>
-                        <div class="dropdown-menu dropdown-menu-right">
-                            <a class="dropdown-item" target="_blank" href="{{URL('storage/'.$folder.'/'.$imageurl.'.pdf')}}">
-                                <i class="la la-file-pdf-o text-danger mr-1" style="font-size: 1.2rem;"></i> Download PDF
+                        <div class="dropdown-menu dropdown-menu-right shadow-lg p-1" style="min-width: 280px; width: max-content; border-radius: 8px;">
+                            <h6 class="dropdown-header text-bold-600 px-1 mb-0" style="color: #4B4B4B; white-space: nowrap;"><i class="la la-download"></i> Choose Format / اختر الصيغة:</h6>
+                            <div class="dropdown-divider my-1"></div>
+                            <a class="dropdown-item py-2 px-1" target="_blank" href="{{URL('storage/'.$folder.'/'.$imageurl.'.pdf')}}" style="font-size: 14px; border-radius: 5px;">
+                                <i class="la la-file-pdf-o text-danger font-medium-3 mr-1" style="vertical-align: middle;"></i> <strong>PDF</strong> Document
                             </a>
-                            <div class="dropdown-divider"></div>
-                            <a class="dropdown-item" href="{{ route('lregister.exportExcel', $lregister->id) }}">
-                                <i class="la la-file-excel-o text-success mr-1" style="font-size: 1.2rem;"></i> Download Excel
+                            <a class="dropdown-item py-2 px-1" href="{{ route('lregister.exportExcel', $lregister->id) }}" style="font-size: 14px; border-radius: 5px;">
+                                <i class="la la-file-excel-o text-success font-medium-3 mr-1" style="vertical-align: middle;"></i> <strong>Excel</strong> Spreadsheet
                             </a>
                         </div>
                     </div>

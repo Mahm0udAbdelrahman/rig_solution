@@ -33,7 +33,7 @@ class MpiptController extends Controller
      */
     public function index()
     {
-        $mpipts = Mpipt::count();
+        $mpipts = Mpipt::exists() ? 1 : 0;
         return view('layouts.inspection.ndt.mpipt.index', ['page_name' => $this->page_name('All', $this->page_name), 'mpipts' => $mpipts]);
     }
 
@@ -45,14 +45,7 @@ class MpiptController extends Controller
         $canViewClient = Auth::user()->hasPermission('client', 'show');
         $canViewSupplier = Auth::user()->hasPermission('supplier', 'show');
 
-        $latestRows = Mpipt::query()
-            ->selectRaw('MAX(mpipts.id) as id')
-            ->groupBy('mpipts.job_request_id', 'mpipts.code');
-
         $data = Mpipt::query()
-            ->joinSub($latestRows, 'latest_mpipts', function ($join) {
-                $join->on('mpipts.id', '=', 'latest_mpipts.id');
-            })
             ->join('job_requests', 'mpipts.job_request_id', '=', 'job_requests.id')
             ->join('inspection_reports', function ($join) {
                 $join->on('mpipts.id', '=', 'inspection_reports.reportable_id')
@@ -93,7 +86,12 @@ class MpiptController extends Controller
 
         $this->applyInspectionApprovalPresetFilter($data, request('smart_preset'));
 
+        $totalCount = InspectionReport::query()
+            ->where('reportable_type', Mpipt::class)
+            ->count();
+
         return Datatables::eloquent($data)
+            ->setTotalRecords($totalCount)
             
             ->addColumn('approval_status', function ($row) {
                 return $this->inspectionApprovalStatusValueByRow($row);

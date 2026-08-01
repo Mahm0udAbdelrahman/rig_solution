@@ -138,31 +138,9 @@
 										@if($mailcenterComposeUrl && auth()->user()->can('create', App\Models\WorkFlow\MailCenter::class))
 											<a class="btn btn-info btn-print btn-lg ml-1" href="{{ $mailcenterComposeUrl }}">Send via Rig MailCenter <i class="la la-envelope-o mr-50"></i></a>
 										@endif
-										@if (Storage::disk('public')->exists($folder.'/'.$imageurl.'.pdf') || !empty($downloadExcelUrl))
+										@if (Storage::disk('public')->exists($folder.'/'.$imageurl.'.pdf'))
 											<button type="button" id="print" class="btn btn-secondary btn-print btn-lg ml-1">Print Page <i class="la la-paper-plane-o mr-50"></i></button>
-											<div class="btn-group ml-1">
-												<button type="button" class="btn btn-primary btn-print btn-lg dropdown-toggle" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
-													Download <i class="la la-download mr-50"></i>
-												</button>
-												<div class="dropdown-menu dropdown-menu-right shadow-lg p-1" style="min-width: 210px; border-radius: 8px;">
-													<h6 class="dropdown-header text-bold-600 px-1 mb-0" style="color: #4B4B4B;"><i class="la la-download"></i> Choose Format / اختر الصيغة:</h6>
-													<div class="dropdown-divider my-1"></div>
-													@if (Storage::disk('public')->exists($folder.'/'.$imageurl.'.pdf'))
-													<a class="dropdown-item py-2 px-1" target="_blank" href="{{ $downloadPdfUrl }}" style="font-size: 14px; border-radius: 5px;">
-														<i class="la la-file-pdf-o text-danger font-medium-3 mr-1" style="vertical-align: middle;"></i> <strong>PDF</strong> Document
-													</a>
-													@endif
-													@if (!empty($downloadExcelUrl))
-													<a class="dropdown-item py-2 px-1" href="{{ $downloadExcelUrl }}" style="font-size: 14px; border-radius: 5px;">
-														<i class="la la-file-excel-o text-success font-medium-3 mr-1" style="vertical-align: middle;"></i> <strong>Excel</strong> Spreadsheet
-													</a>
-													@else
-													<a class="dropdown-item py-2 px-1 js-export-page-excel" href="javascript:void(0);" style="font-size: 14px; border-radius: 5px;">
-														<i class="la la-file-excel-o text-success font-medium-3 mr-1" style="vertical-align: middle;"></i> <strong>Excel</strong> Spreadsheet
-													</a>
-													@endif
-												</div>
-											</div>
+											<a class="btn btn-primary btn-print btn-lg ml-1" target="_blank" href="{{ $downloadPdfUrl }}">Download <i class="la la-download mr-50"></i></a>
 										@endif
 										<button type="button" id="uploadpdf" class="btn btn-dark btn-print btn-lg">Upload / Update PDF <i class="la la-paper-plane-o"></i></button>
 							      </div>
