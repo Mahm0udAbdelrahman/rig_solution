@@ -33,7 +33,7 @@ class MpiptController extends Controller
      */
     public function index()
     {
-        $mpipts = Mpipt::count();
+        $mpipts = Mpipt::exists() ? 1 : 0;
         return view('layouts.inspection.ndt.mpipt.index', ['page_name' => $this->page_name('All', $this->page_name), 'mpipts' => $mpipts]);
     }
 
@@ -45,13 +45,13 @@ class MpiptController extends Controller
         $canViewClient = Auth::user()->hasPermission('client', 'show');
         $canViewSupplier = Auth::user()->hasPermission('supplier', 'show');
 
-        $latestRows = Mpipt::query()
-            ->selectRaw('MAX(mpipts.id) as id')
-            ->groupBy('mpipts.job_request_id', 'mpipts.code');
-
         $data = Mpipt::query()
-            ->joinSub($latestRows, 'latest_mpipts', function ($join) {
-                $join->on('mpipts.id', '=', 'latest_mpipts.id');
+            ->whereNotExists(function ($sub) {
+                $sub->select(DB::raw(1))
+                    ->from('mpipts as m2')
+                    ->whereColumn('m2.job_request_id', 'mpipts.job_request_id')
+                    ->whereColumn('m2.code', 'mpipts.code')
+                    ->whereColumn('m2.id', '>', 'mpipts.id');
             })
             ->join('job_requests', 'mpipts.job_request_id', '=', 'job_requests.id')
             ->join('inspection_reports', function ($join) {
@@ -91,10 +91,39 @@ class MpiptController extends Controller
                 DB::raw("COALESCE(clients.name, suppliers.name) as client"),
             ]);
 
-        $this->applyInspectionApprovalPresetFilter($data, request('smart_preset'));
+        $preset = request('smart_preset', '');
+        $this->applyInspectionApprovalPresetFilter($data, $preset);
 
-        return Datatables::eloquent($data)
+        $overallCount = \Illuminate\Support\Facades\Cache::remember('mpipts_dt_overall_count', 600, function () {
+            return Mpipt::query()
+                ->whereNotExists(function ($sub) {
+                    $sub->select(DB::raw(1))
+                        ->from('mpipts as m2')
+                        ->whereColumn('m2.job_request_id', 'mpipts.job_request_id')
+                        ->whereColumn('m2.code', 'mpipts.code')
+                        ->whereColumn('m2.id', '>', 'mpipts.id');
+                })
+                ->join('job_requests', 'mpipts.job_request_id', '=', 'job_requests.id')
+                ->join('inspection_reports', function ($join) {
+                    $join->on('mpipts.id', '=', 'inspection_reports.reportable_id')
+                        ->where('inspection_reports.reportable_type', '=', 'App\Models\Inspection\Ndt\Mpipt');
+                })
+                ->count();
+        });
 
+        $presetKey = $preset ?: 'all';
+        $filteredCount = \Illuminate\Support\Facades\Cache::remember('mpipts_dt_preset_count_' . $presetKey, 600, function () use ($data) {
+            return (clone $data)->count();
+        });
+
+        $dataTable = Datatables::eloquent($data)
+            ->setTotalRecords($overallCount);
+
+        if (empty(request('search.value'))) {
+            $dataTable->setFilteredRecords($filteredCount);
+        }
+
+        return $dataTable
             ->addColumn('approval_status', function ($row) {
                 return $this->inspectionApprovalStatusValueByRow($row);
             })

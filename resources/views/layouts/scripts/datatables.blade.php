@@ -131,6 +131,9 @@
 						orderCellsTop: useFilterRow,
 						fixedHeader: fixedHeaderOptions,
 						searchDelay: searchDelayMs,
+						language: {
+							infoFiltered: ""
+						},
 						// stateSave: true,
 						processing: true,
 						serverSide: true,
