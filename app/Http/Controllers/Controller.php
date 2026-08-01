@@ -133,7 +133,7 @@ class Controller extends BaseController
         }
 
 		if(count($approved_reports_related) != 0)
-		{	
+		{
             $latestRelatedReportable = $approved_reports_related->last();
             if ($latestRelatedReportable && isset($latestRelatedReportable->report) && $latestRelatedReportable->report) {
                 $have_edit->latest = $latestRelatedReportable->report;
@@ -747,17 +747,13 @@ class Controller extends BaseController
                 $baseCodeExpression = "TRIM(SUBSTRING_INDEX({$table}.code, ' - Duplicated', 1))";
                 $duplicatedRankExpression = "CASE WHEN {$table}.code LIKE '%Duplicated%' THEN 1 ELSE 0 END";
 
-                if ($this->queryJoinsTable($query, 'job_requests')) {
-                    $query->orderBy('job_requests.code', $orderDirection);
-                } else {
-                    $query->orderBy(
-                        DB::table('job_requests')
-                            ->select('code')
-                            ->whereColumn('job_requests.id', $table.'.job_request_id')
-                            ->limit(1),
-                        $orderDirection
-                    );
-                }
+                $query->orderBy(
+                    DB::table('job_requests')
+                        ->select('code')
+                        ->whereColumn('job_requests.id', $table.'.job_request_id')
+                        ->limit(1),
+                    $orderDirection
+                );
                 $query->orderByRaw("{$baseCodeExpression} {$orderDirection}");
                 $query->orderByRaw("{$duplicatedRankExpression} asc");
                 $query->orderBy($table.'.code', $orderDirection);
@@ -766,51 +762,39 @@ class Controller extends BaseController
 
             if (in_array($columnName, ['deploc', 'work_location', 'location'], true)
                 && Schema::hasColumn($table, 'job_request_id')) {
-                if ($this->queryJoinsTable($query, 'job_requests')) {
-                    $query->orderBy('job_requests.deploc', $orderDirection);
-                } else {
-                    $query->orderBy(
-                        DB::table('job_requests')
-                            ->select('deploc')
-                            ->whereColumn('job_requests.id', $table.'.job_request_id')
-                            ->limit(1),
-                        $orderDirection
-                    );
-                }
+                $query->orderBy(
+                    DB::table('job_requests')
+                        ->select('deploc')
+                        ->whereColumn('job_requests.id', $table.'.job_request_id')
+                        ->limit(1),
+                    $orderDirection
+                );
                 return;
             }
 
             if ($columnName === 'client_department' && Schema::hasColumn($table, 'job_request_id')) {
-                if ($this->queryJoinsTable($query, 'client_departments')) {
-                    $query->orderBy('client_departments.name', $orderDirection);
-                } else {
-                    $query->orderBy(
-                        DB::table('job_requests')
-                            ->leftJoin('client_departments', 'client_departments.id', '=', 'job_requests.client_department_id')
-                            ->select('client_departments.name')
-                            ->whereColumn('job_requests.id', $table.'.job_request_id')
-                            ->limit(1),
-                        $orderDirection
-                    );
-                }
+                $query->orderBy(
+                    DB::table('job_requests')
+                        ->leftJoin('client_departments', 'client_departments.id', '=', 'job_requests.client_department_id')
+                        ->select('client_departments.name')
+                        ->whereColumn('job_requests.id', $table.'.job_request_id')
+                        ->limit(1),
+                    $orderDirection
+                );
                 return;
             }
 
             if (in_array($columnName, ['client', 'client_supplier'], true)
                 && Schema::hasColumn($table, 'job_request_id')) {
-                if ($this->queryJoinsTable($query, 'clients') || $this->queryJoinsTable($query, 'suppliers')) {
-                    $query->orderByRaw("COALESCE(clients.name, suppliers.name) {$orderDirection}");
-                } else {
-                    $query->orderBy(
-                        DB::table('job_requests')
-                            ->leftJoin('clients', 'clients.id', '=', 'job_requests.client_id')
-                            ->leftJoin('suppliers', 'suppliers.id', '=', 'job_requests.supplier_id')
-                            ->selectRaw('COALESCE(clients.name, suppliers.name)')
-                            ->whereColumn('job_requests.id', $table.'.job_request_id')
-                            ->limit(1),
-                        $orderDirection
-                    );
-                }
+                $query->orderBy(
+                    DB::table('job_requests')
+                        ->leftJoin('clients', 'clients.id', '=', 'job_requests.client_id')
+                        ->leftJoin('suppliers', 'suppliers.id', '=', 'job_requests.supplier_id')
+                        ->selectRaw('COALESCE(clients.name, suppliers.name)')
+                        ->whereColumn('job_requests.id', $table.'.job_request_id')
+                        ->limit(1),
+                    $orderDirection
+                );
                 return;
             }
 
@@ -862,20 +846,8 @@ class Controller extends BaseController
 
     private function queryJoinsInspectionReportsTable($query): bool
     {
-        return $this->queryJoinsTable($query, 'inspection_reports');
-    }
-
-    private function queryJoinsJobRequestsTable($query): bool
-    {
-        return $this->queryJoinsTable($query, 'job_requests');
-    }
-
-    private function queryJoinsTable($query, string $tableName): bool
-    {
         $queryObject = method_exists($query, 'getQuery') ? $query->getQuery() : $query;
         $joins = is_object($queryObject) && property_exists($queryObject, 'joins') ? ($queryObject->joins ?: []) : [];
-
-        $tableNamePattern = '/\b' . preg_quote(trim($tableName), '/') . '\b/i';
 
         foreach ($joins as $join) {
             $table = null;
@@ -883,13 +855,13 @@ class Controller extends BaseController
                 $table = $join->table;
             }
 
-            if (is_string($table) && preg_match($tableNamePattern, $table)) {
+            if (is_string($table) && preg_match('/\binspection_reports\b/i', $table)) {
                 return true;
             }
 
             if (is_object($table) && method_exists($table, '__toString')) {
                 $tableSql = (string) $table;
-                if (preg_match($tableNamePattern, $tableSql)) {
+                if (preg_match('/\binspection_reports\b/i', $tableSql)) {
                     return true;
                 }
             }
@@ -1072,10 +1044,9 @@ class Controller extends BaseController
             $subQuery->select(DB::raw(1))
                 ->from(DB::raw($table.' as newer_revisions'))
                 ->whereColumn('newer_revisions.job_request_id', $table.'.job_request_id')
-                ->where(function ($codeCond) use ($table) {
-                    $codeCond->whereColumn('newer_revisions.code', $table.'.code')
-                        ->orWhereRaw("TRIM(SUBSTRING_INDEX(newer_revisions.code, ' - Duplicated', 1)) = TRIM(SUBSTRING_INDEX({$table}.code, ' - Duplicated', 1))");
-                })
+                ->whereRaw(
+                    "TRIM(SUBSTRING_INDEX(newer_revisions.code, ' - Duplicated', 1)) = TRIM(SUBSTRING_INDEX({$table}.code, ' - Duplicated', 1))"
+                )
                 ->where(function ($nestedQuery) use ($table) {
                     $nestedQuery->whereColumn('newer_revisions.created_at', '>', $table.'.created_at')
                         ->orWhere(function ($tieBreakerQuery) use ($table) {
