@@ -50,19 +50,26 @@ class ThroughExaminationController extends Controller
      */
     public function index()
     {
-        $throughexaminations = ThroughExamination::exists() ? 1 : 0;
-        return view('layouts.inspection.lifting.through-examination.index', ['page_name' => $this->page_name('All', $this->page_name), 'throughexaminations' => $throughexaminations]);
+				$throughexaminations = ThroughExamination::count();
+				return view('layouts.inspection.lifting.through-examination.index', ['page_name' => $this->page_name('All', $this->page_name), 'throughexaminations' => $throughexaminations]);
     }
 
-    public function getDataForDataTable()
-    {
+		public function getDataForDataTable()
+		{
       $canViewThroughExamination = Auth::user()->hasPermission('throughexamination', 'show');
       $canUpdateThroughExamination = Auth::user()->hasPermission('throughexamination', 'edit');
       $canDeleteThroughExamination = Auth::user()->hasPermission('throughexamination', 'delete');
       $canViewClient = Auth::user()->hasPermission('client', 'show');
       $canViewSupplier = Auth::user()->hasPermission('supplier', 'show');
 
+      $latestRows = ThroughExamination::query()
+            ->selectRaw('MAX(through_examinations.id) as id')
+            ->groupBy('through_examinations.job_request_id', 'through_examinations.code');
+
       $data = ThroughExamination::query()
+            ->joinSub($latestRows, 'latest_through_examinations', function ($join) {
+                  $join->on('through_examinations.id', '=', 'latest_through_examinations.id');
+              })
             ->join('job_requests', 'through_examinations.job_request_id', '=', 'job_requests.id')
             ->join('inspection_reports', function ($join) {
                   $join->on('through_examinations.id', '=', 'inspection_reports.reportable_id')
@@ -99,14 +106,9 @@ class ThroughExaminationController extends Controller
                 DB::raw("COALESCE(clients.name, suppliers.name) as client"),
             ]);
 
-        $this->applyInspectionApprovalPresetFilter($data, request('smart_preset'));
+				$this->applyInspectionApprovalPresetFilter($data, request('smart_preset'));
 
-        $totalCount = InspectionReport::query()
-            ->where('reportable_type', ThroughExamination::class)
-            ->count();
-
-        return Datatables::eloquent($data)
-            ->setTotalRecords($totalCount)
+				return  Datatables::eloquent($data)
 ->addColumn('id_number', function ($row) {
                     if(!empty($row->lter_10['pop1']))
                     {
@@ -223,7 +225,7 @@ class ThroughExaminationController extends Controller
                                 break;
                         }
                     })
-							
+
             ->filter(function ($query) {
                 $this->applyInspectionGlobalSearch($query, request('search.value'));
             })
@@ -369,7 +371,7 @@ class ThroughExaminationController extends Controller
     {
       $have_edit = $this->check_if_report_edit(ThroughExamination::class, $throughExamination);
       $throughExamination->report = $have_edit->default;
-		  
+
       return view('layouts.inspection.lifting.through-examination.show', [
         'page_name' => 'Thorough Examination Certificate Of Lifting Equipment',
         'page_text'=>'This report complies with the requirements of the Lifting Operations and Lifting Equipment Regulations 1998',
