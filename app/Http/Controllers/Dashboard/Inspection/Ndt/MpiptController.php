@@ -45,14 +45,13 @@ class MpiptController extends Controller
         $canViewClient = Auth::user()->hasPermission('client', 'show');
         $canViewSupplier = Auth::user()->hasPermission('supplier', 'show');
 
-        $latestRows = Mpipt::query()
-            ->selectRaw('MAX(mpipts.id) as id')
-            ->groupBy('mpipts.job_request_id', 'mpipts.code');
-
         $data = Mpipt::query()
-            ->joinSub($latestRows, 'latest_mpipts', function ($join) {
-                $join->on('mpipts.id', '=', 'latest_mpipts.id');
+            ->leftJoin('mpipts as latest_check', function ($join) {
+                $join->on('mpipts.job_request_id', '=', 'latest_check.job_request_id')
+                    ->on('mpipts.code', '=', 'latest_check.code')
+                    ->on('mpipts.id', '<', 'latest_check.id');
             })
+            ->whereNull('latest_check.id')
             ->join('job_requests', 'mpipts.job_request_id', '=', 'job_requests.id')
             ->join('inspection_reports', function ($join) {
                 $join->on('mpipts.id', '=', 'inspection_reports.reportable_id')
@@ -209,6 +208,14 @@ class MpiptController extends Controller
                         break;
                 }
             })
+
+            ->orderColumn('code', 'mpipts.id $1')
+            ->orderColumn('client_department', 'client_departments.name $1')
+            ->orderColumn('deploc', 'job_requests.deploc $1')
+            ->orderColumn('acceptance', 'mpipts.acceptance $1')
+            ->orderColumn('desc', 'mpipts.desc $1')
+            ->orderColumn('client', 'COALESCE(clients.name, suppliers.name) $1')
+            ->orderColumn('nmpr_28', 'mpipts.nmpr_28 $1')
 
             ->filter(function ($query) {
                 $this->applyInspectionGlobalSearch($query, request('search.value'));

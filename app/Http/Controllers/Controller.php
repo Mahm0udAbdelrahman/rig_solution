@@ -1044,16 +1044,8 @@ class Controller extends BaseController
             $subQuery->select(DB::raw(1))
                 ->from(DB::raw($table.' as newer_revisions'))
                 ->whereColumn('newer_revisions.job_request_id', $table.'.job_request_id')
-                ->whereRaw(
-                    "TRIM(SUBSTRING_INDEX(newer_revisions.code, ' - Duplicated', 1)) = TRIM(SUBSTRING_INDEX({$table}.code, ' - Duplicated', 1))"
-                )
-                ->where(function ($nestedQuery) use ($table) {
-                    $nestedQuery->whereColumn('newer_revisions.created_at', '>', $table.'.created_at')
-                        ->orWhere(function ($tieBreakerQuery) use ($table) {
-                            $tieBreakerQuery->whereColumn('newer_revisions.created_at', $table.'.created_at')
-                                ->whereColumn('newer_revisions.id', '>', $table.'.id');
-                        });
-                });
+                ->whereColumn('newer_revisions.code', $table.'.code')
+                ->whereColumn('newer_revisions.id', '>', $table.'.id');
         });
     }
 

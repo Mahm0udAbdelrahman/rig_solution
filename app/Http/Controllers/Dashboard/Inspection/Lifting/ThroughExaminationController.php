@@ -62,14 +62,13 @@ class ThroughExaminationController extends Controller
       $canViewClient = Auth::user()->hasPermission('client', 'show');
       $canViewSupplier = Auth::user()->hasPermission('supplier', 'show');
 
-      $latestRows = ThroughExamination::query()
-            ->selectRaw('MAX(through_examinations.id) as id')
-            ->groupBy('through_examinations.job_request_id', 'through_examinations.code');
-
       $data = ThroughExamination::query()
-            ->joinSub($latestRows, 'latest_through_examinations', function ($join) {
-                  $join->on('through_examinations.id', '=', 'latest_through_examinations.id');
-              })
+            ->leftJoin('through_examinations as latest_check', function ($join) {
+                $join->on('through_examinations.job_request_id', '=', 'latest_check.job_request_id')
+                    ->on('through_examinations.code', '=', 'latest_check.code')
+                    ->on('through_examinations.id', '<', 'latest_check.id');
+            })
+            ->whereNull('latest_check.id')
             ->join('job_requests', 'through_examinations.job_request_id', '=', 'job_requests.id')
             ->join('inspection_reports', function ($join) {
                   $join->on('through_examinations.id', '=', 'inspection_reports.reportable_id')
@@ -108,25 +107,19 @@ class ThroughExaminationController extends Controller
 
 				$this->applyInspectionApprovalPresetFilter($data, request('smart_preset'));
 
-				return  Datatables::eloquent($data)
-->addColumn('id_number', function ($row) {
-                    if(!empty($row->lter_10['pop1']))
-                    {
-                        return $row->lter_10['pop1'];
-                    }
-                })
-              ->addColumn('desc', function ($row) {
-                    if(!empty($row->lter_10['pop20']))
-                    {
-                        return $row->lter_10['pop20'];
-                    }
-                })
-              ->addColumn('swl', function ($row) {
-                    if(!empty($row->lter_10['pop4']))
-                    {
-                        return $row->lter_10['pop4'];
-                    }
-                })
+				return Datatables::eloquent($data)
+					->addColumn('id_number', function ($row) {
+						$lter10 = is_string($row->lter_10) ? json_decode($row->lter_10, true) : (array) $row->lter_10;
+						return is_array($lter10) ? ($lter10['pop1'] ?? '') : '';
+					})
+					->addColumn('desc', function ($row) {
+						$lter10 = is_string($row->lter_10) ? json_decode($row->lter_10, true) : (array) $row->lter_10;
+						return is_array($lter10) ? ($lter10['pop20'] ?? '') : '';
+					})
+					->addColumn('swl', function ($row) {
+						$lter10 = is_string($row->lter_10) ? json_decode($row->lter_10, true) : (array) $row->lter_10;
+						return is_array($lter10) ? ($lter10['pop4'] ?? '') : '';
+					})
               ->addColumn('client', function ($row) use ($canViewClient, $canViewSupplier) {
                   $label = e((string) $row->client);
                   if ($label === '') {
@@ -225,6 +218,14 @@ class ThroughExaminationController extends Controller
                                 break;
                         }
                     })
+
+            ->orderColumn('code', 'through_examinations.id $1')
+            ->orderColumn('id_number', 'through_examinations.id $1')
+            ->orderColumn('desc', 'through_examinations.id $1')
+            ->orderColumn('swl', 'through_examinations.id $1')
+            ->orderColumn('client_department', 'client_departments.name $1')
+            ->orderColumn('deploc', 'job_requests.deploc $1')
+            ->orderColumn('client', 'COALESCE(clients.name, suppliers.name) $1')
 
             ->filter(function ($query) {
                 $this->applyInspectionGlobalSearch($query, request('search.value'));
