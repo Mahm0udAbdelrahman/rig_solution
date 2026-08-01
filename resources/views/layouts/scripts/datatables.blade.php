@@ -23,7 +23,7 @@
 
 				var disableColumnFilters = [];
 				@isset($disable_column_filters)disableColumnFilters = {!! json_encode($disable_column_filters) !!};@endisset
-				
+
 				var route = "{{ route('getDataForDataTable.'.$route) }}";
 				@isset($route_param)
 					route = "{{ route('getDataForDataTable.'.$route, $route_param) }}";
@@ -131,9 +131,6 @@
 						orderCellsTop: useFilterRow,
 						fixedHeader: fixedHeaderOptions,
 						searchDelay: searchDelayMs,
-						language: {
-							infoFiltered: ""
-						},
 						// stateSave: true,
 						processing: true,
 						serverSide: true,
@@ -221,7 +218,7 @@
 														}, filterDebounceMs);
 												});
 										}
-										
+
 								});
 
 								if (isInspectionListing) {
