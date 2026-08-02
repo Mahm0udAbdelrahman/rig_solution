@@ -115,10 +115,10 @@ class CraneController extends Controller
 				$query->whereRaw("CONCAT(job_requests.code,'/',cranes.code) like ?", ["%{$keyword}%"]);
 			})
 			->filterColumn('id_number', function ($query, $keyword) {
-				$query->whereRaw("lcr_12 like ?", ["%{$keyword}%"]);
+				$query->whereRaw("cranes.lcr_12 like ?", ["%{$keyword}%"]);
 			})
 			->filterColumn('desc', function ($query, $keyword) {
-				$query->whereRaw("lcr_10 like ?", ["%{$keyword}%"]);
+				$query->whereRaw("cranes.lcr_10 like ?", ["%{$keyword}%"]);
 			})
 			->filterColumn('client', function ($query, $keyword) {
 				$query->whereRaw("clients.name like ?", ["%{$keyword}%"]);

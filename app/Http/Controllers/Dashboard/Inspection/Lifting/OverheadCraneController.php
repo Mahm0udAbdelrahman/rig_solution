@@ -169,10 +169,10 @@ class OverheadCraneController extends Controller
                 $query->whereRaw("CONCAT(job_requests.code,'/',overhead_cranes.code) like ?", ["%{$keyword}%"]);
             })
             ->filterColumn('id_number', function($query, $keyword){
-                $query->whereRaw("locr_12 like ?", ["%{$keyword}%"]);
+                $query->whereRaw("overhead_cranes.locr_12 like ?", ["%{$keyword}%"]);
             })
             ->filterColumn('desc', function($query, $keyword){
-                $query->whereRaw("locr_10 like ?", ["%{$keyword}%"]);
+                $query->whereRaw("overhead_cranes.locr_10 like ?", ["%{$keyword}%"]);
             })
             ->filterColumn('client', function($query, $keyword){
                 $query->whereRaw("clients.name like ?", ["%{$keyword}%"]);

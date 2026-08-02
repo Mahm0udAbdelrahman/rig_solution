@@ -175,10 +175,10 @@ class ForkliftController extends Controller
                   $query->whereRaw("CONCAT(job_requests.code,'/',forklifts.code) like ?", ["%{$keyword}%"]);
 							 		})
 						 	->filterColumn('id_number', function($query, $keyword){
-								 	$query->whereRaw("lfr_12 like ?", ["%{$keyword}%"]);
+								 	$query->whereRaw("forklifts.lfr_12 like ?", ["%{$keyword}%"]);
 						 		})
 						 	->filterColumn('desc', function($query, $keyword){
-								 	$query->whereRaw("lfr_10 like ?", ["%{$keyword}%"]);
+								 	$query->whereRaw("forklifts.lfr_10 like ?", ["%{$keyword}%"]);
 						 		})
 
               // ->filterColumn('code', function($query, $keyword){

@@ -159,7 +159,7 @@ class DefectController extends Controller
 				$query->whereRaw("CONCAT(job_requests.code,'/',defects.code) like ?", ["%{$keyword}%"]);
 			})
             ->filterColumn('id_number', function ($query, $keyword) {
-                $query->whereRaw("JSON_EXTRACT(ldr_8, '$[0].\"lcr_10\"') like ?", ["%{$keyword}%"]);
+                $query->whereRaw("JSON_EXTRACT(defects.ldr_8, '$[0].\"lcr_10\"') like ?", ["%{$keyword}%"]);
             })
             ->filterColumn('client', function ($query, $keyword) {
                 $query->whereHas('job_request', function ($row) use (&$keyword) {

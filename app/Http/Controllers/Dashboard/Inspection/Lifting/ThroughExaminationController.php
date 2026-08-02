@@ -181,13 +181,13 @@ class ThroughExaminationController extends Controller
 					    	})
 
 						 	->filterColumn('id_number', function($query, $keyword){
-								 	$query->whereRaw("lter_10 like ?", ["%{$keyword}%"]);
+								 	$query->whereRaw("through_examinations.lter_10 like ?", ["%{$keyword}%"]);
 						 		})
 						 	->filterColumn('desc', function($query, $keyword){
-								 	$query->whereRaw("lter_10 like ?", ["%{$keyword}%"]);
+								 	$query->whereRaw("through_examinations.lter_10 like ?", ["%{$keyword}%"]);
 						 		})
 						 	->filterColumn('swl', function($query, $keyword){
-								 	$query->whereRaw("lter_10 like ?", ["%{$keyword}%"]);
+								 	$query->whereRaw("through_examinations.lter_10 like ?", ["%{$keyword}%"]);
 			 	        })
               ->filterColumn('code', function($query, $keyword){
                 $query->whereRaw("CONCAT(job_requests.code,'/',through_examinations.code) like ?", ["%{$keyword}%"]);
