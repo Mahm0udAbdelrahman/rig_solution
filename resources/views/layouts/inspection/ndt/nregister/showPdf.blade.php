@@ -207,9 +207,7 @@
         <table class="borderless" style="margin-top: 4px; text-align: center; width: 100%;">
             <tr>
                 <td class="center" style="font-size: 9px; font-weight: bold;">
-                    <div>{{ $footerAddress->address_line_1 }}</div>
-                    <div>{{ $footerAddress->address_line_2 }}</div>
-                    <div>{{ $footerAddress->phone }} | {{ $footerAddress->mobile }} | {{ $footerAddress->email }} | {{ $footerAddress->website }}</div>
+                    <div>{{ $footerAddress->getPartsPlainText() }}</div>
                 </td>
             </tr>
         </table>

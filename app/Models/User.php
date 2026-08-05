@@ -29,6 +29,7 @@ class User extends Authenticatable
         'role_id',
         'is_super_admin',
         'is_active',
+        'is_suspended',
         'last_active_at',
     ];
 
@@ -50,6 +51,7 @@ class User extends Authenticatable
 
     protected $casts = [
         'email_verified_at' => 'datetime',
+        'is_suspended' => 'boolean',
     ];
 
     public function findForPassport($username)

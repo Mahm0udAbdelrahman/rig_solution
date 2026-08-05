@@ -201,6 +201,8 @@ Route::group(
                 Route::get('employee/getDataForDataTable', [App\Http\Controllers\Dashboard\Organization\EmployeeController::class, 'getDataForDataTable'])->name('getDataForDataTable.employee');
                 Route::resource('employee', App\Http\Controllers\Dashboard\Organization\EmployeeController::class);
                 Route::get('user/getDataForDataTable', [App\Http\Controllers\Dashboard\Organization\UserController::class, 'getDataForDataTable'])->name('getDataForDataTable.user');
+                Route::post('user/bulk-toggle-status', [App\Http\Controllers\Dashboard\Organization\UserController::class, 'bulkToggleStatus'])->name('user.bulkToggleStatus');
+                Route::post('user/{user}/toggle-status', [App\Http\Controllers\Dashboard\Organization\UserController::class, 'toggleStatus'])->name('user.toggleStatus');
                 Route::resource('user', App\Http\Controllers\Dashboard\Organization\UserController::class);
                 Route::get('role/getDataForDataTable', [App\Http\Controllers\Dashboard\Organization\RoleController::class, 'getDataForDataTable'])->name('getDataForDataTable.role');
                 Route::resource('role', App\Http\Controllers\Dashboard\Organization\RoleController::class);

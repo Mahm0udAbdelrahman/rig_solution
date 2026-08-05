@@ -142,13 +142,8 @@
 									</div>
 										<div class="row mt-1 text-center" style="font-size: 10px; font-weight: 700; color: #000; justify-content: center; width: 100%;">
 												<div class="col-12 text-center">
-														<p class="mb-0">{{ $footerAddress->address_line_1 }}</p>
-														<p class="mb-0">{{ $footerAddress->address_line_2 }}</p>
 														<p class="mb-0">
-																<i class="ft-phone"></i> : {{ $footerAddress->phone }} |
-																<i class="ft-smartphone"></i> : {{ $footerAddress->mobile }} |
-																<i class="ft-mail"></i> : {{ $footerAddress->email }} |
-																Website: <a href="http://{{ str_replace(['http://', 'https://'], '', $footerAddress->website) }}" target="_blank">{{ $footerAddress->website }}</a>
+																{!! $footerAddress->getPartsHtml() !!}
 														</p>
 												</div>
 										</div>
@@ -161,17 +156,18 @@
 					if (!$mailcenterComposeUrl && !empty($for_approve_url) && isset($folder) && !str_contains((string) $folder, 'workflow')) {
 						$mailcenterComposeUrl = route('mailCenter.compose.related', ['relatedType' => 'inspection_report', 'relatedId' => $for_approve_url]);
 					}
-					$hasApprovedVersionForPdf = collect($have_edit ?? [])->contains(function ($editReport) {
-						return !empty($editReport['approved']);
-					});
 					$downloadPdfUrl = URL('storage/'.$folder.'/'.$imageurl.'.pdf');
 					if (!empty($for_approve_url) && isset($folder) && str_contains((string) $folder, 'pdf/inspection') && Route::has('inspection.approval.pdf')) {
 						$downloadPdfUrl = route('inspection.approval.pdf', $for_approve_url);
 					}
 					$downloadExcelUrl = $downloadExcelUrl ?? (isset($invoice) ? route('invoice.exportExcel', $invoice->id) : null);
+					$isCurrentApprovedForPdf = (!empty($user_id_approved)) || str_contains((string) ($folder ?? ''), 'workflow') || in_array(Route::currentRouteName(), ['defect.show', 'nregister.show', 'lregister.show', 'drawingInspection.show'], true) || str_contains((string) Route::currentRouteName(), 'lregister') || str_contains((string) Route::currentRouteName(), 'nregister');
+					$isCurrentPublishedPdf = $isCurrentApprovedForPdf
+						&& (!empty(data_get($model ?? null, 'report.publish')) || !empty($publish ?? null))
+						&& Storage::disk('public')->exists(($folder ?? '').'/'.($imageurl ?? '').'.pdf');
 				@endphp
-				<!-- these inspection does require approval before upload the pdf -->
-				@if($user_id_approved != Null || $hasApprovedVersionForPdf || strpos( $folder, 'workflow' ) || Route::currentRouteName() == "defect.show" || Route::currentRouteName() == "nregister.show" || Route::currentRouteName() == "drawingInspection.show")
+				<!-- action controls card: requires current version to be approved -->
+				@if($isCurrentApprovedForPdf)
 				<div class="card no-print mt-2">
 					  <div class="card-content">
 						    <div class="card-body">
@@ -179,7 +175,7 @@
 										@if($mailcenterComposeUrl && auth()->user()->can('create', App\Models\WorkFlow\MailCenter::class))
 											<a class="btn btn-info btn-print btn-lg ml-1" href="{{ $mailcenterComposeUrl }}">Send via Rig MailCenter <i class="la la-envelope-o mr-50"></i></a>
 										@endif
-										@if (Storage::disk('public')->exists($folder.'/'.$imageurl.'.pdf'))
+										@if ($isCurrentPublishedPdf)
 											<button type="button" id="print" class="btn btn-secondary btn-print btn-lg ml-1">Print Page <i class="la la-paper-plane-o mr-50"></i></button>
 											<a class="btn btn-primary btn-print btn-lg ml-1" target="_blank" href="{{ $downloadPdfUrl }}">Download <i class="la la-download mr-50"></i></a>
 										@endif

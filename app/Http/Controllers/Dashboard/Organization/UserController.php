@@ -65,6 +65,9 @@ class UserController extends Controller
                   return $row->user->last_active_at;
                 })
               ->addColumn('status', function ($row) {
+                  if ($row->user->is_suspended) {
+                      return '<span class="badge badge-danger">موقوف</span>';
+                  }
                   return $row->user->isActive();
                 })
               ->addColumn('action', function ($row) {
@@ -72,12 +75,20 @@ class UserController extends Controller
 
                     if (Auth::user()->can('update', User::find($row->user->id)))
                     {
-                        $btn .= '<a href="'.route('user.edit', $row->user->id).'" class="btn btn-icon btn-info mr-1"><i class="la la-pencil"></i></a>';
+                        $btn .= '<a href="'.route('user.edit', $row->user->id).'" class="btn btn-icon btn-info mr-1" title="Edit"><i class="la la-pencil"></i></a>';
+                        
+                        if (!$row->user->isSuperAdmin()) {
+                            if ($row->user->is_suspended) {
+                                $btn .= '<button type="button" data-id="'.$row->user->id.'" class="btn btn-icon btn-success toggle-status mr-1" title="تفعيل الحساب"><i class="la la-check-circle"></i></button>';
+                            } else {
+                                $btn .= '<button type="button" data-id="'.$row->user->id.'" class="btn btn-icon btn-warning toggle-status mr-1" title="إيقاف الحساب"><i class="la la-ban"></i></button>';
+                            }
+                        }
                     }
 
                     if (Auth::user()->can('delete', User::find($row->user->id)))
                     {
-                        $btn .= '<button type="button" data-id="'.$row->user->id.'" class="btn btn-icon btn-danger delete"><i class="la la-trash"></i></button>';
+                        $btn .= '<button type="button" data-id="'.$row->user->id.'" class="btn btn-icon btn-danger delete" title="Delete"><i class="la la-trash"></i></button>';
                     }
                     return $btn;
                 })
@@ -212,6 +223,52 @@ class UserController extends Controller
             return response()->json([
                 'success' => $this->action_message(2, $this->page_name)
             ]);
+        }
+    }
+
+    /**
+     * Toggle individual user suspension status.
+     */
+    public function toggleStatus(User $user)
+    {
+        if (Auth::user()->cannot('update', $user)) {
+            return response()->json(['error' => 'Unauthorized'], 403);
+        }
+
+        if ($user->isSuperAdmin()) {
+            return response()->json(['error' => 'لا يمكن إيقاف حساب Super Admin'], 403);
+        }
+
+        $user->is_suspended = !$user->is_suspended;
+        $user->save();
+
+        $message = $user->is_suspended ? 'تم إيقاف الحساب بنجاح' : 'تم تفعيل الحساب بنجاح';
+        return response()->json([
+            'success' => $message,
+            'is_suspended' => $user->is_suspended
+        ]);
+    }
+
+    /**
+     * Bulk suspend or activate all users.
+     */
+    public function bulkToggleStatus(Request $request)
+    {
+        $action = $request->input('action');
+        if (!in_array($action, ['suspend_all', 'activate_all'], true)) {
+            return response()->json(['error' => 'إجراء غير صالح'], 400);
+        }
+
+        if ($action === 'suspend_all') {
+            User::where('id', '!=', Auth::id())
+                ->where('is_super_admin', '!=', 1)
+                ->update(['is_suspended' => 1]);
+
+            return response()->json(['success' => 'تم إيقاف جميع الحسابات بنجاح']);
+        } else {
+            User::query()->update(['is_suspended' => 0]);
+
+            return response()->json(['success' => 'تم تفعيل جميع الحسابات بنجاح']);
         }
     }
 }

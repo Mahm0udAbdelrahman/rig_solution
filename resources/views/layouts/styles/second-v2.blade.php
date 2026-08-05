@@ -67,13 +67,8 @@
 				</div>
 				<div class="row mt-1 text-center" style="font-size: 10px; font-weight: 700; color: #000; justify-content: center; width: 100%;">
 					<div class="col-12 text-center">
-						<p class="mb-0">{{ $footerAddress->address_line_1 }}</p>
-						<p class="mb-0">{{ $footerAddress->address_line_2 }}</p>
 						<p class="mb-0">
-							<i class="ft-phone"></i> : {{ $footerAddress->phone }} |
-							<i class="ft-smartphone"></i> : {{ $footerAddress->mobile }} |
-							<i class="ft-mail"></i> : {{ $footerAddress->email }} |
-							Website: <a href="http://{{ str_replace(['http://', 'https://'], '', $footerAddress->website) }}" target="_blank">{{ $footerAddress->website }}</a>
+							{!! $footerAddress->getPartsHtml() !!}
 						</p>
 					</div>
 				</div>

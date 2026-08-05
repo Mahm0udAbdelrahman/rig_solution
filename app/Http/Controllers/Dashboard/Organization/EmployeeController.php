@@ -93,7 +93,12 @@ class EmployeeController extends Controller
                         $builder->where('name', 'like', "%{$keyword}%");
                     });
                 })
-              ->rawColumns(['esign' ,'departments', 'action'])
+              ->addColumn('is_assistant', function ($row) {
+                    return $row->is_assistant
+                        ? '<span class="badge badge-warning">Assistant</span>'
+                        : '<span class="badge badge-light-secondary">No</span>';
+                })
+              ->rawColumns(['esign', 'departments', 'is_assistant', 'action'])
               ->make('true');
     }
 
@@ -142,6 +147,7 @@ class EmployeeController extends Controller
             'tel' => $request->utel,
             'esign' => $path_crypt,
             'desc' => $request->desc,
+            'is_assistant' => $request->has('is_assistant') ? 1 : 0,
         ]);
 
         if ($store_employee)
@@ -246,6 +252,7 @@ class EmployeeController extends Controller
             'esign' => $path_crypt,
             'avatar' => $avatarPath,
             'desc' => $request->desc,
+            'is_assistant' => $request->has('is_assistant') ? 1 : 0,
         ]);
 
         if ($update)

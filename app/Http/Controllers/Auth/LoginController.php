@@ -55,30 +55,44 @@ class LoginController extends Controller
 
     protected function attemptLogin(Request $request)
     {
-        $employee_id = Employee::select('id')->where('email' ,$request->employee_id)->first();
+        $employee = Employee::select('id')->where('email', $request->employee_id)->first();
 
-        if ($employee_id != NULL)
-				{
-          	$request['employee_id'] = $employee_id->id;
-        }
-				else
-				{
-          	$request['employee_id'] = NULL;
+        if ($employee != NULL) {
+            $request->merge(['employee_id' => $employee->id]);
+        } else {
+            $request->merge(['employee_id' => NULL]);
         }
 
         $credentials = $request->only('employee_id', 'password');
 
-        if (Auth::attempt($credentials))
-				{
-            DB::table('users')->where('id', Auth::id())->update([
-                'is_active' => 1,
-                'last_active_at' => \Carbon\Carbon::now(),
-            ]);
-            
-           	$request->session()->regenerate();
-           	return redirect()->intended('dashboard');
+        return Auth::attempt($credentials, $request->filled('remember'));
+    }
+
+    /**
+     * The user has been authenticated.
+     *
+     * @param  \Illuminate\Http\Request  $request
+     * @param  mixed  $user
+     * @return mixed
+     */
+    protected function authenticated(Request $request, $user)
+    {
+        if ($user && $user->is_suspended && !$user->isSuperAdmin()) {
+            Auth::guard('web')->logout();
+            $request->session()->invalidate();
+            $request->session()->regenerateToken();
+
+            return redirect()->route('login')
+                ->withInput($request->only('employee_id'))
+                ->withErrors(['employee_id' => 'تم إيقاف حسابك مؤقتاً']);
         }
 
+        DB::table('users')->where('id', $user->id)->update([
+            'is_active' => 1,
+            'last_active_at' => \Carbon\Carbon::now(),
+        ]);
+
+        return redirect()->intended($this->redirectPath());
     }
 
     public function username()

@@ -45,6 +45,7 @@ class InspectionReportLifecycleServiceTest extends TestCase
             'status' => 1,
             'publish' => null,
             'user_id' => 3,
+            'sync' => 1,
             'user_id_approved' => 17,
         ]);
 
@@ -68,6 +69,7 @@ class InspectionReportLifecycleServiceTest extends TestCase
             'status' => 1,
             'publish' => null,
             'user_id' => 2,
+            'sync' => 1,
             'user_id_edit' => null,
             'user_id_approved' => null,
         ]);
@@ -96,6 +98,7 @@ class InspectionReportLifecycleServiceTest extends TestCase
             'status' => 1,
             'publish' => null,
             'user_id' => 13,
+            'sync' => 1,
             'user_id_edit' => null,
             'user_id_approved' => null,
         ]);
@@ -117,6 +120,8 @@ class InspectionReportLifecycleServiceTest extends TestCase
                 'code' => '001',
                 'status' => 1,
                 'publish' => 1,
+                'user_id' => 1,
+                'sync' => 1,
                 'user_id_approved' => 7,
             ]);
 
@@ -127,6 +132,8 @@ class InspectionReportLifecycleServiceTest extends TestCase
                 'code' => '002',
                 'status' => 1,
                 'publish' => 1,
+                'user_id' => 1,
+                'sync' => 1,
                 'user_id_approved' => 7,
             ]);
 
@@ -136,6 +143,8 @@ class InspectionReportLifecycleServiceTest extends TestCase
             'code' => '002 - Duplicated',
             'status' => 1,
             'publish' => null,
+            'user_id' => 1,
+            'sync' => 1,
             'user_id_approved' => null,
         ]);
 
@@ -167,6 +176,8 @@ class InspectionReportLifecycleServiceTest extends TestCase
                 'code' => '001',
                 'status' => 1,
                 'publish' => 1,
+                'user_id' => 1,
+                'sync' => 1,
                 'user_id_approved' => 7,
             ]);
 
@@ -177,6 +188,8 @@ class InspectionReportLifecycleServiceTest extends TestCase
                 'code' => '002',
                 'status' => 1,
                 'publish' => 1,
+                'user_id' => 1,
+                'sync' => 1,
                 'user_id_approved' => 7,
             ]);
 
@@ -186,6 +199,8 @@ class InspectionReportLifecycleServiceTest extends TestCase
             'code' => '002 - Duplicated',
             'status' => 1,
             'publish' => null,
+            'user_id' => 1,
+            'sync' => 1,
             'user_id_approved' => 7,
         ]);
 
@@ -216,6 +231,8 @@ class InspectionReportLifecycleServiceTest extends TestCase
             'code' => '004',
             'status' => 1,
             'publish' => null,
+            'user_id' => 1,
+            'sync' => 1,
             'user_id_approved' => 18,
         ]);
 
@@ -238,6 +255,8 @@ class InspectionReportLifecycleServiceTest extends TestCase
                 'code' => '001',
                 'status' => 1,
                 'publish' => 1,
+                'user_id' => 1,
+                'sync' => 1,
                 'user_id_approved' => 5,
             ]);
 
@@ -248,6 +267,7 @@ class InspectionReportLifecycleServiceTest extends TestCase
             'status' => 1,
             'publish' => null,
             'user_id' => 9,
+            'sync' => 1,
             'user_id_edit' => null,
             'user_id_approved' => null,
         ]);
@@ -262,5 +282,44 @@ class InspectionReportLifecycleServiceTest extends TestCase
         $this->assertTrue($published);
         $this->assertNull($duplicateReport->publish);
         $this->assertNull($duplicateReport->user_id_approved);
+    }
+
+    public function test_update_resets_approval_on_all_family_revisions(): void
+    {
+        $service = app(InspectionReportLifecycleService::class);
+
+        $owner1 = FakeInspectionReportable::query()->create(['code' => '001']);
+        $report1 = $owner1->report()->create([
+            'job_request_id' => 99,
+            'code' => '001',
+            'status' => 1,
+            'publish' => 1,
+            'user_id' => 1,
+            'sync' => 1,
+            'user_id_approved' => 10,
+        ]);
+
+        $owner2 = FakeInspectionReportable::query()->create(['code' => '001']);
+        $report2 = $owner2->report()->create([
+            'job_request_id' => 99,
+            'code' => '001',
+            'status' => 1,
+            'publish' => 1,
+            'user_id' => 1,
+            'sync' => 1,
+            'user_id_approved' => 10,
+        ]);
+
+        $service->persistForOwner($owner2, [
+            'user_id_edit' => 5,
+        ]);
+
+        $report1->refresh();
+        $report2->refresh();
+
+        $this->assertNull($report1->user_id_approved);
+        $this->assertNull($report2->user_id_approved);
+        $this->assertNull($report1->publish);
+        $this->assertNull($report2->publish);
     }
 }

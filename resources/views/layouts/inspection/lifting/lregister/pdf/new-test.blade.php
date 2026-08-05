@@ -49,11 +49,15 @@
       data-open="click" data-menu="vertical-compact-menu" data-col="2-columns">
 
 
+@php
+    $isCurrentApprovedLregister = true;
+@endphp
+@if($isCurrentApprovedLregister)
 <div class="card no-print mt-2">
     <div class="card-content fixed-top">
         <div class="card-body">
             <div class="row" style="direction: rtl;">
-                @if (Storage::disk('public')->exists($folder.'/'.$imageurl.'.pdf'))
+                @if ((!empty(data_get($lregister, 'report.publish')) || !empty($publish ?? null)) && Storage::disk('public')->exists($folder.'/'.$imageurl.'.pdf'))
                     <button type="button" id="print" class="btn btn-secondary btn-print btn-lg ml-1">Print Page <i class="la la-paper-plane-o mr-50"></i></button>
 
                     <div class="btn-group ml-1" style="direction: ltr;">
@@ -78,6 +82,7 @@
         </div>
     </div>
 </div>
+@endif
 <br/>
 <!-- BEGIN: Content-->
 @php  $index = 1; @endphp

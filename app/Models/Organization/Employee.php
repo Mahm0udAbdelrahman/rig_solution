@@ -25,6 +25,11 @@ class Employee extends Model
         'avatar',
         'desc',
         'type',
+        'is_assistant',
+    ];
+
+    protected $casts = [
+        'is_assistant' => 'boolean',
     ];
 
     public function departments()

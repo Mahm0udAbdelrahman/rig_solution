@@ -80,7 +80,7 @@
                                           <form class="form-horizontal form-simple" method="POST" action="{{ route('login') }}" aria-label="{{ __('Login') }}" novalidate>
                                             @csrf
                                             <fieldset class="form-group position-relative has-icon-left mb-0">
-                                                <input class="form-control" id="email" placeholder="Your Username" type="text" name="employee_id" required autofocus>
+                                                <input class="form-control" id="email" placeholder="Your Username" type="text" name="employee_id" value="{{ old('employee_id') }}" required autofocus>
 
 
                                                 <div class="form-control-position">

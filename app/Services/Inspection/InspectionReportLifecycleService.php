@@ -36,6 +36,13 @@ class InspectionReportLifecycleService
             && $reportableChanged
             && !empty($report->user_id_approved);
 
+        if (!$isPublishTransition) {
+            $attributes['user_id_approved'] = null;
+            $attributes['publish'] = null;
+
+            $this->resetApprovalForReportFamily($report);
+        }
+
         if ($isDuplicatedClone && ($reportableChanged || $editorStateChanged) && !$isPublishTransition) {
             $attributes['publish'] = null;
             $attributes['user_id_approved'] = null;
@@ -190,6 +197,31 @@ class InspectionReportLifecycleService
         ]);
 
         return (bool) $created;
+    }
+
+    private function resetApprovalForReportFamily(InspectionReport $report): void
+    {
+        $jobRequestId = (int) ($report->job_request_id ?? 0);
+        $code = trim((string) ($report->code ?? ''));
+        if ($jobRequestId <= 0 || $code === '') {
+            return;
+        }
+
+        $baseCode = trim((string) preg_replace('/(?:\s*-\s*Duplicated)+$/i', '', $code));
+        if ($baseCode === '') {
+            return;
+        }
+
+        InspectionReport::query()
+            ->where('job_request_id', $jobRequestId)
+            ->where(function ($query) use ($baseCode) {
+                $query->where('code', $baseCode)
+                    ->orWhere('code', 'like', $baseCode . ' - Duplicated%');
+            })
+            ->update([
+                'user_id_approved' => null,
+                'publish' => null,
+            ]);
     }
 }
 

@@ -120,6 +120,17 @@
                                             <button type="button" data-id="delete-avatar" class="btn btn-icon btn-danger mr-1 delete-avatar"><i class="la la-trash"></i></button>
                                             <input type="hidden" value="{{ $employee->avatar }}" id="avatardata" />
                                         </div>
+                                    <div class="row">
+                                        <div class="col-12 mt-1">
+                                            <div class="form-group mb-0">
+                                                <div class="custom-control custom-checkbox">
+                                                    <input type="checkbox" name="is_assistant" class="custom-control-input" id="is_assistant" value="1" {{ $employee->is_assistant ? 'checked' : '' }}>
+                                                    <label class="custom-control-label font-weight-bold text-primary" for="is_assistant">
+                                                        <i class="ft-user-check mr-50"></i>Technician
+                                                    </label>
+                                                </div>
+                                            </div>
+                                        </div>
                                     </div>
                                 </div>
                             </div>

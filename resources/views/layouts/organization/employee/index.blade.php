@@ -32,6 +32,7 @@
                                         <tr class="column-headings">
                                             <th>Code</th>
                                             <th>Name</th>
+                                            <th>Assistant</th>
                                             <th>Department</th>
                                             <th>Email</th>
                                             <th>Telephone</th>
@@ -40,6 +41,7 @@
                                             <th>Actions</th>
                                         </tr>
                                         <tr class="filter-row">
+                                            <th></th>
                                             <th></th>
                                             <th></th>
                                             <th></th>
@@ -62,7 +64,7 @@
 
 @include('layouts.scripts.datatables', [
     'route' => 'employee',
-    'columns' => ['code', 'name', 'departments', 'email', 'tel', 'esign', 'desc', 'action'],
+    'columns' => ['code', 'name', 'is_assistant', 'departments', 'email', 'tel', 'esign', 'desc', 'action'],
     'datatable_options' => [
         'ordering' => true,
         'order' => [[0, 'desc']],
@@ -70,7 +72,7 @@
         'fixedHeader' => ['header' => true, 'headerOffset' => 78],
         'filterDebounceMs' => 250,
     ],
-    'non_orderable_columns' => ['departments', 'esign', 'action'],
+    'non_orderable_columns' => ['is_assistant', 'departments', 'esign', 'action'],
     'non_searchable_columns' => ['esign', 'action'],
-    'disable_column_filters' => ['esign', 'action'],
+    'disable_column_filters' => ['is_assistant', 'esign', 'action'],
 ])

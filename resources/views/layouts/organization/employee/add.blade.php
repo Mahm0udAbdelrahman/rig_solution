@@ -60,6 +60,17 @@
                                                 </div>
                                             </div>
                                         </div>
+                                    <div class="row">
+                                        <div class="col-12 mt-1">
+                                            <div class="form-group mb-0">
+                                                <div class="custom-control custom-checkbox">
+                                                    <input type="checkbox" name="is_assistant" class="custom-control-input" id="is_assistant" value="1">
+                                                    <label class="custom-control-label font-weight-bold text-primary" for="is_assistant">
+                                                        <i class="ft-user-check mr-50"></i>Technician
+                                                    </label>
+                                                </div>
+                                            </div>
+                                        </div>
                                     </div>
                                 </div>
                             </div>

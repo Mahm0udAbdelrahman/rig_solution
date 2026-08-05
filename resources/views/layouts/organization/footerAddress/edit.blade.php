@@ -29,14 +29,14 @@
                                     <div class="col-md-6">
                                         <div class="form-group">
                                             <label for="address_line_1"><strong>Address Line 1:</strong></label>
-                                            <input type="text" id="address_line_1" name="address_line_1" class="form-control" value="{{ old('address_line_1', $model->address_line_1) }}" placeholder="e.g. Head Office: Block# 3053|Hamdy Ramadan street" required>
+                                            <input type="text" id="address_line_1" name="address_line_1" class="form-control" value="{{ old('address_line_1', $model->address_line_1) }}" placeholder="e.g. Head Office: Block# 3053|Hamdy Ramadan street">
                                         </div>
                                     </div>
 
                                     <div class="col-md-6">
                                         <div class="form-group">
                                             <label for="address_line_2"><strong>Address Line 2:</strong></label>
-                                            <input type="text" id="address_line_2" name="address_line_2" class="form-control" value="{{ old('address_line_2', $model->address_line_2) }}" placeholder="e.g. 2nd Floor #2 |El-Mearag City|Maadi|Cairo|Egypt" required>
+                                            <input type="text" id="address_line_2" name="address_line_2" class="form-control" value="{{ old('address_line_2', $model->address_line_2) }}" placeholder="e.g. 2nd Floor #2 |El-Mearag City|Maadi|Cairo|Egypt">
                                         </div>
                                     </div>
                                 </div>
@@ -84,14 +84,9 @@
 
                             <h5 class="text-bold-600 mb-1">Live Preview on Reports:</h5>
                             <div class="p-2 border rounded" style="background: #f8f9fa; font-size: 11px; font-weight: 700; color: #000;">
-                                <div>{{ $model->address_line_1 }}</div>
-                                <div>{{ $model->address_line_2 }}</div>
                                 <div>
-                                    <i class="la la-phone"></i> : {{ $model->phone }} |
-                                    <i class="la la-mobile"></i> : {{ $model->mobile }}
+                                    {!! $model->getPartsHtml() !!}
                                 </div>
-                                <div><i class="la la-envelope"></i> : {{ $model->email }}</div>
-                                <div>Website: <a href="http://{{ str_replace(['http://', 'https://'], '', $model->website) }}" target="_blank">{{ $model->website }}</a></div>
                             </div>
 
                         </div>
