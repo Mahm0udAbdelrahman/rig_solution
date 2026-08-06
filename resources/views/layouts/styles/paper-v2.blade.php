@@ -163,7 +163,7 @@
 					$downloadExcelUrl = $downloadExcelUrl ?? (isset($invoice) ? route('invoice.exportExcel', $invoice->id) : null);
 					$isCurrentApprovedForPdf = (!empty($user_id_approved)) || str_contains((string) ($folder ?? ''), 'workflow') || in_array(Route::currentRouteName(), ['defect.show', 'nregister.show', 'lregister.show', 'drawingInspection.show'], true) || str_contains((string) Route::currentRouteName(), 'lregister') || str_contains((string) Route::currentRouteName(), 'nregister');
 					$isCurrentPublishedPdf = $isCurrentApprovedForPdf
-						&& (!empty(data_get($model ?? null, 'report.publish')) || !empty($publish ?? null))
+						&& (!empty(data_get($model ?? null, 'report.publish')) || !empty($publish ?? null) || str_contains((string) ($folder ?? ''), 'workflow'))
 						&& Storage::disk('public')->exists(($folder ?? '').'/'.($imageurl ?? '').'.pdf');
 				@endphp
 				<!-- action controls card: requires current version to be approved -->
