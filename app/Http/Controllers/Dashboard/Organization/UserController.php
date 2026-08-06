@@ -66,7 +66,7 @@ class UserController extends Controller
                 })
               ->addColumn('status', function ($row) {
                   if ($row->user->is_suspended) {
-                      return '<span class="badge badge-danger">موقوف</span>';
+                      return '<span class="badge badge-danger">Suspended</span>';
                   }
                   return $row->user->isActive();
                 })
@@ -79,9 +79,9 @@ class UserController extends Controller
                         
                         if (!$row->user->isSuperAdmin()) {
                             if ($row->user->is_suspended) {
-                                $btn .= '<button type="button" data-id="'.$row->user->id.'" class="btn btn-icon btn-success toggle-status mr-1" title="تفعيل الحساب"><i class="la la-check-circle"></i></button>';
+                                $btn .= '<button type="button" data-id="'.$row->user->id.'" class="btn btn-icon btn-success toggle-status mr-1" title="Activate Account"><i class="la la-check-circle"></i></button>';
                             } else {
-                                $btn .= '<button type="button" data-id="'.$row->user->id.'" class="btn btn-icon btn-warning toggle-status mr-1" title="إيقاف الحساب"><i class="la la-ban"></i></button>';
+                                $btn .= '<button type="button" data-id="'.$row->user->id.'" class="btn btn-icon btn-warning toggle-status mr-1" title="Suspend Account"><i class="la la-ban"></i></button>';
                             }
                         }
                     }
@@ -236,13 +236,13 @@ class UserController extends Controller
         }
 
         if ($user->isSuperAdmin()) {
-            return response()->json(['error' => 'لا يمكن إيقاف حساب Super Admin'], 403);
+            return response()->json(['error' => 'Cannot suspend Super Admin account'], 403);
         }
 
         $user->is_suspended = !$user->is_suspended;
         $user->save();
 
-        $message = $user->is_suspended ? 'تم إيقاف الحساب بنجاح' : 'تم تفعيل الحساب بنجاح';
+        $message = $user->is_suspended ? 'Account suspended successfully' : 'Account activated successfully';
         return response()->json([
             'success' => $message,
             'is_suspended' => $user->is_suspended
@@ -256,7 +256,7 @@ class UserController extends Controller
     {
         $action = $request->input('action');
         if (!in_array($action, ['suspend_all', 'activate_all'], true)) {
-            return response()->json(['error' => 'إجراء غير صالح'], 400);
+            return response()->json(['error' => 'Invalid action'], 400);
         }
 
         if ($action === 'suspend_all') {
@@ -264,11 +264,11 @@ class UserController extends Controller
                 ->where('is_super_admin', '!=', 1)
                 ->update(['is_suspended' => 1]);
 
-            return response()->json(['success' => 'تم إيقاف جميع الحسابات بنجاح']);
+            return response()->json(['success' => 'All accounts suspended successfully']);
         } else {
             User::query()->update(['is_suspended' => 0]);
 
-            return response()->json(['success' => 'تم تفعيل جميع الحسابات بنجاح']);
+            return response()->json(['success' => 'All accounts activated successfully']);
         }
     }
 }

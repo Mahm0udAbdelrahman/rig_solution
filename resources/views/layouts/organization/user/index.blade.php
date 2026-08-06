@@ -12,8 +12,8 @@
 										<a href="{{route('user.create')}}" class="btn btn-primary clear"><i class="la la-plus"></i> Create New {{ucfirst(str_replace('All ', '', substr($page_name, 0, -1)))}}</a>
 								@endcan
 								@can('update', 'App\Models\User')
-										<button type="button" id="suspend-all-users" class="btn btn-warning clear ml-1"><i class="la la-ban"></i> توقيف جميع الحسابات</button>
-										<button type="button" id="activate-all-users" class="btn btn-success clear ml-1"><i class="la la-check-circle"></i> تفعيل جميع الحسابات</button>
+										<button type="button" id="suspend-all-users" class="btn btn-warning clear ml-1"><i class="la la-ban"></i> Suspend All Accounts</button>
+										<button type="button" id="activate-all-users" class="btn btn-success clear ml-1"><i class="la la-check-circle"></i> Activate All Accounts</button>
 								@endcan
 								<div class="card">
 										<div class="card-content">
@@ -56,7 +56,7 @@
                 method: 'POST',
                 success: function(data) {
                     if (data.success) {
-                        toastr.success(data.success, 'نجاح', {
+                        toastr.success(data.success, 'Success', {
                             positionClass: 'toast-bottom-left',
                             timeOut: 1500,
                             onHidden: function() {
@@ -70,8 +70,8 @@
                     }
                 },
                 error: function(xhr) {
-                    var errorMsg = xhr.responseJSON ? xhr.responseJSON.error : 'حدث خطأ غير متوقع';
-                    toastr.error(errorMsg, 'خطأ', { positionClass: 'toast-bottom-left' });
+                    var errorMsg = xhr.responseJSON ? xhr.responseJSON.error : 'An unexpected error occurred';
+                    toastr.error(errorMsg, 'Error', { positionClass: 'toast-bottom-left' });
                 }
             });
         });
@@ -79,14 +79,14 @@
         $(document).on('click', '#suspend-all-users', function(e){
             e.preventDefault();
             Swal.fire({
-                title: 'هل أنت تأكد؟',
-                text: "سيتم إيقاف جميع حسابات المستخدمين (باستثناء حساب الأدمن الرئيسي) وتسجيل خروجهم فوراً!",
+                title: 'Are you sure?',
+                text: "All user accounts (except primary super admin) will be suspended immediately!",
                 type: 'warning',
                 showCancelButton: true,
                 confirmButtonColor: '#ff9149',
                 cancelButtonColor: '#d33',
-                confirmButtonText: 'نعم، إيقاف الكل',
-                cancelButtonText: 'إلغاء',
+                confirmButtonText: 'Yes, Suspend All',
+                cancelButtonText: 'Cancel',
                 confirmButtonClass: 'btn btn-warning',
                 cancelButtonClass: 'btn btn-dark ml-1',
                 buttonsStyling: false,
@@ -98,7 +98,7 @@
                         method: 'POST',
                         data: { action: 'suspend_all' },
                         success: function(data) {
-                            toastr.warning(data.success, 'تم التوقيف', {
+                            toastr.warning(data.success, 'Suspended', {
                                 positionClass: 'toast-bottom-left',
                                 timeOut: 1500,
                                 onHidden: function() {
@@ -111,8 +111,8 @@
                             });
                         },
                         error: function(xhr) {
-                            var errorMsg = xhr.responseJSON ? xhr.responseJSON.error : 'حدث خطأ أثناء التوقيف الجماعي';
-                            toastr.error(errorMsg, 'خطأ', { positionClass: 'toast-bottom-left' });
+                            var errorMsg = xhr.responseJSON ? xhr.responseJSON.error : 'An error occurred during bulk suspension';
+                            toastr.error(errorMsg, 'Error', { positionClass: 'toast-bottom-left' });
                         }
                     });
                 }
@@ -122,14 +122,14 @@
         $(document).on('click', '#activate-all-users', function(e){
             e.preventDefault();
             Swal.fire({
-                title: 'هل أنت تأكد؟',
-                text: "سيتم إعادة تفعيل جميع حسابات المستخدمين ويمكنهم التسجيل من جديد!",
+                title: 'Are you sure?',
+                text: "All user accounts will be re-activated and can log in again!",
                 type: 'info',
                 showCancelButton: true,
                 confirmButtonColor: '#28d094',
                 cancelButtonColor: '#d33',
-                confirmButtonText: 'نعم، تفعيل الكل',
-                cancelButtonText: 'إلغاء',
+                confirmButtonText: 'Yes, Activate All',
+                cancelButtonText: 'Cancel',
                 confirmButtonClass: 'btn btn-success',
                 cancelButtonClass: 'btn btn-dark ml-1',
                 buttonsStyling: false,
@@ -141,7 +141,7 @@
                         method: 'POST',
                         data: { action: 'activate_all' },
                         success: function(data) {
-                            toastr.success(data.success, 'تم التفعيل', {
+                            toastr.success(data.success, 'Activated', {
                                 positionClass: 'toast-bottom-left',
                                 timeOut: 1500,
                                 onHidden: function() {
@@ -154,8 +154,8 @@
                             });
                         },
                         error: function(xhr) {
-                            var errorMsg = xhr.responseJSON ? xhr.responseJSON.error : 'حدث خطأ أثناء التفعيل الجماعي';
-                            toastr.error(errorMsg, 'خطأ', { positionClass: 'toast-bottom-left' });
+                            var errorMsg = xhr.responseJSON ? xhr.responseJSON.error : 'An error occurred during bulk activation';
+                            toastr.error(errorMsg, 'Error', { positionClass: 'toast-bottom-left' });
                         }
                     });
                 }
