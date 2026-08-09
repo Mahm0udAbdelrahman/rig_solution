@@ -272,6 +272,18 @@
 								</div>
 							</div>
 						</div>
+						<h6 class="mb-1">Assistant Required</h6>
+						<div class="card">
+							<div class="card-content">
+								<div class="card-body">
+									<div class="skin skin-square form-group mt-1">
+										<div class="controls">
+											<div class="row" id="assistants"></div>
+										</div>
+									</div>
+								</div>
+							</div>
+						</div>
 						<h6 class="mb-1">Equipment / Material Required</h6>
 						<div class="card">
 							<div class="card-content">

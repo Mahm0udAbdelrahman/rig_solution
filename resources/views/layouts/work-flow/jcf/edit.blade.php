@@ -286,6 +286,18 @@
                                 </div>
                             </div>
                         </div>
+                        <h6 class="mb-1">Assistant Required</h6>
+                        <div class="card">
+                            <div class="card-content">
+                                <div class="card-body">
+                                    <div class="skin skin-square form-group mt-1">
+                                        <div class="controls">
+                                            <div class="row" id="assistants"></div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
                         <h6 class="mb-1">Equipment / Material Required</h6>
                         <div class="card">
                             <div class="card-content">
@@ -600,7 +612,7 @@
           "department": department
         },
         success: function (data) {
-          $('#managers, #employees').html('');
+          $('#managers, #employees, #assistants').html('');
           var managers_job = "{{$jobRequest->managers}}";
           $.each(data.managers, function (key1, value1) {
             var checkOrNot11;
@@ -626,14 +638,38 @@
             else {
               checkOrNot12 = "";
             }
-            $('#employees').append('<div class="col-md-3 col-sm-12"><fieldset><input type="checkbox" class="eng" name="eng" required data-id="' + value + '" id="employee' + key + '" ' + checkOrNot12 + '/><label for="employee' + key + '">' + value + '</label></fieldset></div>');
+            $('#employees').append('<div class="col-md-3 col-sm-12"><fieldset><input type="radio" class="eng" name="eng" data-id="' + value + '" id="employee' + key + '" ' + checkOrNot12 + '/><label for="employee' + key + '">' + value + '</label></fieldset></div>');
           });
+          $.each(data.assistants, function (key, value) {
+            var checkOrNot13;
+            if (employee_job.includes(value)) {
+              checkOrNot13 = "checked";
+            }
+            else {
+              checkOrNot13 = "";
+            }
+            $('#assistants').append('<div class="col-md-3 col-sm-12"><fieldset><input type="checkbox" class="assistant" name="assistant" data-id="' + value + '" id="assistant' + key + '" ' + checkOrNot13 + '/><label for="assistant' + key + '">' + value + '</label></fieldset></div>');
+          });
+          selectedInspector = null;
+          assistant = [];
           $(".eng").each(function (index, value) {
             if ($(this).is(':checked')) {
-              eng.push($(value).data('id'));
+              selectedInspector = $(value).data('id');
             }
           });
-          $('.manager, .eng').iCheck({
+          $(".assistant").each(function (index, value) {
+            if ($(this).is(':checked')) {
+              assistant.push($(value).data('id'));
+            }
+          });
+          updateEngArray();
+          $('.manager').iCheck({
+            checkboxClass: 'icheckbox_square-green',
+          });
+          $('.eng').iCheck({
+            radioClass: 'iradio_square-green',
+          });
+          $('.assistant').iCheck({
             checkboxClass: 'icheckbox_square-green',
           });
         },

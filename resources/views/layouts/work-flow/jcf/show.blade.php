@@ -203,13 +203,23 @@
 				<div class="col-md-2 bg-dark border-dark middle">
 					<h6 class="mb-0 white text-bold-700">Personal name/Qualifications Required</h6>
 				</div>
-				<div class="col-md-10 border-dark" style="height: 122px;">
-						<?php
-							$arr1 = [];
-						?>
+				<div class="col-md-4 border-dark" style="min-height: 61px;">
 						<div class="row">
-								@foreach($jobRequest->employees as $key => $employee)
-										<div class="col-md-3 col-sm-12 mid">
+								@foreach($jobRequest->employees->filter(function($emp) { return !$emp->is_assistant; }) as $key => $employee)
+										<div class="col-md-6 col-sm-12 mid">
+											<span class="noncheckedfrom checked"></span>
+											<label>{{$employee->name}}</label>
+										</div>
+								@endforeach
+						</div>
+				</div>
+				<div class="col-md-2 bg-dark border-dark middle">
+					<h6 class="mb-0 white text-bold-700">Assistant Required</h6>
+				</div>
+				<div class="col-md-4 border-dark" style="min-height: 61px;">
+						<div class="row">
+								@foreach($jobRequest->employees->filter(function($emp) { return (bool)$emp->is_assistant; }) as $key => $employee)
+										<div class="col-md-6 col-sm-12 mid">
 											<span class="noncheckedfrom checked"></span>
 											<label>{{$employee->name}}</label>
 										</div>

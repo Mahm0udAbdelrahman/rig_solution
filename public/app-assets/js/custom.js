@@ -46,14 +46,23 @@ function getManagersAndEmployees(){
             "department":department
         },
         success: function(data){
-            $('#managers, #employees').html('');
+            $('#managers, #employees, #assistants').html('');
             $.each(data.managers, function( key1, value1 ){
                 $('#managers').append('<div class="col-md-6 col-sm-12"><fieldset><input type="checkbox" class="manager" name="manager" data-id="'+value1+'" id="manager'+key1+'" /><label for="manager'+key1+'">'+value1+'</label></fieldset></div>');
             });
             $.each(data.employees, function( key, value ) {
-                $('#employees').append('<div class="col-md-3 col-sm-12"><fieldset><input type="checkbox" class="eng" name="eng" data-id="'+value+'" id="employee'+key+'" /><label for="employee'+key+'">'+value+'</label></fieldset></div>');
+                $('#employees').append('<div class="col-md-3 col-sm-12"><fieldset><input type="radio" class="eng" name="eng" data-id="'+value+'" id="employee'+key+'" /><label for="employee'+key+'">'+value+'</label></fieldset></div>');
             });
-            $('.manager, .eng').iCheck({
+            $.each(data.assistants, function( key, value ) {
+                $('#assistants').append('<div class="col-md-3 col-sm-12"><fieldset><input type="checkbox" class="assistant" name="assistant" data-id="'+value+'" id="assistant'+key+'" /><label for="assistant'+key+'">'+value+'</label></fieldset></div>');
+            });
+            $('.manager').iCheck({
+                checkboxClass: 'icheckbox_square-green',
+            });
+            $('.eng').iCheck({
+                radioClass: 'iradio_square-green',
+            });
+            $('.assistant').iCheck({
                 checkboxClass: 'icheckbox_square-green',
             });
         },

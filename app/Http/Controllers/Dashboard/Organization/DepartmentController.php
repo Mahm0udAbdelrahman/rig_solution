@@ -136,7 +136,8 @@ class DepartmentController extends Controller
             ->values();
 
         $managerNames = collect();
-        $employeeNames = collect();
+        $inspectorNames = collect();
+        $assistantNames = collect();
 
         if ($departmentIds->isNotEmpty()) {
             $departments = Department::query()
@@ -151,7 +152,11 @@ class DepartmentController extends Controller
 
                 foreach ($department->employees as $employee) {
                     if ($employee->name) {
-                        $employeeNames->push($employee->name);
+                        if ($employee->is_assistant) {
+                            $assistantNames->push($employee->name);
+                        } else {
+                            $inspectorNames->push($employee->name);
+                        }
                     }
                 }
             }
@@ -166,15 +171,34 @@ class DepartmentController extends Controller
         }
 
         // If no engineers are linked yet, expose managers so Step 2 is usable.
-        if ($employeeNames->isEmpty()) {
-            $employeeNames = $managerNames;
+        if ($inspectorNames->isEmpty()) {
+            $nonAssistants = Employee::query()
+                ->where(function ($q) {
+                    $q->where('is_assistant', 0)->orWhereNull('is_assistant');
+                })
+                ->pluck('name');
+
+            if ($nonAssistants->isNotEmpty()) {
+                $inspectorNames = $nonAssistants;
+            } else {
+                $inspectorNames = $managerNames;
+            }
         }
 
-        $collection = new Collection($managerNames);
-        $collection1 = new Collection($employeeNames);
+        if ($assistantNames->isEmpty()) {
+            $allAssistants = Employee::query()
+                ->where('is_assistant', 1)
+                ->pluck('name');
+
+            if ($allAssistants->isNotEmpty()) {
+                $assistantNames = $allAssistants;
+            }
+        }
+
         return response()->json([
-            'managers' => $collection->unique(),
-            'employees' => $collection1->unique(),
+            'managers' => $managerNames->unique()->values(),
+            'employees' => $inspectorNames->unique()->values(),
+            'assistants' => $assistantNames->unique()->values(),
         ]);
     }
 

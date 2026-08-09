@@ -101,6 +101,7 @@
 				}
 				/***************************************************************************/
 				/*** This Function To Get Managers & Employees ***/
+				/*** This Function To Get Managers & Employees ***/
 				function getManagersAndEmployees(){
 						$.ajax({
 								headers: {'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')},
@@ -111,14 +112,27 @@
 										"department":department
 								},
 								success: function(data){
-										$('#managers, #employees').html('');
+										$('#managers, #employees, #assistants').html('');
+										selectedInspector = null;
+										assistant = [];
+										updateEngArray();
+
 										$.each(data.managers, function( key1, value1 ){
 												$('#managers').append('<div class="col-md-6 col-sm-12"><fieldset><input type="checkbox" class="manager" name="manager" data-id="'+value1+'" id="manager'+key1+'" /><label for="manager'+key1+'">'+value1+'</label></fieldset></div>');
 										});
 										$.each(data.employees, function( key, value ) {
-												$('#employees').append('<div class="col-md-3 col-sm-12"><fieldset><input type="checkbox" class="eng" name="eng" data-id="'+value+'" id="employee'+key+'" /><label for="employee'+key+'">'+value+'</label></fieldset></div>');
+												$('#employees').append('<div class="col-md-3 col-sm-12"><fieldset><input type="radio" class="eng" name="eng" data-id="'+value+'" id="employee'+key+'" /><label for="employee'+key+'">'+value+'</label></fieldset></div>');
 										});
-										$('.manager, .eng').iCheck({
+										$.each(data.assistants, function( key, value ) {
+												$('#assistants').append('<div class="col-md-3 col-sm-12"><fieldset><input type="checkbox" class="assistant" name="assistant" data-id="'+value+'" id="assistant'+key+'" /><label for="assistant'+key+'">'+value+'</label></fieldset></div>');
+										});
+										$('.manager').iCheck({
+												checkboxClass: 'icheckbox_square-green',
+										});
+										$('.eng').iCheck({
+												radioClass: 'iradio_square-green',
+										});
+										$('.assistant').iCheck({
 												checkboxClass: 'icheckbox_square-green',
 										});
 								},
@@ -175,16 +189,47 @@
 						manager.splice(index, 1);
 				});
 				/***************************************************************************/
+				var selectedInspector = null;
+				var assistant = [];
 				var eng = [];
-				/***************************************************************************/
-				$('.steps-validation').on("ifChecked", '.eng',function (e){
-						var id = $(this).data('id');
-						eng.push(id);
+
+				function updateEngArray() {
+						eng = [];
+						if (selectedInspector) {
+								eng.push(selectedInspector);
+						}
+						$.each(assistant, function(i, val) {
+								if (eng.indexOf(val) === -1) {
+										eng.push(val);
+								}
+						});
+				}
+
+				$('.steps-validation').on("ifChecked", '.eng', function (e){
+						selectedInspector = $(this).data('id');
+						updateEngArray();
 				});
-				$('.steps-validation').on("ifUnchecked", '.eng',function (e){
+				$('.steps-validation').on("ifUnchecked", '.eng', function (e){
+						if (selectedInspector === $(this).data('id')) {
+								selectedInspector = null;
+								updateEngArray();
+						}
+				});
+
+				$('.steps-validation').on("ifChecked", '.assistant', function (e){
 						var id = $(this).data('id');
-						index = eng.indexOf(id);
-						eng.splice(index, 1);
+						if (assistant.indexOf(id) === -1) {
+								assistant.push(id);
+						}
+						updateEngArray();
+				});
+				$('.steps-validation').on("ifUnchecked", '.assistant', function (e){
+						var id = $(this).data('id');
+						var index = assistant.indexOf(id);
+						if (index !== -1) {
+								assistant.splice(index, 1);
+						}
+						updateEngArray();
 				});
 				/***************************************************************************/
 				var tool = [];
