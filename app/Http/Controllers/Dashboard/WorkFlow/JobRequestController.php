@@ -313,7 +313,7 @@ class JobRequestController extends Controller
 								->leftJoin('jcf_statuses', 'job_requests.id', '=', 'jcf_statuses.job_request_id')
 								->leftJoin('packing_slips', 'job_requests.id', '=', 'packing_slips.job_request_id')
 								->leftJoin('service_tickets', 'job_requests.id', '=', 'service_tickets.job_request_id')
-								->leftJoin('employee_job_request', 'job_requests.id', '=', 'employee_job_request.job_request_id')
+								->leftJoin(\DB::raw('(SELECT ejr.employee_id, ejr.job_request_id FROM employee_job_request ejr INNER JOIN employees e ON e.id = ejr.employee_id WHERE e.is_assistant = 0) as employee_job_request'), 'job_requests.id', '=', 'employee_job_request.job_request_id')
 								->leftJoin('employees as inspector_employees', 'inspector_employees.id', '=', 'employee_job_request.employee_id')
 								->leftJoin('client_departments', 'job_requests.client_department_id', '=', 'client_departments.id')
 								->select([
