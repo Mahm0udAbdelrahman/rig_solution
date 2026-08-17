@@ -56,16 +56,14 @@
 <div class="row border-dark" style="margin-bottom: 3px;">
   <h6 class="bg-dark white text-bold-600 pl-1 mb-0 border-dark col-2 middle">Final Conclusion:</h6>
 
-  <div class="col-6">
-      <p class="black bnew">NDT result Accept / Reject ?</p>
-  </div>
-  <div class="col-2 mid">
-      <span class="noncheckedfrom {{$summary->checkbox_yes($summary->nsr_8)}}" style="width: 20px; height: 20px; top: 5px; position: relative;"></span>
-      <label class="black" style="font-size: 1.3rem; font-weight: 600;">Accept</label>
-  </div>
-  <div class="col-2 mid">
-      <span class="noncheckedfrom {{$summary->checkbox_no($summary->nsr_8)}}" style="width: 20px; height: 20px; top: 5px; position: relative;"></span>
-      <label class="black" style="font-size: 1.3rem; font-weight: 600;">Reject</label>
+  <div class="col-10 border-dark p-0 pl-1 text-16 black preline">
+    @if($summary->checkbox_yes($summary->nsr_8) == 'checked')
+        Accept
+    @elseif($summary->checkbox_no($summary->nsr_8) == 'checked')
+        Reject
+    @else
+        {{$summary->nsr_8}}
+    @endif
   </div>
 </div>
 

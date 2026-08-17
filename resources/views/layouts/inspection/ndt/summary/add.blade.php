@@ -88,7 +88,7 @@
                                 <div class="input-group-prepend">
                                     <span class="input-group-text"><i class="ft-calendar"></i></span>
                                 </div>
-                                <input type="text" class="form-control dp-date-range-from" id="nsr_6" name="nsr_6" placeholder="Examination Date" data-validation--message="This field is "/>
+                                <input type="text" class="form-control dp-date-range-from" id="nsr_6" name="nsr_6" placeholder="Examination Date" value="{{ date('Y-m-d') }}" data-validation--message="This field is "/>
                             </div>
                         <div class="help-block"></div></div>
                     </div>
@@ -164,28 +164,8 @@
 
                               <div class="form-group">
                                   <div class="controls">
-                                      <!-- <textarea id="nsr_13" name="nsr_13" class="form-control" placeholder="Final Conclusion"></textarea> -->
-                                      <div class="row">
-
-                                          <div class="col-8">
-                                              <p>NDT result : Accept / Reject ?</p>
-                                          </div>
-                                          <div class="col-2">
-                                              <div class="custom-control custom-radio">
-                                                  <input type="radio" class="custom-control-input" id="nsr_13_y " name="nsr_13" required>
-                                                  <label class="custom-control-label" for="nsr_13_y ">Accept</label>
-                                              </div>
-                                          </div>
-                                          <div class="col-2">
-                                              <div class="custom-control custom-radio">
-                                                  <input type="radio" class="custom-control-input" id="nsr_13_n" name="nsr_13">
-                                                  <label class="custom-control-label" for="nsr_13_n">Reject</label>
-                                              </div>
-                                          </div>
-
-
-                                    </div>
-
+                                      <label for="nsr_13">NDT result : Accept / Reject ?</label>
+                                      <textarea id="nsr_13" name="nsr_13" class="form-control" placeholder="NDT result : Accept / Reject ?"></textarea>
                                   </div>
                               </div>
 

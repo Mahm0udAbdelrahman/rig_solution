@@ -158,28 +158,8 @@
 
                               <div class="form-group">
                                   <div class="controls">
-                                      <!-- <textarea id="nsr_13" name="nsr_13" class="form-control" placeholder="Final Conclusion"></textarea> -->
-                                      <div class="row">
-
-                                          <div class="col-8">
-                                              <p>NDT result : Accept / Reject ?</p>
-                                          </div>
-                                          <div class="col-2">
-                                              <div class="custom-control custom-radio">
-                                                  <input type="radio" class="custom-control-input" id="nsr_13_y " name="nsr_13" {{$summary->checkbox_yes($summary->nsr_8)}}  required>
-                                                  <label class="custom-control-label" for="nsr_13_y ">Accept</label>
-                                              </div>
-                                          </div>
-                                          <div class="col-2">
-                                              <div class="custom-control custom-radio">
-                                                  <input type="radio" class="custom-control-input" id="nsr_13_n" name="nsr_13" {{$summary->checkbox_no($summary->nsr_8)}}>
-                                                  <label class="custom-control-label" for="nsr_13_n">Reject</label>
-                                              </div>
-                                          </div>
-
-
-                                    </div>
-
+                                      <label for="nsr_13">NDT result : Accept / Reject ?</label>
+                                      <textarea id="nsr_13" name="nsr_13" class="form-control" placeholder="NDT result : Accept / Reject ?">{{$summary->nsr_8}}</textarea>
                                   </div>
                               </div>
 
