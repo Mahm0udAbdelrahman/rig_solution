@@ -1,4 +1,4 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html class="loading" lang="en" data-textdirection="ltr">
 		<!-- BEGIN: Head-->
 	  <head>
@@ -175,10 +175,10 @@
                                 <a class="dropdown-item" href="{{ route('profile.edit') }}"><i class="material-icons">person_outline</i> My Profile</a>
                                 <a class="dropdown-item" href="{{ route('mailCenter.index', ['tab' => 'notifications']) }}"><i class="material-icons">notifications_none</i> Notifications</a>
                                 <a class="dropdown-item" href="{{ route('dashboard.home') }}"><i class="material-icons">dashboard</i> Dashboard</a>
-                                <!-- @if((bool) $authUser->is_super_admin)
+                                 @if((bool) $authUser->is_super_admin)
                                     <a class="dropdown-item" href="{{ route('system.maintenance.index') }}"><i class="material-icons">build_circle</i> System Maintenance</a>
                                 @endif
-                                <div class="dropdown-divider"></div> -->
+                                <div class="dropdown-divider"></div>
                                 <form method="POST" action="{{ route('logout') }}">
                                     @csrf
                                     <a class="dropdown-item" href="{{ route('logout') }}" onclick="event.preventDefault(); this.closest('form').submit();"><i class="material-icons">power_settings_new</i> {{ __('Logout') }}</a>

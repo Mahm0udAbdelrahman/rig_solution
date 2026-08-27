@@ -45,8 +45,7 @@
       return window.validateWizardCurrentStep($(this));
     },
     onFinishing: function (event, currentIndex) {
-      form.validate().settings.ignore = ":disabled";
-      return form.valid();
+      return window.validateWizardOnFinishing($(this), currentIndex);
     },
     onFinished: function (event, currentIndex) {
       var form = $(this);

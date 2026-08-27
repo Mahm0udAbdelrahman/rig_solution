@@ -183,6 +183,88 @@
 						}
 				};
 
+				window.validateWizardOnFinishing = function (formElement, currentIndex) {
+						try {
+								var $form = formElement && formElement.jquery ? formElement : $(formElement || '.steps-validation').first();
+								if ($form.length && !$form.is('form')) {
+										$form = $form.closest('form.steps-validation');
+								}
+								if (!$form.length) {
+										$form = $('.steps-validation').first();
+								}
+								if (!$form.length) {
+										return true;
+								}
+
+								window.form = $form;
+								form = $form;
+
+								if ($form.data('validator')) {
+										$form.validate().settings.ignore = ":disabled";
+								}
+
+								var isValid = $form.valid();
+
+								if (!isValid) {
+										var $firstInvalid = $();
+										var validator = $form.data('validator');
+										if (validator && validator.errorList && validator.errorList.length > 0) {
+												$firstInvalid = $(validator.errorList[0].element);
+										}
+
+										if (!$firstInvalid.length) {
+												$firstInvalid = $form.find('.error, :input.error, .is-invalid, :input:invalid').first();
+										}
+
+										if (!$firstInvalid.length) {
+												$form.find('.content > .body, fieldset').each(function () {
+														var manual = window.manualValidateWizardVisibleStep ? window.manualValidateWizardVisibleStep($(this)) : { valid: true };
+														if (!manual.valid && manual.firstInvalid && manual.firstInvalid.length) {
+																$firstInvalid = manual.firstInvalid;
+																return false;
+														}
+												});
+										}
+
+										if ($firstInvalid.length) {
+												var $stepBody = $firstInvalid.closest('.body');
+												if (!$stepBody.length) {
+														$stepBody = $firstInvalid.closest('fieldset');
+												}
+
+												if ($stepBody.length) {
+														var targetStepIndex = $form.find('.content > .body').index($stepBody);
+														if (targetStepIndex === -1) {
+																targetStepIndex = $form.find('fieldset').index($stepBody);
+														}
+
+														if (targetStepIndex !== -1 && targetStepIndex !== currentIndex) {
+																var $stepTab = $form.find('.steps li a').eq(targetStepIndex);
+																if ($stepTab.length) {
+																		$stepTab.trigger('click');
+																} else {
+																		try {
+																				$form.steps('select', targetStepIndex);
+																		} catch (e) {}
+																}
+														}
+												}
+
+												setTimeout(function () {
+														window.showWizardValidationMessage($form, $firstInvalid);
+												}, 100);
+										}
+
+										return false;
+								}
+
+								return true;
+						} catch (error) {
+								console.error('Wizard finishing validation exception:', error);
+								return true;
+						}
+				};
+
 				window.resolveInspectionAjaxErrorMessage = function (xhr, fallbackMessage) {
 						if (xhr && xhr.responseJSON) {
 								if (xhr.responseJSON.message) {

@@ -59,6 +59,7 @@ Route::group(
         Route::put('profile', [ProfileController::class, 'update'])->name('profile.update');
         Route::get('system/maintenance', [SystemMaintenanceController::class, 'index'])->name('system.maintenance.index');
         Route::post('system/maintenance/run', [SystemMaintenanceController::class, 'run'])->name('system.maintenance.run');
+        Route::get('system/maintenance/download-database', [SystemMaintenanceController::class, 'downloadDatabase'])->name('system.maintenance.downloadDatabase');
         // *********** CustomController ************  //
         // Route::get('{table_name}/prepend_data_to_local', [App\Http\Controllers\CustomController::class, 'prepend_data_to_local'])->name('system.prepend_data_to_local');
         // Route::resource('toolapi', App\Http\Controllers\Api\Dashboard\Organization\DepartmentController::class);

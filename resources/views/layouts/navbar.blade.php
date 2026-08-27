@@ -385,6 +385,11 @@
                 </ul>
               </li>
               @endif
+              @if((bool) auth()->user()->is_super_admin)
+              <li class=" nav-item {{ request()->routeIs('system.maintenance.*') ? 'active' : '' }}">
+                <a href="{{ route('system.maintenance.index') }}"><i class="la la-wrench"></i><span class="menu-title" data-i18n="System Maintenance">System Maintenance</span></a>
+              </li>
+              @endif
             </ul>
         </div>
     </div>
