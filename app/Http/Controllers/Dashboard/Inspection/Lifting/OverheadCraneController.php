@@ -134,7 +134,7 @@ class OverheadCraneController extends Controller
                               <div class="dropdown-divider"></div>';
                               if (OverheadCrane::find($row->overhead_crane_id)->overheadcrane2)
                                 {
-                                    $btn .= '<a href="'.route('overhead_crane2_edit.overhead_crane', OverheadCrane::find($row->overhead_crane_id)->overheadcrane2->id).'" class="dropdown-item">Edit 2nd Page</a>';
+                                    $btn .= '<a href="'.route('overhead_crane2_edit.overhead_crane', $row->overhead_crane_id).'" class="dropdown-item">Edit 2nd Page</a>';
                                 }
                                 else
                                 {

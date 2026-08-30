@@ -335,34 +335,58 @@ Route::currentRouteName() == "nregister.show" || Route::currentRouteName() == "d
 <script src="{{asset('app-assets/js/html2canvas.js')}}"></script>
 <script src="{{asset('app-assets/js/jspdf.js')}}"></script>
 <script>
-	function setPdfUploadState(isLoading) {
+	function setPdfUploadState(isLoading, message) {
 		var $button = $('#uploadpdf');
-		var $icon = $button.find('i');
 		if (isLoading) {
-			$icon.removeClass('la la-paper-plane-o').addClass('la la-refresh spinner');
+			var text = message || 'Processing PDF...';
+			$button.html(text + ' <i class="la la-refresh spinner"></i>');
 			$button.prop('disabled', true);
 			return;
 		}
 
-		$icon.removeClass('la la-refresh spinner').addClass('la la-paper-plane-o');
+		$button.html('Upload / Update PDF <i class="la la-paper-plane-o"></i>');
 		$button.prop('disabled', false);
 	}
 
 	function captureReportPagesSequentially() {
 		var captureElements = Array.prototype.slice.call(document.querySelectorAll('.donw'));
 		var images = [];
+		var totalPages = captureElements.length;
 
-		return captureElements.reduce(function (chain, element) {
+		if (!totalPages) {
+			return Promise.reject(new Error('no_pages_found'));
+		}
+
+		return captureElements.reduce(function (chain, element, index) {
 			return chain.then(function () {
+				setPdfUploadState(true, 'Capturing (' + (index + 1) + '/' + totalPages + ')');
 				return html2canvas(element, {
 					backgroundColor: '#ffffff',
-					scale: 1,
+					scale: 1.8,
 					useCORS: true,
 					scrollX: 0,
 					scrollY: 0,
 					logging: false
 				}).then(function (canvas) {
-					images.push(canvas.toDataURL('image/jpeg', 0.72));
+					var jpegData = canvas.toDataURL('image/jpeg', 0.85);
+					images.push(jpegData);
+
+					setPdfUploadState(true, 'Uploading (' + (index + 1) + '/' + totalPages + ')');
+					var formData = new FormData();
+					formData.append('imageurl', '{{$imageurl}}');
+					formData.append('folder', '{{$folder}}');
+					formData.append('page_index', index);
+					formData.append('page_data', jpegData);
+
+					return $.ajax({
+						headers: { 'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content') },
+						type: 'POST',
+						url: "{{route('report.makeImageForPdf', $for_approve_url)}}",
+						cache: false,
+						data: formData,
+						processData: false,
+						contentType: false
+					});
 				});
 			});
 		}, Promise.resolve()).then(function () {
@@ -395,22 +419,7 @@ Route::currentRouteName() == "nregister.show" || Route::currentRouteName() == "d
 	}
 
 	function uploadCapturedSnapshots(images) {
-		var formData = new FormData();
-		formData.append('imageurl', '{{$imageurl}}');
-		formData.append('folder', '{{$folder}}');
-		formData.append('image', JSON.stringify(images));
-
-		return $.ajax({
-			headers: { 'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content') },
-			type: 'POST',
-			url: "{{route('report.makeImageForPdf', $for_approve_url)}}",
-			cache: false,
-			data: formData,
-			processData: false,
-			contentType: false
-		}).then(function () {
-			return images;
-		});
+		return Promise.resolve(images);
 	}
 
 	function convert_pdf(images) {
@@ -418,6 +427,7 @@ Route::currentRouteName() == "nregister.show" || Route::currentRouteName() == "d
 			return Promise.reject(new Error('pdf_images_missing'));
 		}
 
+		setPdfUploadState(true, 'Building PDF...');
 		const pdf_page_mode = $('#page_mode').val() || 'p';
 
 		var doc = new jspdf.jsPDF(pdf_page_mode, 'pt', 'a4', true);
@@ -426,10 +436,12 @@ Route::currentRouteName() == "nregister.show" || Route::currentRouteName() == "d
 		for (var i = 0; i < images.length; ++i) {
 			doc.addImage(images[i], "JPEG", 0, 0, width, height, "alias" + i, 'FAST');
 			if (i + 1 != images.length) {
-				doc.addPage()
+				doc.addPage();
 			}
 		}
 		var blob = doc.output('blob');
+
+		setPdfUploadState(true, 'Saving PDF...');
 		var formData = new FormData();
 		formData.append('pdf', blob, 'nregister-report.pdf');
 		formData.append('imageurl', '{{$imageurl}}');

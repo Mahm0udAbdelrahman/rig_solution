@@ -111,6 +111,36 @@ class Crane2Controller extends Controller
 	      }
     }
 
+    protected function resolveCraneModels($param): array
+    {
+        $crane = null;
+        $crane2 = null;
+
+        if ($param instanceof Crane) {
+            $crane = $param;
+            $crane2 = $crane->crane2;
+        } elseif ($param instanceof Crane2) {
+            $crane2 = $param;
+            $crane = $crane2->crane;
+        } else {
+            $craneCandidate = Crane::find($param);
+            if ($craneCandidate) {
+                $crane = $craneCandidate;
+                $crane2 = $craneCandidate->crane2;
+            }
+
+            if (!$crane2) {
+                $crane2Candidate = Crane2::find($param);
+                if ($crane2Candidate) {
+                    $crane2 = $crane2Candidate;
+                    $crane = $crane ?: $crane2Candidate->crane;
+                }
+            }
+        }
+
+        return [$crane, $crane2];
+    }
+
     /**
      * Display the specified resource.
      *
@@ -125,27 +155,37 @@ class Crane2Controller extends Controller
     /**
      * Show the form for editing the specified resource.
      *
-     * @param  \App\Models\Crane2  $crane2
+     * @param  mixed  $id
      * @return \Illuminate\Http\Response
      */
-    public function edit(Crane2 $crane2, Crane $crane)
+    public function edit($id)
     {
+        [$crane, $crane2] = $this->resolveCraneModels($id);
+        if (!$crane || !$crane2) {
+            abort(404);
+        }
+
         return view('layouts.inspection.lifting.crane.second.edit', [
-						'page_name' => $this->page_name(1, $this->page_name),
-						'crane2' => $crane2,
-						'crane' => $crane2->crane->id
-				]);
+            'page_name' => $this->page_name(1, $this->page_name),
+            'crane2' => $crane2,
+            'crane' => $crane->id
+        ]);
     }
 
     /**
      * Update the specified resource in storage.
      *
      * @param  \Illuminate\Http\Request  $request
-     * @param  \App\Models\Crane2  $crane2
+     * @param  mixed  $id
      * @return \Illuminate\Http\Response
      */
-    public function update(Request $request, Crane2 $crane2, Crane $crane)
+    public function update(Request $request, $id)
     {
+        [$crane, $crane2] = $this->resolveCraneModels($id);
+        if (!$crane || !$crane2) {
+            return response()->json(['error' => 'Inspection record not found.'], 404);
+        }
+
         $data = [
             'lcr2_1' => $request->lcr2_1,
             'lcr2_2' => $request->lcr2_2,

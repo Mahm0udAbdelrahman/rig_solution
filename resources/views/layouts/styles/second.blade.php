@@ -1,3 +1,6 @@
+@php
+	$footerAddress = $footerAddress ?? \App\Models\GeneralInfo\FooterAddress::getFooterAddress();
+@endphp
 @section('second_paper')
 <div class="card donw">
 		<div class="card-content">
@@ -30,15 +33,14 @@
 								</div>
 						</div>
 						@stack('page_content_second')
-						<div class="row mt-1">
-								<div class="col-4 text-bold-600 pl-0">
+						<div class="d-flex justify-content-between align-items-center mt-1" style="font-size: 8px; font-weight: 700; color: #000; width: 100%;">
+								@if(isset($iso_number) && $iso_number)
+								<div class="text-nowrap mr-1" style="font-size: 8px;">
 										{{$iso_number}}
 								</div>
-								<div class="col-5">
-										<img src="{{asset('app-assets/images/footer.jpg')}}" style="max-width: 100%;" />
-								</div>
-								<div class="col-3 text-right text-bold-600 pr-0">
-
+								@endif
+								<div class="text-center text-nowrap flex-grow-1" style="font-size: 8px;">
+										{!! $footerAddress->getPartsHtml() !!}
 								</div>
 						</div>
 				</div>

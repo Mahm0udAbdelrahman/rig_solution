@@ -139,7 +139,7 @@ class ForkliftController extends Controller
                               <div class="dropdown-divider"></div>';
                               if (Forklift::find($row->forklift_id)->forklift2)
                                                                 {
-                                    $btn .= '<a href="'.route('forklift2_edit.forklift', Forklift::find($row->forklift_id)->forklift2->id).'" class="dropdown-item">Edit 2nd Page</a>';
+                                    $btn .= '<a href="'.route('forklift2_edit.forklift', $row->forklift_id).'" class="dropdown-item">Edit 2nd Page</a>';
                                                                 }
                                                                 else
                                                                 {

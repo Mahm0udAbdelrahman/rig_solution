@@ -112,6 +112,36 @@ class OverheadCrane2Controller extends Controller
         }
     }
 
+    protected function resolveOverheadCraneModels($param): array
+    {
+        $overheadCrane = null;
+        $overheadCrane2 = null;
+
+        if ($param instanceof OverheadCrane) {
+            $overheadCrane = $param;
+            $overheadCrane2 = $overheadCrane->overheadCrane2;
+        } elseif ($param instanceof OverheadCrane2) {
+            $overheadCrane2 = $param;
+            $overheadCrane = $overheadCrane2->overheadCrane;
+        } else {
+            $overheadCraneCandidate = OverheadCrane::find($param);
+            if ($overheadCraneCandidate) {
+                $overheadCrane = $overheadCraneCandidate;
+                $overheadCrane2 = $overheadCraneCandidate->overheadCrane2;
+            }
+
+            if (!$overheadCrane2) {
+                $overheadCrane2Candidate = OverheadCrane2::find($param);
+                if ($overheadCrane2Candidate) {
+                    $overheadCrane2 = $overheadCrane2Candidate;
+                    $overheadCrane = $overheadCrane ?: $overheadCrane2Candidate->overheadCrane;
+                }
+            }
+        }
+
+        return [$overheadCrane, $overheadCrane2];
+    }
+
     /**
      * Display the specified resource.
      *
@@ -126,27 +156,37 @@ class OverheadCrane2Controller extends Controller
     /**
      * Show the form for editing the specified resource.
      *
-     * @param  \App\Models\OverheadCrane2  $overheadCrane2
+     * @param  mixed  $id
      * @return \Illuminate\Http\Response
      */
-    public function edit(OverheadCrane2 $overheadCrane2, OverheadCrane $overheadCrane)
+    public function edit($id)
     {
+        [$overheadCrane, $overheadCrane2] = $this->resolveOverheadCraneModels($id);
+        if (!$overheadCrane || !$overheadCrane2) {
+            abort(404);
+        }
+
         return view('layouts.inspection.lifting.overheadcrane.second.edit', [
-						'page_name' => $this->page_name(1, $this->page_name),
-						'overheadCrane2' => $overheadCrane2,
-						'overheadCrane' => $overheadCrane2->overheadCrane->id
-				]);
+            'page_name' => $this->page_name(1, $this->page_name),
+            'overheadCrane2' => $overheadCrane2,
+            'overheadCrane' => $overheadCrane->id
+        ]);
     }
 
     /**
      * Update the specified resource in storage.
      *
      * @param  \Illuminate\Http\Request  $request
-     * @param  \App\Models\OverheadCrane2  $overheadCrane2
+     * @param  mixed  $id
      * @return \Illuminate\Http\Response
      */
-    public function update(Request $request, OverheadCrane2 $overheadCrane2, OverheadCrane $overheadCrane)
+    public function update(Request $request, $id)
     {
+        [$overheadCrane, $overheadCrane2] = $this->resolveOverheadCraneModels($id);
+        if (!$overheadCrane || !$overheadCrane2) {
+            return response()->json(['error' => 'Inspection record not found.'], 404);
+        }
+
         $data = [
             'locr2_1' => $request->locr2_1,
             'locr2_2' => $request->locr2_2,

@@ -1,4 +1,7 @@
 @extends('layouts.app')
+@php
+  $footerAddress = $footerAddress ?? \App\Models\GeneralInfo\FooterAddress::getFooterAddress();
+@endphp
 
 @section('header')
 <link rel="stylesheet" type="text/css" href="{{asset('app-assets/vendors/css/ui/jquery-ui.min.css')}}">
@@ -205,14 +208,14 @@
           <!-- -->
         </div>
         <!-- -->
-        <div class="row mt-1">
-          <div class="col-4 text-bold-600 pl-0 middle">
+        <div class="d-flex justify-content-between align-items-center mt-1" style="font-size: 8px; font-weight: 700; color: #000; width: 100%;">
+          <div class="text-nowrap mr-1" style="font-size: 8px;">
             Form # RSE-GF-01 - ISSUE 05 / Aug 2021
           </div>
-          <div class="col-5">
-            <img src="{{asset('app-assets/images/footer.jpg')}}" style="max-width: 100%;" />
+          <div class="text-center text-nowrap flex-grow-1 px-1" style="font-size: 8px;">
+            {!! $footerAddress->getPartsHtml() !!}
           </div>
-          <div class="col-3 text-right text-bold-600 middle" style="justify-content: flex-end;">
+          <div class="text-nowrap ml-1" style="font-size: 8px;">
             Page 1 of 1
           </div>
         </div>

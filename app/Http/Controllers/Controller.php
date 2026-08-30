@@ -1297,7 +1297,7 @@ class Controller extends BaseController
 
             $secondPage = data_get($record, $secondRelation);
             if ($secondPage) {
-                $btn .= '<a href="' . route($secondEditRoute, $secondPage->id) . '" class="dropdown-item">Edit 2nd Page</a>';
+                $btn .= '<a href="' . route($secondEditRoute, $modelId) . '" class="dropdown-item">Edit 2nd Page</a>';
             } else {
                 $btn .= '<a href="' . route($secondCreateRoute, $modelId) . '" class="dropdown-item">Create 2nd Page</a>';
             }

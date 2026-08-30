@@ -20,7 +20,7 @@
                     <div class="form-group mb-0">
                         <div class="controls">
                             <label>JCF Number</label>
-                            <select class="form-control" id="lcr_1" name="lcr_1" required="">
+                            <select class="form-control" id="lcr_1" name="lcr_1" required="" disabled>
                                 <option value="">Select Value</option>
                                 @foreach($jobrequests as $jobrequest)
                                     <option value="{{$jobrequest->id}}"  @if($jobrequest->id === $throughExamination->job_request_id) selected @endif>{{$jobrequest->code}}</option>

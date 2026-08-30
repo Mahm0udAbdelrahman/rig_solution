@@ -65,9 +65,9 @@
 					</div>
 					<div class="col-1 p-0 pl-1 border-dark">2 of 2</div>
 				</div>
-				<div class="row mt-1 text-center" style="font-size: 10px; font-weight: 700; color: #000; justify-content: center; width: 100%;">
+				<div class="row mt-1 text-center" style="font-size: 8.5px; font-weight: 700; color: #000; justify-content: center; width: 100%;">
 					<div class="col-12 text-center">
-						<p class="mb-0">
+						<p class="mb-0" style="white-space: nowrap; font-size: 8.5px; font-weight: 700;">
 							{!! $footerAddress->getPartsHtml() !!}
 						</p>
 					</div>

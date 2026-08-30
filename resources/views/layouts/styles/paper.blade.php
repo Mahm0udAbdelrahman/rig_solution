@@ -38,6 +38,9 @@
 </style>
 @endsection
 
+@php
+	$footerAddress = $footerAddress ?? \App\Models\GeneralInfo\FooterAddress::getFooterAddress();
+@endphp
 @section('content')
 		@if(isset($have_edit) && count($have_edit) > 1 )
 			<div class="card no-print">
@@ -100,15 +103,14 @@
 												</div>
 										</div>
 										@stack('page_content')
-										<div class="row mt-1">
-												<div class="col-4 text-bold-600 pl-0">
+										<div class="d-flex justify-content-between align-items-center mt-1" style="font-size: 8px; font-weight: 700; color: #000; width: 100%;">
+												@if(isset($iso_number) && $iso_number)
+												<div class="text-nowrap mr-1" style="font-size: 8px;">
 														{{$iso_number}}
 												</div>
-												<div class="col-5">
-														<img src="{{asset('app-assets/images/footer.jpg')}}" style="max-width: 100%;" />
-												</div>
-												<div class="col-3 text-right text-bold-600 pr-0">
-
+												@endif
+												<div class="text-center text-nowrap flex-grow-1" style="font-size: 8px;">
+														{!! $footerAddress->getPartsHtml() !!}
 												</div>
 										</div>
 								</div>
@@ -196,48 +198,84 @@
 						return pdfDependenciesPromise;
 				}
 
-				function take_snap_shot(){
-						var captureElements = document.querySelectorAll('.donw');
-						var snapshots = Array.prototype.map.call(captureElements, function (element) {
-								return html2canvas(element).then(function (canvas) {
-										return canvas.toDataURL('image/png').replace('image/png', 'image/octet-stream');
-								});
-						});
+				function setPdfUploadState(isLoading, message) {
+						var $btn = $('#uploadpdf');
+						$btn.prop('disabled', isLoading);
+						if (isLoading) {
+								var text = message || 'Processing PDF...';
+								$btn.html(text + ' <i class="la la-refresh spinner"></i>');
+						} else {
+								$btn.html('Upload / Update PDF <i class="la la-paper-plane-o"></i>');
+						}
+				}
 
-						return Promise.all(snapshots).then(function (images) {
-								var formData = new FormData();
-								formData.append('imageurl', '{{$imageurl}}');
-								formData.append('folder', '{{$folder}}');
-								formData.append('image', JSON.stringify(images));
-								return $.ajax({
-										headers: {'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')},
-										type: 'POST',
-										url: "{{route('report.makeImageForPdf', $for_approve_url)}}",
-										cache: false,
-										data: formData,
-										processData: false,
-										contentType: false
-								}).then(function () {
-										return images;
+				function take_snap_shot(){
+						var captureElements = Array.prototype.slice.call(document.querySelectorAll('.donw'));
+						var images = [];
+						var totalPages = captureElements.length;
+
+						if (!totalPages) {
+								return Promise.reject(new Error('no_pages_found'));
+						}
+
+						return captureElements.reduce(function (chain, element, index) {
+								return chain.then(function () {
+										setPdfUploadState(true, 'Capturing (' + (index + 1) + '/' + totalPages + ')');
+										return html2canvas(element, {
+												backgroundColor: '#ffffff',
+												scale: 1.8,
+												useCORS: true,
+												scrollX: 0,
+												scrollY: 0,
+												logging: false
+										}).then(function (canvas) {
+												var jpegData = canvas.toDataURL('image/jpeg', 0.85);
+												images.push(jpegData);
+
+												setPdfUploadState(true, 'Uploading (' + (index + 1) + '/' + totalPages + ')');
+												var formData = new FormData();
+												formData.append('imageurl', '{{$imageurl}}');
+												formData.append('folder', '{{$folder}}');
+												formData.append('page_index', index);
+												formData.append('page_data', jpegData);
+
+												return $.ajax({
+														headers: {'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')},
+														type: 'POST',
+														url: "{{route('report.makeImageForPdf', $for_approve_url)}}",
+														cache: false,
+														data: formData,
+														processData: false,
+														contentType: false
+												});
+										});
 								});
+						}, Promise.resolve()).then(function () {
+								if (!images.length || images.length !== captureElements.length) {
+										throw new Error('capture_incomplete');
+								}
+								return images;
 						});
 				}
 
 				function convert_pdf(images)
 				{
+				  		setPdfUploadState(true, 'Building PDF...');
 				  		const pdf_page_mode = $('#page_mode').val() || 'p';
 
 						var doc = new jspdf.jsPDF(pdf_page_mode, 'pt','a4',true);
 						var width = doc.internal.pageSize.getWidth();
 						var height = doc.internal.pageSize.getHeight();
 						for (var i = 0; i < images.length; ++i){
-								doc.addImage(images[i], "PNG", 0, 0, width, height, "alias"+i, 'FAST')
+								doc.addImage(images[i], "JPEG", 0, 0, width, height, "alias"+i, 'FAST');
 								if (i+1 != images.length)
 								{
-										doc.addPage()
+										doc.addPage();
 								}
 						}
 						var blob = doc.output("blob");
+
+						setPdfUploadState(true, 'Saving PDF...');
 						var formData = new FormData();
 						formData.append('pdf', blob);
 						formData.append('imageurl', '{{$imageurl}}');
@@ -269,6 +307,7 @@
 				}
 
 				$(document).on('click','#uploadpdf',function(){
+						setPdfUploadState(true, 'Starting...');
 						loadPdfDependencies()
 								.then(function () {
 										return take_snap_shot();
@@ -276,8 +315,12 @@
 								.then(function (images) {
 										return convert_pdf(images);
 								})
+								.then(function () {
+										setPdfUploadState(false);
+								})
 								.catch(function (error) {
 										console.error(error);
+										setPdfUploadState(false);
 										toastr.error('Capture failed', 'Unable to build the full PDF', { positionClass: 'toast-bottom-left', "showMethod": "slideDown", "hideMethod": "slideUp", "progressBar": true, timeOut: 3000, fadeOut: 1000 });
 								});
 				});

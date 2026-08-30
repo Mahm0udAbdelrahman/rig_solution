@@ -1,3 +1,6 @@
+@php
+    $footerAddress = $footerAddress ?? \App\Models\GeneralInfo\FooterAddress::getFooterAddress();
+@endphp
 <!DOCTYPE html>
 <html>
     <head>
@@ -24,12 +27,12 @@
         <div class="row page-break-before:always;">
             <table>
                 <tr>
-                    <td width="33.3%">
+                    <td width="25%">
                         <p class="text-bold-600 emadnew pl-1" style="font-size: 70%;">Form # RSE-RF-01 - ISSUE 05 / Jan 2022
                         </p>
                     </td>
-                    <td class="text-center" width="33.3%"><img src="{{asset('app-assets/images/footer.jpg')}}" style="max-width: 100%;"></td>
-                    <td width="33.3%"></td>
+                    <td class="text-center" width="50%" style="font-size: 9px; font-weight: bold;">{{ $footerAddress->getPartsPlainText() }}</td>
+                    <td width="25%"></td>
                 </tr>
             </table>
             

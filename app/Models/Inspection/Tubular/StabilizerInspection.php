@@ -201,11 +201,43 @@ class StabilizerInspection extends Model
         return array_merge($defaults, $decodedArray);
     }
 
+    public function setExaminationDateAttribute($value)
+    {
+        if (empty($value)) {
+            $this->attributes['examination_date'] = null;
+            return;
+        }
+        try {
+            if ($value instanceof \DateTimeInterface) {
+                $this->attributes['examination_date'] = $value->format('Y-m-d');
+            } elseif (is_string($value)) {
+                $value = trim($value);
+                if (preg_match('/^\d{2}-\d{2}-\d{4}$/', $value)) {
+                    $this->attributes['examination_date'] = Carbon::createFromFormat('d-m-Y', $value)->format('Y-m-d');
+                } elseif (preg_match('/^\d{4}-\d{2}-\d{2}$/', $value)) {
+                    $this->attributes['examination_date'] = $value;
+                } else {
+                    $this->attributes['examination_date'] = Carbon::parse($value)->format('Y-m-d');
+                }
+            } else {
+                $this->attributes['examination_date'] = null;
+            }
+        } catch (\Throwable $e) {
+            $this->attributes['examination_date'] = null;
+        }
+    }
+
     // Accessor method to format examination_date attribute
     public function getExaminationDateAttribute($value)
     {
-        $date = new Carbon($value);
-        return $value ? $date->format('d-m-Y') : null;
+        if (empty($value)) {
+            return null;
+        }
+        try {
+            return Carbon::parse($value)->format('d-m-Y');
+        } catch (\Throwable $e) {
+            return null;
+        }
     }
 
     // Define the virtual attribute accessor for related Footer Values

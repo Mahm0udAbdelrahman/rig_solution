@@ -113,6 +113,36 @@ class Forklift2Controller extends Controller
       }
     }
 
+    protected function resolveForkliftModels($param): array
+    {
+        $forklift = null;
+        $forklift2 = null;
+
+        if ($param instanceof Forklift) {
+            $forklift = $param;
+            $forklift2 = $forklift->forklift2;
+        } elseif ($param instanceof Forklift2) {
+            $forklift2 = $param;
+            $forklift = $forklift2->forklift;
+        } else {
+            $forkliftCandidate = Forklift::find($param);
+            if ($forkliftCandidate) {
+                $forklift = $forkliftCandidate;
+                $forklift2 = $forkliftCandidate->forklift2;
+            }
+
+            if (!$forklift2) {
+                $forklift2Candidate = Forklift2::find($param);
+                if ($forklift2Candidate) {
+                    $forklift2 = $forklift2Candidate;
+                    $forklift = $forklift ?: $forklift2Candidate->forklift;
+                }
+            }
+        }
+
+        return [$forklift, $forklift2];
+    }
+
     /**
      * Display the specified resource.
      *
@@ -127,35 +157,44 @@ class Forklift2Controller extends Controller
     /**
      * Show the form for editing the specified resource.
      *
-     * @param  \App\Models\Forklift2  $forklift2
+     * @param  mixed  $id
      * @return \Illuminate\Http\Response
      */
-    public function edit(Forklift2 $forklift2, Forklift $forklift)
+    public function edit($id)
     {
-      // return view('layouts.inspection.lifting.forklift.second.edit', ['page_name' => "lifting forklift edit", 'forklift2' => $forklift2, 'forklift' => $forklift2->forklift->id]);
-      return view('layouts.inspection.lifting.forklift.second.edit', [
-          'page_name' => $this->page_name(1, $this->page_name),
-          'forklift2' => $forklift2,
-          'forklift' => $forklift2->forklift->id
-      ]);
+        [$forklift, $forklift2] = $this->resolveForkliftModels($id);
+        if (!$forklift || !$forklift2) {
+            abort(404);
+        }
+
+        return view('layouts.inspection.lifting.forklift.second.edit', [
+            'page_name' => $this->page_name(1, $this->page_name),
+            'forklift2' => $forklift2,
+            'forklift' => $forklift->id
+        ]);
     }
 
     /**
      * Update the specified resource in storage.
      *
      * @param  \Illuminate\Http\Request  $request
-     * @param  \App\Models\Forklift2  $forklift2
+     * @param  mixed  $id
      * @return \Illuminate\Http\Response
      */
-    public function update(Request $request, Forklift2 $forklift2, Forklift $forklift)
+    public function update(Request $request, $id)
     {
+        [$forklift, $forklift2] = $this->resolveForkliftModels($id);
+        if (!$forklift || !$forklift2) {
+            return response()->json(['error' => 'Inspection record not found.'], 404);
+        }
+
         $isApprovedRevision = $forklift->report && $forklift->report->user_id_approved != null;
 
         $path = $request->file('lfr2_42');
         $path_crypt = $request->imagedata;
         if($path != NULL){
-          if(!$isApprovedRevision && $request->publish != 'yes' && !empty($forklift->forklift2->lfr2_42)){
-            Storage::disk('public')->delete('camera/inspection/lifting/forklifts/second/'.$forklift->forklift2->lfr2_42);
+          if(!$isApprovedRevision && $request->publish != 'yes' && !empty($forklift2->lfr2_42)){
+            Storage::disk('public')->delete('camera/inspection/lifting/forklifts/second/'.$forklift2->lfr2_42);
           }
           $path_crypt = Crypt::encryptString($path->getClientOriginalName());
           $store = $path->storeAs(
@@ -163,8 +202,8 @@ class Forklift2Controller extends Controller
           $path_crypt
           );
         }else{
-          if(!$isApprovedRevision && $request->imagedata == '' && $request->publish != 'yes' && !empty($forklift->forklift2->lfr2_42)){
-            Storage::disk('public')->delete('camera/inspection/lifting/forklifts/second/'.$forklift->forklift2->lfr2_42);
+          if(!$isApprovedRevision && $request->imagedata == '' && $request->publish != 'yes' && !empty($forklift2->lfr2_42)){
+            Storage::disk('public')->delete('camera/inspection/lifting/forklifts/second/'.$forklift2->lfr2_42);
           }
         }
 

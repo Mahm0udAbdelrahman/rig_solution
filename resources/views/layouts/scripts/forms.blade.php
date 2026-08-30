@@ -183,6 +183,121 @@
 						}
 				};
 
+				window.jumpToFirstWizardErrorStep = function (formElement, currentIndex) {
+						try {
+								var $targetForm = formElement && formElement.jquery ? formElement : $(formElement || '.steps-validation').first();
+								if ($targetForm.length && !$targetForm.is('form')) {
+										$targetForm = $targetForm.closest('form');
+								}
+								if (!$targetForm.length) {
+										$targetForm = $('.steps-validation, form.wizard, form').first();
+								}
+								if (!$targetForm.length) {
+										return false;
+								}
+
+								var $firstInvalid = $();
+
+								// 1. Check validator errorList if jQuery Validate plugin is attached
+								var validator = $targetForm.data('validator');
+								if (validator && validator.errorList && validator.errorList.length > 0) {
+										for (var i = 0; i < validator.errorList.length; i++) {
+												var item = validator.errorList[i];
+												if (item && item.element) {
+														var $el = $(item.element);
+														if ($el.length && !$el.prop('disabled')) {
+																$firstInvalid = $el;
+																break;
+														}
+												}
+										}
+								}
+
+								// 2. Check DOM for fields with error classes or HTML5 invalid status
+								if (!$firstInvalid.length) {
+										$firstInvalid = $targetForm.find('.is-invalid, :input.is-invalid, .error:not(label), :input.error, :input:invalid').filter(function () {
+												return !$(this).prop('disabled');
+										}).first();
+								}
+
+								// 3. Check for form-group with error class (.has-error, .danger)
+								if (!$firstInvalid.length) {
+										var $hasErrorGroup = $targetForm.find('.form-group.has-error, .form-group.danger, .controls.danger').first();
+										if ($hasErrorGroup.length) {
+												$firstInvalid = $hasErrorGroup.find(':input:not(:disabled)').first();
+										}
+								}
+
+								// 4. Check for error label or help block with text
+								if (!$firstInvalid.length) {
+										var $errorLabel = $targetForm.find('label.error:visible, .help-block.danger:not(:empty), .invalid-feedback:not(:empty)').first();
+										if ($errorLabel.length) {
+												var $associated = $errorLabel.closest('.controls, .form-group').find(':input:not(:disabled)').first();
+												$firstInvalid = $associated.length ? $associated : $errorLabel;
+										}
+								}
+
+								// 5. Check manually for empty required inputs in visible/hidden step bodies
+								if (!$firstInvalid.length) {
+										$targetForm.find('.content > .body, fieldset').each(function () {
+												var manual = window.manualValidateWizardVisibleStep ? window.manualValidateWizardVisibleStep($(this)) : { valid: true };
+												if (!manual.valid && manual.firstInvalid && manual.firstInvalid.length) {
+														$firstInvalid = manual.firstInvalid;
+														return false;
+												}
+										});
+								}
+
+								if (!$firstInvalid.length) {
+										return false;
+								}
+
+								// Find the step body / fieldset container for the invalid field
+								var $stepBody = $firstInvalid.closest('.body');
+								if (!$stepBody.length) {
+										$stepBody = $firstInvalid.closest('fieldset');
+								}
+
+								if ($stepBody.length) {
+										var $allBodies = $targetForm.find('.content > .body');
+										if (!$allBodies.length) {
+												$allBodies = $targetForm.find('fieldset');
+										}
+										var targetStepIndex = $allBodies.index($stepBody);
+
+										if (targetStepIndex !== -1 && (typeof currentIndex === 'undefined' || targetStepIndex !== currentIndex)) {
+												// Switch step using jquery.steps 'select' API
+												try {
+														$targetForm.steps('select', targetStepIndex);
+												} catch (e) {
+														// Fallback: trigger click on step header tab
+														var $stepTab = $targetForm.find('.steps li a').eq(targetStepIndex);
+														if ($stepTab.length) {
+																$stepTab.trigger('click');
+														}
+												}
+										}
+								} else {
+										// Fallback for Bootstrap Tab Panes if used
+										var $tabPane = $firstInvalid.closest('.tab-pane');
+										if ($tabPane.length && $tabPane.attr('id')) {
+												var tabId = $tabPane.attr('id');
+												$('a[data-toggle="tab"][href="#' + tabId + '"], a[data-toggle="pill"][href="#' + tabId + '"]').tab('show');
+										}
+								}
+
+								// Scroll, focus, and display notification
+								setTimeout(function () {
+										window.showWizardValidationMessage($targetForm, $firstInvalid);
+								}, 150);
+
+								return true;
+						} catch (e) {
+								console.error('jumpToFirstWizardErrorStep exception:', e);
+								return false;
+						}
+				};
+
 				window.validateWizardOnFinishing = function (formElement, currentIndex) {
 						try {
 								var $form = formElement && formElement.jquery ? formElement : $(formElement || '.steps-validation').first();
@@ -206,55 +321,7 @@
 								var isValid = $form.valid();
 
 								if (!isValid) {
-										var $firstInvalid = $();
-										var validator = $form.data('validator');
-										if (validator && validator.errorList && validator.errorList.length > 0) {
-												$firstInvalid = $(validator.errorList[0].element);
-										}
-
-										if (!$firstInvalid.length) {
-												$firstInvalid = $form.find('.error, :input.error, .is-invalid, :input:invalid').first();
-										}
-
-										if (!$firstInvalid.length) {
-												$form.find('.content > .body, fieldset').each(function () {
-														var manual = window.manualValidateWizardVisibleStep ? window.manualValidateWizardVisibleStep($(this)) : { valid: true };
-														if (!manual.valid && manual.firstInvalid && manual.firstInvalid.length) {
-																$firstInvalid = manual.firstInvalid;
-																return false;
-														}
-												});
-										}
-
-										if ($firstInvalid.length) {
-												var $stepBody = $firstInvalid.closest('.body');
-												if (!$stepBody.length) {
-														$stepBody = $firstInvalid.closest('fieldset');
-												}
-
-												if ($stepBody.length) {
-														var targetStepIndex = $form.find('.content > .body').index($stepBody);
-														if (targetStepIndex === -1) {
-																targetStepIndex = $form.find('fieldset').index($stepBody);
-														}
-
-														if (targetStepIndex !== -1 && targetStepIndex !== currentIndex) {
-																var $stepTab = $form.find('.steps li a').eq(targetStepIndex);
-																if ($stepTab.length) {
-																		$stepTab.trigger('click');
-																} else {
-																		try {
-																				$form.steps('select', targetStepIndex);
-																		} catch (e) {}
-																}
-														}
-												}
-
-												setTimeout(function () {
-														window.showWizardValidationMessage($form, $firstInvalid);
-												}, 100);
-										}
-
+										window.jumpToFirstWizardErrorStep($form, currentIndex);
 										return false;
 								}
 
@@ -264,6 +331,84 @@
 								return true;
 						}
 				};
+
+				// --- Global Interceptor for $.fn.steps ---
+				if (typeof $.fn !== 'undefined' && typeof $.fn.steps === 'function' && !$.fn.steps._rigErrorJumpPatched) {
+						var _originalStepsFn = $.fn.steps;
+
+						$.fn.steps = function (options) {
+								if (typeof options === 'object' && options !== null) {
+										var userOnFinishing = options.onFinishing;
+										options.onFinishing = function (event, currentIndex) {
+												var $form = $(this);
+												var isOK = true;
+
+												if (typeof userOnFinishing === 'function') {
+														isOK = userOnFinishing.call(this, event, currentIndex);
+												} else if (typeof window.validateWizardOnFinishing === 'function') {
+														isOK = window.validateWizardOnFinishing($form, currentIndex);
+												} else if ($form.data('validator')) {
+														$form.validate().settings.ignore = ":disabled";
+														isOK = $form.valid();
+												}
+
+												if (isOK === false) {
+														window.jumpToFirstWizardErrorStep($form, currentIndex);
+														return false;
+												}
+
+												return true;
+										};
+
+										var userOnStepChanging = options.onStepChanging;
+										options.onStepChanging = function (event, currentIndex, newIndex) {
+												var $form = $(this);
+
+												// Always allow moving backwards
+												if (currentIndex > newIndex) {
+														if (typeof userOnStepChanging === 'function') {
+																return userOnStepChanging.call(this, event, currentIndex, newIndex);
+														}
+														return true;
+												}
+
+												var isOK = true;
+												if (typeof userOnStepChanging === 'function') {
+														isOK = userOnStepChanging.call(this, event, currentIndex, newIndex);
+												} else if (typeof window.validateWizardCurrentStep === 'function') {
+														isOK = window.validateWizardCurrentStep($form);
+												}
+
+												if (isOK === false) {
+														window.jumpToFirstWizardErrorStep($form, currentIndex);
+														return false;
+												}
+
+												return true;
+										};
+								}
+
+								var wizardInstance = _originalStepsFn.apply(this, arguments);
+
+								// Auto check for server-side validation errors on page load after wizard initialization
+								var $formInstance = $(this);
+								setTimeout(function () {
+										window.jumpToFirstWizardErrorStep($formInstance);
+								}, 250);
+
+								return wizardInstance;
+						};
+
+						$.fn.steps._rigErrorJumpPatched = true;
+				}
+
+				$(document).ready(function () {
+						setTimeout(function () {
+								$('.steps-validation, form.wizard').each(function () {
+										window.jumpToFirstWizardErrorStep($(this));
+								});
+						}, 350);
+				});
 
 				window.resolveInspectionAjaxErrorMessage = function (xhr, fallbackMessage) {
 						if (xhr && xhr.responseJSON) {
@@ -374,6 +519,24 @@
 										var message = window.resolveInspectionAjaxErrorMessage(xhr, settings.errorMessage);
 										window.__inspectionAjaxErrorSilenceUntil = Date.now() + 1200;
 
+										if (xhr && xhr.responseJSON && xhr.responseJSON.errors) {
+												$.each(xhr.responseJSON.errors, function (fieldName, errorMsgs) {
+														var cleanName = fieldName.replace(/\.(\d+)/g, '[$1]');
+														var $field = $form.find('[name="' + fieldName + '"], [name="' + cleanName + '"], [name="' + fieldName + '[]"]').first();
+														if ($field.length) {
+																$field.addClass('is-invalid error');
+																var $fg = $field.closest('.form-group, .controls');
+																if ($fg.length) {
+																		$fg.addClass('has-error danger');
+																		if (!$fg.find('.help-block.danger, .invalid-feedback').length) {
+																				$fg.append('<div class="help-block danger error-msg">' + (errorMsgs[0] || 'Invalid value') + '</div>');
+																		}
+																}
+														}
+												});
+												window.jumpToFirstWizardErrorStep($form);
+										}
+
 										if (typeof settings.onError === 'function') {
 												settings.onError(xhr, message, $form, $button);
 										}
@@ -425,6 +588,24 @@
 
 								window.__lastInspectionAjaxErrorSignature = signature;
 								window.__lastInspectionAjaxErrorAt = Date.now();
+
+								if (xhr && xhr.responseJSON && xhr.responseJSON.errors) {
+										var $form = $('.steps-validation, form.wizard').first();
+										if ($form.length) {
+												$.each(xhr.responseJSON.errors, function (fieldName, errorMsgs) {
+														var cleanName = fieldName.replace(/\.(\d+)/g, '[$1]');
+														var $field = $form.find('[name="' + fieldName + '"], [name="' + cleanName + '"], [name="' + fieldName + '[]"]').first();
+														if ($field.length) {
+																$field.addClass('is-invalid error');
+																var $fg = $field.closest('.form-group, .controls');
+																if ($fg.length) {
+																		$fg.addClass('has-error danger');
+																}
+														}
+												});
+												window.jumpToFirstWizardErrorStep($form);
+										}
+								}
 
 								if (typeof toastr !== 'undefined') {
 										toastr.error(message, 'Submit failed', {

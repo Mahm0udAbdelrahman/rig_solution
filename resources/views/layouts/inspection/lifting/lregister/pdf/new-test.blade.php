@@ -120,59 +120,64 @@
 <script src="{{asset('app-assets/js/jspdf.js')}}"></script>
 <script>
 
-  function setPdfUploadState(isLoading) {
-    var $icon = $('#uploadpdf i');
-    $('#uploadpdf').prop('disabled', isLoading);
+  function setPdfUploadState(isLoading, message) {
+    var $btn = $('#uploadpdf');
+    $btn.prop('disabled', isLoading);
     if (isLoading) {
-      $icon.removeClass('la la-paper-plane-o').addClass('la la-refresh spinner');
-      return;
+      var text = message || 'Processing PDF...';
+      $btn.html(text + ' <i class="la la-refresh spinner"></i>');
+    } else {
+      $btn.html('Upload / Update PDF <i class="la la-paper-plane-o"></i>');
     }
-
-    $icon.removeClass('la la-refresh spinner').addClass('la la-paper-plane-o');
   }
 
-  function captureReportPagesSequentially() {
+  function captureAndUploadPagesSequentially() {
     var captureElements = Array.prototype.slice.call(document.querySelectorAll('.donw'));
     var images = [];
+    var totalPages = captureElements.length;
 
-    return captureElements.reduce(function (chain, element) {
+    if (!totalPages) {
+      return Promise.reject(new Error('no_pages_found'));
+    }
+
+    return captureElements.reduce(function (chain, element, index) {
       return chain.then(function () {
+        setPdfUploadState(true, 'Capturing (' + (index + 1) + '/' + totalPages + ')');
         return html2canvas(element, {
           backgroundColor: '#ffffff',
-          scale: 2,
+          scale: 1.8,
           useCORS: true,
           scrollX: 0,
           scrollY: 0,
           logging: false
         }).then(function (canvas) {
-          images.push(canvas.toDataURL('image/png').replace('image/png', 'image/octet-stream'));
+          var jpegData = canvas.toDataURL('image/jpeg', 0.85);
+          images.push(jpegData);
+
+          setPdfUploadState(true, 'Uploading (' + (index + 1) + '/' + totalPages + ')');
+
+          var formData = new FormData();
+          formData.append('imageurl', '{{$imageurl}}');
+          formData.append('folder', '{{$folder}}');
+          formData.append('page_index', index);
+          formData.append('page_data', jpegData);
+
+          return $.ajax({
+            headers: { 'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content') },
+            type: 'POST',
+            url: "{{ route('report.makeImageForPdf', $for_approve_url) }}",
+            cache: false,
+            data: formData,
+            processData: false,
+            contentType: false
+          });
         });
       });
     }, Promise.resolve()).then(function () {
       if (!images.length || images.length !== captureElements.length) {
         throw new Error('capture_incomplete');
       }
-
       return images;
-    });
-  }
-
-  function uploadCapturedSnapshots(imagesArray) {
-    var formData = new FormData();
-    formData.append('imageurl', '{{$imageurl}}');
-    formData.append('folder', '{{$folder}}');
-    formData.append('image', JSON.stringify(imagesArray));
-
-    return $.ajax({
-      headers: { 'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content') },
-      type: 'POST',
-      url: "{{ route('report.makeImageForPdf', $for_approve_url) }}",
-      cache: false,
-      data: formData,
-      processData: false,
-      contentType: false
-    }).then(function () {
-      return imagesArray;
     });
   }
 
@@ -182,18 +187,21 @@
       return Promise.reject(new Error('pdf_images_missing'));
     }
 
-    var doc = new jspdf.jsPDF('p', 'mm', 'a4',true);
-    const pageWidth = 210;
-    const pageHeight = 297;
+    setPdfUploadState(true, 'Building PDF...');
+    const pdf_page_mode = $('#page_mode').val() || 'p';
+    var doc = new jspdf.jsPDF(pdf_page_mode, 'mm', 'a4', true);
+    const pageWidth = doc.internal.pageSize.getWidth();
+    const pageHeight = doc.internal.pageSize.getHeight();
 
     for (var i = 0; i < images.length; i++) {
-      doc.addImage(images[i], 'PNG', 0, 0, pageWidth, pageHeight, 'alias' + i, 'FAST');
+      doc.addImage(images[i], 'JPEG', 0, 0, pageWidth, pageHeight, 'alias' + i, 'FAST');
       if(i < images.length - 1){
         doc.addPage();
       }
     }
     var blob = doc.output('blob');
 
+    setPdfUploadState(true, 'Saving PDF...');
     var formData = new FormData();
     formData.append('folder', '{{$folder}}');
     formData.append('imageurl', '{{$imageurl}}');
@@ -210,9 +218,17 @@
       processData: false,
       contentType: false,
       success: function(data){
-        toastr.info('Good Job !', data.success, { positionClass: 'toast-bottom-left', "showMethod": "slideDown", "hideMethod": "slideUp", "progressBar": true, timeOut: 1000, fadeOut: 1000, onHidden: function () {
-          window.location.reload();
-        } });
+        toastr.info('Good Job !', (data && data.success) ? data.success : 'PDF Uploaded Successfully !', {
+          positionClass: 'toast-bottom-left',
+          showMethod: "slideDown",
+          hideMethod: "slideUp",
+          progressBar: true,
+          timeOut: 1000,
+          fadeOut: 1000,
+          onHidden: function () {
+            window.location.reload();
+          }
+        });
       },
       error: function(xhr){
         var message = 'Upload failed';
@@ -231,14 +247,16 @@
   }
 
   $(document).on('click','#uploadpdf',function(){
-    setPdfUploadState(true);
-    captureReportPagesSequentially()
-      .then(uploadCapturedSnapshots)
-      .then(convert_pdf)
+    setPdfUploadState(true, 'Starting...');
+    captureAndUploadPagesSequentially()
+      .then(function (images) {
+        return convert_pdf(images);
+      })
       .then(function () {
         setPdfUploadState(false);
       })
-      .catch(function () {
+      .catch(function (error) {
+        console.error(error);
         setPdfUploadState(false);
         toastr.error('Capture failed', 'Unable to build the full PDF', {
           positionClass: 'toast-bottom-left',

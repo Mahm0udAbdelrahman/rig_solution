@@ -213,20 +213,50 @@ class CustomController extends Controller
         $request->validate([
             'folder' => ['required', 'string'],
             'imageurl' => ['required', 'string'],
-            'image' => ['required'],
+            'image' => ['nullable'],
+            'page_index' => ['nullable', 'integer', 'min:0'],
+            'page_data' => ['nullable', 'string'],
         ]);
+
+        $folder = trim((string) $request->folder, '/');
+        $imageurl = trim((string) $request->imageurl, '/');
+
+        if ($request->filled('page_index') && $request->filled('page_data')) {
+            $key = (int) $request->input('page_index');
+            $data = (string) $request->input('page_data');
+            if (str_contains($data, 'base64,')) {
+                $data = explode('base64,', $data)[1];
+            }
+            $content = base64_decode($data);
+            if ($content !== false) {
+                $path = 'images/' . $folder . '/' . $imageurl . '/file' . $key . '.png';
+                Storage::disk('public')->put($path, $content);
+                FileManager::upsertPublicFile($path, now());
+            }
+            return response()->json(['success' => 'Page capture saved']);
+        }
 
         $images = json_decode((string) $request->image, true) ?: [];
 
         foreach ($images as $key => $value) {
-                $path = 'images/'.trim((string) $request->folder, '/').'/'.trim((string) $request->imageurl).'/file'.$key.'.png';
-                Storage::disk('public')->put($path, file_get_contents($value));
+            $data = (string) $value;
+            if (str_contains($data, 'base64,')) {
+                $data = explode('base64,', $data)[1];
+            }
+            $content = base64_decode($data);
+            if ($content === false) {
+                $content = @file_get_contents($value);
+            }
+            if ($content !== false && $content !== null) {
+                $path = 'images/' . $folder . '/' . $imageurl . '/file' . $key . '.png';
+                Storage::disk('public')->put($path, $content);
                 FileManager::upsertPublicFile($path, now());
+            }
         }
 
-            return response()->json(
-                ['success' => 'System Generate Capture']
-            );
+        return response()->json(
+            ['success' => 'System Generate Capture']
+        );
 
     }//end makeImageForPdf()
 
@@ -237,34 +267,45 @@ class CustomController extends Controller
         /*************************
          * Get Report Data Based On Job Request
          ********************************/
-    public static function getReportData(JobRequest $jobRequest)
+    public static function getReportData(?JobRequest $jobRequest = null)
     {
-            $last = InspectionReport::where('job_request_id', $jobRequest->id)->orderBy('code', 'DESC')->where('code', 'not LIKE', '%Duplicated')->first();
+        if (!$jobRequest) {
+            return response()->json([
+                'client_name'     => '',
+                'client_location' => '',
+                'address'         => '',
+                'lastcode'        => '001',
+                'deploc'          => '',
+                'clientDepartment'=> null,
+                'purchase_order'  => '-',
+            ]);
+        }
+
+        $last = InspectionReport::where('job_request_id', $jobRequest->id)->orderBy('code', 'DESC')->where('code', 'not LIKE', '%Duplicated')->first();
         if (!$last) {
-                $last = '001';
+            $last = '001';
         } else {
             if (str_contains($last->code, '/')) {
-                    $emad = substr($last->code, (strpos($last->code, '/') + 1));
-										$new_id = $emad+1;
-                    $last = $new_id > 999 ? $new_id : str_pad($new_id, 3, '0', STR_PAD_LEFT);
+                $emad = substr($last->code, (strpos($last->code, '/') + 1));
+                $new_id = $emad+1;
+                $last = $new_id > 999 ? $new_id : str_pad($new_id, 3, '0', STR_PAD_LEFT);
             } else {
-                    $new_id = $last->code + 1;
-                    $last = $new_id > 999 ? $new_id :str_pad($new_id, 3, '0', STR_PAD_LEFT);
+                $new_id = $last->code + 1;
+                $last = $new_id > 999 ? $new_id : str_pad($new_id, 3, '0', STR_PAD_LEFT);
             }
         }
 
-            return response()->json(
-                [
-                    // 'client' => $jobRequest->client,
-                    'client_name'     => $jobRequest->client? $jobRequest->client->name : $jobRequest->supplier->name,
-                    'client_location' => $jobRequest->client? $jobRequest->client->location: $jobRequest->supplier->location,
-                    'address'         => preg_replace('~[\\\\/:*?"<>[]|]~', '', $jobRequest->work_location),
-                    'lastcode'        => $last,
-                    'deploc'          => $jobRequest->deploc,
-                    'clientDepartment'=> $jobRequest->clientDepartment,
-                    'purchase_order'  => $jobRequest->purchase_order,
-                ]
-            );
+        return response()->json(
+            [
+                'client_name'     => $jobRequest->client ? $jobRequest->client->name : ($jobRequest->supplier ? $jobRequest->supplier->name : ''),
+                'client_location' => $jobRequest->client ? $jobRequest->client->location : ($jobRequest->supplier ? $jobRequest->supplier->location : ''),
+                'address'         => preg_replace('~[\\\\/:*?"<>[]|]~', '', $jobRequest->work_location ?? ''),
+                'lastcode'        => $last,
+                'deploc'          => $jobRequest->deploc ?? '',
+                'clientDepartment'=> $jobRequest->clientDepartment ?? null,
+                'purchase_order'  => $jobRequest->purchase_order ?? '-',
+            ]
+        );
 
     }//end getReportData()
     /************************************************************************************************/

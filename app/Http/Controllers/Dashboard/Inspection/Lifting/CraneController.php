@@ -163,7 +163,7 @@ class CraneController extends Controller
                                   					<a href="' . route('crane.edit', $row->crane_id) . '" class="dropdown-item">Edit 1st Page</a>
                                   					<div class="dropdown-divider"></div>';
 						if (Crane::find($row->crane_id)->crane2) {
-							$btn .= '<a href="' . route('crane2_edit.crane', Crane::find($row->crane_id)->crane2->id) . '" class="dropdown-item">Edit 2nd Page</a>';
+							$btn .= '<a href="' . route('crane2_edit.crane', $row->crane_id) . '" class="dropdown-item">Edit 2nd Page</a>';
 						} else {
 							$btn .= '<a href="' . route('crane2_create.crane', $row->crane_id) . '" class="dropdown-item">Create 2nd Page</a>';
 						}
