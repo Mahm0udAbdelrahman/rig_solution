@@ -145,17 +145,37 @@
     .listing-table-shell .wf-inline-actions .dropdown-menu,
     .listing-table-shell .jcf-inline-status .dropdown-menu,
     .wf-floating-dropdown-menu {
-        min-width: 250px;
+        min-width: 240px;
         max-width: 320px;
-        max-height: min(65vh, 420px);
-        overflow: auto;
-        border: 1px solid #dde4f3;
-        box-shadow: 0 16px 36px rgba(20, 30, 70, 0.16);
-        border-radius: 12px;
-        padding: 8px 0;
-        z-index: 1080;
-        overflow-x: hidden;
+        border: 1px solid #e2e8f0;
+        box-shadow: 0 12px 32px rgba(15, 23, 42, 0.18), 0 4px 6px rgba(15, 23, 42, 0.05);
+        border-radius: 10px;
+        padding: 6px 0;
+        z-index: 1090;
         background: #fff;
+        scrollbar-width: thin;
+        scrollbar-color: #cbd5e1 transparent;
+    }
+
+    .wf-floating-dropdown-menu::-webkit-scrollbar,
+    .listing-table-shell .wf-table-dropdown-menu::-webkit-scrollbar {
+        width: 6px;
+    }
+
+    .wf-floating-dropdown-menu::-webkit-scrollbar-track,
+    .listing-table-shell .wf-table-dropdown-menu::-webkit-scrollbar-track {
+        background: transparent;
+    }
+
+    .wf-floating-dropdown-menu::-webkit-scrollbar-thumb,
+    .listing-table-shell .wf-table-dropdown-menu::-webkit-scrollbar-thumb {
+        background: #cbd5e1;
+        border-radius: 6px;
+    }
+
+    .wf-floating-dropdown-menu::-webkit-scrollbar-thumb:hover,
+    .listing-table-shell .wf-table-dropdown-menu::-webkit-scrollbar-thumb:hover {
+        background: #94a3b8;
     }
 
     .wf-floating-dropdown-menu {
@@ -168,7 +188,8 @@
     .listing-table-shell .jcf-inline-status .dropdown-menu.show,
     .listing-table-shell .wf-table-dropdown-menu.show,
     .wf-floating-dropdown-menu.show {
-        overflow: hidden auto;
+        overflow-y: auto !important;
+        overflow-x: hidden !important;
     }
 
     .listing-table-shell .wf-table-dropdown-menu .dropdown-header,
@@ -180,7 +201,7 @@
         letter-spacing: .04em;
         text-transform: uppercase;
         font-weight: 700;
-        color: #6b7794;
+        color: #64748b;
     }
 
     .listing-table-shell .wf-table-dropdown-menu .dropdown-item,
@@ -188,10 +209,13 @@
     .listing-table-shell .jcf-inline-status .dropdown-menu .dropdown-item,
     .wf-floating-dropdown-menu .dropdown-item {
         white-space: normal;
-        padding: 9px 14px;
-        line-height: 1.35;
+        padding: 7px 14px;
+        font-size: .84rem;
+        line-height: 1.4;
         position: relative;
         z-index: 1;
+        color: #334155;
+        transition: background-color .15s ease, color .15s ease;
     }
 
     .listing-table-shell .wf-table-dropdown-menu .dropdown-item:hover,
@@ -202,15 +226,16 @@
     .listing-table-shell .jcf-inline-status .dropdown-menu .dropdown-item:focus,
     .wf-floating-dropdown-menu .dropdown-item:hover,
     .wf-floating-dropdown-menu .dropdown-item:focus {
-        background: #f4f6ff;
-        color: #4f40c7;
+        background: #f1f5f9;
+        color: #4338ca;
     }
 
     .listing-table-shell .wf-table-dropdown-menu .dropdown-divider,
     .listing-table-shell .wf-inline-actions .dropdown-menu .dropdown-divider,
     .listing-table-shell .jcf-inline-status .dropdown-menu .dropdown-divider,
     .wf-floating-dropdown-menu .dropdown-divider {
-        margin: 6px 0;
+        margin: 4px 0;
+        border-top-color: #f1f5f9;
     }
 
     @media (max-width: 767.98px) {

@@ -325,53 +325,170 @@
 						var viewportTop = $(window).scrollTop();
 						var viewportWidth = $(window).width();
 						var viewportHeight = $(window).height();
-						var menuWidth = $menu.outerWidth() || 280;
-						var menuHeight = $menu.outerHeight() || 320;
+
+						var menuWidth = $menu.outerWidth() || 260;
+
+						// Horizontal positioning: align right edge of menu with right edge of button
 						var left = toggleOffset.left + toggleWidth - menuWidth;
-						var top = toggleOffset.top + toggleHeight + 6;
-
-						if (left < viewportLeft + 8) {
-								left = toggleOffset.left;
+						if (left + menuWidth > viewportLeft + viewportWidth - 12) {
+								left = viewportLeft + viewportWidth - menuWidth - 12;
+						}
+						if (left < viewportLeft + 12) {
+								left = viewportLeft + 12;
 						}
 
-						if (left + menuWidth > viewportLeft + viewportWidth - 8) {
-								left = viewportLeft + viewportWidth - menuWidth - 8;
-						}
+						// Calculate vertical space in viewport
+						var spaceBelow = (viewportTop + viewportHeight) - (toggleOffset.top + toggleHeight);
+						var spaceAbove = toggleOffset.top - viewportTop;
 
-						if (left < viewportLeft + 8) {
-								left = viewportLeft + 8;
-						}
+						// Only flip upward if space below is tight (< 180px) and space above is greater
+						var openUpwards = (spaceBelow < 180 && spaceAbove > spaceBelow);
 
-						if (top + menuHeight > viewportTop + viewportHeight - 8) {
-								var upwardTop = toggleOffset.top - menuHeight - 6;
-								if (upwardTop >= viewportTop + 8) {
-										top = upwardTop;
-								} else {
-										top = Math.max(viewportTop + 8, viewportTop + viewportHeight - menuHeight - 8);
-								}
+						var top;
+						var maxHeight;
+
+						if (openUpwards) {
+								maxHeight = Math.max(120, Math.min(380, spaceAbove - 16));
+								$menu.css({
+										'max-height': maxHeight + 'px',
+										'overflow-y': 'auto'
+								});
+								var menuHeight = $menu.outerHeight();
+								top = toggleOffset.top - menuHeight - 4;
+						} else {
+								maxHeight = Math.max(150, Math.min(380, spaceBelow - 16));
+								$menu.css({
+										'max-height': maxHeight + 'px',
+										'overflow-y': 'auto'
+								});
+								top = toggleOffset.top + toggleHeight + 4;
 						}
 
 						$menu.css({
-								top: top,
-								left: left,
+								position: 'absolute',
+								top: Math.round(top) + 'px',
+								left: Math.round(left) + 'px',
 								right: 'auto',
-								bottom: 'auto'
+								bottom: 'auto',
+								zIndex: 1090
 						});
 				}
 
-				$(document).on('shown.bs.dropdown', '.listing-table-shell .dropdown, .listing-table-shell .btn-group', function () {
+				var dropdownCloseTimers = new Map();
+
+				function openDropdown($dropdown) {
+						var timer = dropdownCloseTimers.get($dropdown[0]);
+						if (timer) {
+								clearTimeout(timer);
+								dropdownCloseTimers.delete($dropdown[0]);
+						}
+
+						var $toggle = $dropdown.find('[data-toggle="dropdown"]').first();
+						if ($toggle.length && !$dropdown.hasClass('show')) {
+								$toggle.dropdown('show');
+						}
+				}
+
+				function scheduleCloseDropdown($dropdown) {
+						var timer = dropdownCloseTimers.get($dropdown[0]);
+						if (timer) {
+								clearTimeout(timer);
+						}
+
+						timer = setTimeout(function () {
+								dropdownCloseTimers.delete($dropdown[0]);
+								var $menu = $dropdown.data('floatingDropdownMenu');
+								var isHoveringDropdown = $dropdown.is(':hover');
+								var isHoveringMenu = $menu && $menu.is(':hover');
+
+								if (!isHoveringDropdown && !isHoveringMenu) {
+										var $toggle = $dropdown.find('[data-toggle="dropdown"]').first();
+										if ($toggle.length && $dropdown.hasClass('show')) {
+												$toggle.dropdown('hide');
+										}
+								}
+						}, 200);
+
+						dropdownCloseTimers.set($dropdown[0], timer);
+				}
+
+				function cleanupFloatingDropdown($dropdown) {
+						var timer = dropdownCloseTimers.get($dropdown[0]);
+						if (timer) {
+								clearTimeout(timer);
+								dropdownCloseTimers.delete($dropdown[0]);
+						}
+
+						var $menu = $dropdown.data('floatingDropdownMenu');
+						var $parent = $dropdown.data('floatingDropdownParent');
+						var $next = $dropdown.data('floatingDropdownNext');
+
+						if ($menu && $menu.length && $parent && $parent.length) {
+								$menu.removeData('parentDropdown');
+								$menu.removeClass('wf-floating-dropdown-menu').css({
+										top: '',
+										left: '',
+										right: '',
+										bottom: '',
+										maxHeight: '',
+										overflowY: ''
+								});
+
+								if ($next && $next.length) {
+										$menu.insertBefore($next);
+								} else {
+										$parent.append($menu);
+								}
+						}
+
+						$dropdown.removeData('floatingDropdownMenu');
+						$dropdown.removeData('floatingDropdownParent');
+						$dropdown.removeData('floatingDropdownNext');
+						$dropdown.removeData('floatingDropdownActive');
+				}
+
+				$(document).on('mouseenter', '.listing-table-shell .dropdown, .listing-table-shell .btn-group', function () {
+						openDropdown($(this));
+				});
+
+				$(document).on('mouseleave', '.listing-table-shell .dropdown, .listing-table-shell .btn-group', function () {
+						scheduleCloseDropdown($(this));
+				});
+
+				$(document).on('mouseenter', '.wf-floating-dropdown-menu', function () {
+						var $dropdown = $(this).data('parentDropdown');
+						if ($dropdown && $dropdown.length) {
+								var timer = dropdownCloseTimers.get($dropdown[0]);
+								if (timer) {
+										clearTimeout(timer);
+										dropdownCloseTimers.delete($dropdown[0]);
+								}
+						}
+				});
+
+				$(document).on('mouseleave', '.wf-floating-dropdown-menu', function () {
+						var $dropdown = $(this).data('parentDropdown');
+						if ($dropdown && $dropdown.length) {
+								scheduleCloseDropdown($dropdown);
+						}
+				});
+
+				$(document).on('show.bs.dropdown shown.bs.dropdown', '.listing-table-shell .dropdown, .listing-table-shell .btn-group', function () {
 						var $dropdown = $(this);
 						var $menu = $dropdown.find('.dropdown-menu').first();
-						if (!$menu.length || $dropdown.data('floatingDropdownActive')) {
+						if (!$menu.length) {
 								return;
 						}
 
-						$dropdown.data('floatingDropdownActive', true);
-						$dropdown.data('floatingDropdownParent', $menu.parent());
-						$dropdown.data('floatingDropdownNext', $menu.next());
-						$dropdown.data('floatingDropdownMenu', $menu);
+						if (!$dropdown.data('floatingDropdownActive')) {
+								$dropdown.data('floatingDropdownActive', true);
+								$dropdown.data('floatingDropdownParent', $menu.parent());
+								$dropdown.data('floatingDropdownNext', $menu.next());
+								$dropdown.data('floatingDropdownMenu', $menu);
+								$menu.data('parentDropdown', $dropdown);
+								$menu.addClass('wf-floating-dropdown-menu').appendTo('body');
+						}
 
-						$menu.addClass('wf-floating-dropdown-menu').appendTo('body');
 						positionListingDropdown($dropdown);
 				});
 
@@ -381,33 +498,8 @@
 						});
 				});
 
-				$(document).on('hide.bs.dropdown', '.listing-table-shell .dropdown, .listing-table-shell .btn-group', function () {
-						var $dropdown = $(this);
-						var $menu = $dropdown.data('floatingDropdownMenu');
-						var $parent = $dropdown.data('floatingDropdownParent');
-						var $next = $dropdown.data('floatingDropdownNext');
-
-						if (!$menu || !$menu.length || !$parent || !$parent.length) {
-								return;
-						}
-
-						$menu.removeClass('wf-floating-dropdown-menu').css({
-								top: '',
-								left: '',
-								right: '',
-								bottom: ''
-						});
-
-						if ($next && $next.length) {
-								$menu.insertBefore($next);
-						} else {
-								$parent.append($menu);
-						}
-
-						$dropdown.removeData('floatingDropdownMenu');
-						$dropdown.removeData('floatingDropdownParent');
-						$dropdown.removeData('floatingDropdownNext');
-						$dropdown.removeData('floatingDropdownActive');
+				$(document).on('hide.bs.dropdown hidden.bs.dropdown', '.listing-table-shell .dropdown, .listing-table-shell .btn-group', function () {
+						cleanupFloatingDropdown($(this));
 				});
 
 				table.on('click', '.duplicate', function(){
