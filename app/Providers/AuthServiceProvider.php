@@ -42,6 +42,7 @@ class AuthServiceProvider extends ServiceProvider
      */
     protected $policies = [
         // 'App\Models\GeneralInfo\Item' => 'App\Policies\GeneralInfo\ItemPolicy',
+        'App\Models\GeneralInfo\EquipmentControlledList' => 'App\Policies\GeneralInfo\EquipmentControlledListPolicy',
         'App\Models\GeneralInfo\Specification' => 'App\Policies\GeneralInfo\SpecificationPolicy',
         'App\Models\GeneralInfo\Tool' => 'App\Policies\GeneralInfo\ToolPolicy',
 

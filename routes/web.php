@@ -236,6 +236,8 @@ Route::group(
                 // Route::get('item/m/multi', [App\Http\Controllers\Dashboard\GeneralInfo\ItemController::class, 'showMulti'])->name('item.showMulti');
                 Route::get('tool/getDataForDataTable', [App\Http\Controllers\Dashboard\GeneralInfo\ToolController::class, 'getDataForDataTable'])->name('getDataForDataTable.tool');
                 Route::resource('tool', App\Http\Controllers\Dashboard\GeneralInfo\ToolController::class);
+                Route::get('equipment-controlled-list/getDataForDataTable', [App\Http\Controllers\Dashboard\GeneralInfo\EquipmentControlledListController::class, 'getDataForDataTable'])->name('getDataForDataTable.equipmentControlledList');
+                Route::resource('equipment-controlled-list', App\Http\Controllers\Dashboard\GeneralInfo\EquipmentControlledListController::class);
                 Route::get('specification/getDataForDataTable', [App\Http\Controllers\Dashboard\GeneralInfo\SpecificationController::class, 'getDataForDataTable'])->name('getDataForDataTable.specification');
                 Route::resource('specification', App\Http\Controllers\Dashboard\GeneralInfo\SpecificationController::class);
                 Route::resource('footer-values', App\Http\Controllers\Dashboard\GeneralInfo\FooterValueController::class);

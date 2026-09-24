@@ -316,9 +316,23 @@
               <!---------------------------------------------------------------------------------->
               @if(auth()->user()->canany(['create', 'viewAny'], \App\Models\GeneralInfo\item::class) ||
                   auth()->user()->canany(['create', 'viewAny'], \App\Models\GeneralInfo\Tool::class) ||
-                  auth()->user()->canany(['create', 'viewAny'], \App\Models\GeneralInfo\Specification::class) )
+                  auth()->user()->canany(['create', 'viewAny'], \App\Models\GeneralInfo\EquipmentControlledList::class) ||
+                  auth()->user()->canany(['create', 'viewAny'], \App\Models\GeneralInfo\Specification::class) ||
+                  (bool) auth()->user()->isSuperAdmin())
               <li class=" nav-item {{Request::segment(2) === 'general-info' ? 'active' : ''}}"><a href=""><i class="la la-info-circle"></i><span class="menu-title" data-i18n="Dashboard">General Info</span></a>
                 <ul class="menu-content">
+                  @canany(['create', 'viewAny'], \App\Models\GeneralInfo\EquipmentControlledList::class)
+                  <li><a class="menu-item {{request()->routeIs('equipment-controlled-list.*') ? 'active' : ''}}" href="#"><i class="la la-server"></i><span data-i18n="All Items">Equipment Controlled List</span></a>
+                    <ul class="menu-content">
+                        @can('viewAny', App\Models\GeneralInfo\EquipmentControlledList::class)
+                        <li><a class="menu-item {{request()->routeIs('equipment-controlled-list.index') ? 'active' : ''}}" href="{{route('equipment-controlled-list.index')}}"><i></i><span data-i18n="All Items">All Equipments</span></a></li>
+                        @endcan
+                        @can('create', App\Models\GeneralInfo\EquipmentControlledList::class)
+                        <li><a class="menu-item {{request()->routeIs('equipment-controlled-list.create') ? 'active' : ''}}" href="{{route('equipment-controlled-list.create')}}"><i></i><span data-i18n="All Items">New Equipment</span></a></li>
+                        @endcan
+                    </ul>
+                  </li>
+                  @endcan
                   @canany(['create', 'viewAny'], \App\Models\GeneralInfo\item::class)
                   <li><a class="menu-item {{request()->routeIs('item.*') ? 'active' : ''}}" href="#"><i class="la la-cube"></i><span data-i18n="All Items">Items</span></a>
                     <ul class="menu-content">
