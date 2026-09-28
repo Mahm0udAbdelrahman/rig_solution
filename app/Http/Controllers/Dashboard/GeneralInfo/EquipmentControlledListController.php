@@ -188,6 +188,11 @@ class EquipmentControlledListController extends Controller
 
         $validated['user_id'] = Auth::id();
 
+        $dueDate = EquipmentControlledList::computeDueDate($validated['calibration_date'] ?? null, $validated['interval'] ?? null);
+        if ($dueDate) {
+            $validated['calibration_due_date'] = $dueDate;
+        }
+
         // If alarm not specified, auto-compute default based on calibration
         if (empty($validated['recalibration_alarm'])) {
             if (!empty($validated['calibration_due_date'])) {
@@ -274,6 +279,11 @@ class EquipmentControlledListController extends Controller
             'date_removed_from_service' => 'nullable|string|max:255',
             'notes' => 'nullable|string',
         ]);
+
+        $dueDate = EquipmentControlledList::computeDueDate($validated['calibration_date'] ?? null, $validated['interval'] ?? null);
+        if ($dueDate) {
+            $validated['calibration_due_date'] = $dueDate;
+        }
 
         $update = $equipment->update($validated);
 

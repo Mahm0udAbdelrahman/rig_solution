@@ -39,6 +39,30 @@ class EquipmentControlledList extends Model
         'calibration_due_date' => 'date',
     ];
 
+    /**
+     * Calibration intervals offered on the register, mapped to their length in months
+     */
+    public static $INTERVALS = [
+        '6 Months' => 6,
+        'Annual' => 12,
+    ];
+
+    public static $DEFAULT_INTERVAL = 'Annual';
+
+    /**
+     * Due date = calibration date + interval, or null when the interval is not a known one
+     */
+    public static function computeDueDate($calibrationDate, $interval)
+    {
+        if (empty($calibrationDate) || !isset(self::$INTERVALS[$interval])) {
+            return null;
+        }
+
+        return Carbon::parse($calibrationDate)
+            ->addMonthsNoOverflow(self::$INTERVALS[$interval])
+            ->format('Y-m-d');
+    }
+
     public function user()
     {
         return $this->belongsTo(User::class);

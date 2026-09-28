@@ -80,29 +80,39 @@
                                 <div class="row">
                                     <div class="col-md-4 col-12">
                                         <div class="form-group">
-                                            <label for="interval" class="font-weight-bold">Maintenance / Calibration Interval</label>
-                                            <input type="text" list="interval_options" id="interval" name="interval" class="form-control" value="{{ old('interval', $equipment->interval) }}">
-                                            <datalist id="interval_options">
-                                                <option value="Pre-Use">
-                                                <option value="Pre-Use/Annual">
-                                                <option value="Annual">
-                                                <option value="6 Months">
-                                                <option value="3 Months">
-                                                <option value="2 Years">
-                                                <option value="N/A">
-                                            </datalist>
-                                        </div>
-                                    </div>
-                                    <div class="col-md-4 col-12">
-                                        <div class="form-group">
                                             <label for="calibration_date" class="font-weight-bold">Calibration Date</label>
                                             <input type="date" id="calibration_date" name="calibration_date" class="form-control" value="{{ $equipment->calibration_date ? \Carbon\Carbon::parse($equipment->calibration_date)->format('Y-m-d') : '' }}">
+                                        </div>
+                                    </div>
+                                    @php
+                                        $intervalOptions = array_keys(\App\Models\GeneralInfo\EquipmentControlledList::$INTERVALS);
+                                        $currentInterval = old('interval', $equipment->interval) ?: \App\Models\GeneralInfo\EquipmentControlledList::$DEFAULT_INTERVAL;
+                                    @endphp
+                                    <div class="col-md-4 col-12">
+                                        <div class="form-group">
+                                            <label class="font-weight-bold d-block">Calibration Interval</label>
+                                            <div class="pt-50">
+                                                @foreach($intervalOptions as $i => $intervalOption)
+                                                    <div class="custom-control custom-radio custom-control-inline">
+                                                        <input type="radio" id="interval_{{ $i }}" name="interval" value="{{ $intervalOption }}" class="custom-control-input interval-radio" {{ $currentInterval == $intervalOption ? 'checked' : '' }}>
+                                                        <label class="custom-control-label" for="interval_{{ $i }}">{{ $intervalOption == 'Annual' ? 'Annual (1 Year)' : $intervalOption }}</label>
+                                                    </div>
+                                                @endforeach
+                                                {{-- Keep an older interval (e.g. Pre-Use) so it is not lost on update --}}
+                                                @if(!in_array($currentInterval, $intervalOptions))
+                                                    <div class="custom-control custom-radio custom-control-inline">
+                                                        <input type="radio" id="interval_legacy" name="interval" value="{{ $currentInterval }}" class="custom-control-input interval-radio" checked>
+                                                        <label class="custom-control-label" for="interval_legacy">{{ $currentInterval }}</label>
+                                                    </div>
+                                                @endif
+                                            </div>
                                         </div>
                                     </div>
                                     <div class="col-md-4 col-12">
                                         <div class="form-group">
                                             <label for="calibration_due_date" class="font-weight-bold">Calibration Due Date</label>
-                                            <input type="date" id="calibration_due_date" name="calibration_due_date" class="form-control" value="{{ $equipment->calibration_due_date ? \Carbon\Carbon::parse($equipment->calibration_due_date)->format('Y-m-d') : '' }}">
+                                            <input type="date" id="calibration_due_date" name="calibration_due_date" class="form-control" value="{{ $equipment->calibration_due_date ? \Carbon\Carbon::parse($equipment->calibration_due_date)->format('Y-m-d') : '' }}" readonly>
+                                            <small class="text-muted">Calculated from Calibration Date + Interval</small>
                                         </div>
                                     </div>
                                     <div class="col-md-6 col-12">
@@ -197,6 +207,33 @@
 @section('footer')
 <script>
 $(document).ready(function() {
+    var intervalMonths = @json(\App\Models\GeneralInfo\EquipmentControlledList::$INTERVALS);
+
+    // Calibration Due Date = Calibration Date + selected interval (clamped to month end, e.g. 31-Aug + 6 Months = 28/29-Feb)
+    function updateDueDate() {
+        var interval = $('input[name="interval"]:checked').val();
+        var months = intervalMonths[interval];
+        var calDate = $('#calibration_date').val();
+        // Older intervals (e.g. Pre-Use) keep their saved due date and stay editable
+        $('#calibration_due_date').prop('readonly', !!months);
+        if (!months) {
+            return;
+        }
+        if (!calDate) {
+            $('#calibration_due_date').val('');
+            return;
+        }
+        var parts = calDate.split('-').map(Number);
+        var target = new Date(parts[0], parts[1] - 1 + months, 1);
+        var lastDay = new Date(target.getFullYear(), target.getMonth() + 1, 0).getDate();
+        target.setDate(Math.min(parts[2], lastDay));
+        var pad = function(n) { return String(n).padStart(2, '0'); };
+        $('#calibration_due_date').val(target.getFullYear() + '-' + pad(target.getMonth() + 1) + '-' + pad(target.getDate()));
+    }
+
+    $('input[name="interval"], #calibration_date').on('change input', updateDueDate);
+    $('#calibration_due_date').prop('readonly', !!intervalMonths[$('input[name="interval"]:checked').val()]);
+
     $('#equipmentEditForm').on('submit', function(e) {
         e.preventDefault();
         var $btn = $('#updateEquipmentBtn');
