@@ -245,6 +245,7 @@
 						</div>
 				</div>
 		</div>
+		@include('layouts.inspection.lifting.partials.equipment_rows_print', ['model' => $crane2, 'section' => 'mpi'])
 		<div class="row" style="margin-bottom: 3px;">
 				<div class="col-12 p-0">
 						<h6 class="bg-dark white text-bold-600 pl-1 mb-0 border-dark">Final Conclusion:</h6>

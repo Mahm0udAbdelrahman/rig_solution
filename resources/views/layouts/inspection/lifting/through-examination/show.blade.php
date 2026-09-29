@@ -326,6 +326,7 @@
   </div>
 </div>
 <!----------------------------------->
+@include('layouts.inspection.lifting.partials.equipment_rows_print', ['model' => $throughExamination, 'section' => 'mpi'])
 <div class="row">
     <h6 class="bg-dark white col-2 p-0 pl-1 mb-0 border-dark middle">NDT Conclusion</h6>
     <p class="col-10 p-0 pl-1 border-dark text-16 black" style="">{{$throughExamination->lter_46}}</p>
@@ -348,6 +349,7 @@
   </div>
 </div>
 <!----------------------------------->
+@include('layouts.inspection.lifting.partials.equipment_rows_print', ['model' => $throughExamination, 'section' => 'load_test'])
 <div class="row row-flex border-dark">
   <div class="col-8">
     <p class="black bnew">Is this equipment safe to operate?</p>

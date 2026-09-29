@@ -10,10 +10,11 @@ use App\Models\WorkFlow\JobRequest;
 use App\Models\Inspection\InspectionReport;
 use App\Models\Inspection\Lifting\Crane2;
 use App\Traits\HasInspectionLogo;
+use App\Traits\HasReportEquipment;
 
 class Crane extends Model
 {
-    use HasFactory, HasInspectionLogo;
+    use HasFactory, HasInspectionLogo, HasReportEquipment;
 
     protected $fillable = [
 				'job_request_id',

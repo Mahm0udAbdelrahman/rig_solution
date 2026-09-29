@@ -63,6 +63,7 @@ class UltrasonicReportWorksheetRenderer extends AbstractLiftingReportWorksheetRe
             ['Manufacturer', (string) $ultrasonic->nur_19],
             ['Technique', (string) $ultrasonic->nur_20],
         ]);
+        $row = $this->additionalEquipmentRows($sheet, $row, $ultrasonic, 'ut_instrument', 'Additional UT equipment');
         $row = $this->singleWideRow($sheet, $row, 'Probe Angle Table', trim(implode(' | ', array_filter([
             '0: '.implode(', ', array_filter([$ultrasonic->getMtvalue('nur_21', 'nur_21'), $ultrasonic->getMtvalue('nur_25', 'nur_21'), $ultrasonic->getMtvalue('nur_29', 'nur_21'), $ultrasonic->getMtvalue('nur_33', 'nur_21'), $ultrasonic->getMtvalue('nur_37', 'nur_21'), $ultrasonic->getMtvalue('nur_41', 'nur_21')])),
             '45: '.implode(', ', array_filter([$ultrasonic->getMtvalue('nur_22', 'nur_21'), $ultrasonic->getMtvalue('nur_26', 'nur_21'), $ultrasonic->getMtvalue('nur_30', 'nur_21'), $ultrasonic->getMtvalue('nur_34', 'nur_21'), $ultrasonic->getMtvalue('nur_38', 'nur_21'), $ultrasonic->getMtvalue('nur_42', 'nur_21')])),
@@ -156,5 +157,27 @@ class UltrasonicReportWorksheetRenderer extends AbstractLiftingReportWorksheetRe
             $value = str_replace('-', ' ', (string) $value);
             return ucwords($value);
         }, $decoded)));
+    }
+
+    /**
+     * Additional equipment rows of a report section (report_equipment), one line each
+     */
+    private function additionalEquipmentRows(Worksheet $sheet, int $row, $model, string $section, string $label): int
+    {
+        if (!method_exists($model, 'reportEquipmentFor')) {
+            return $row;
+        }
+
+        foreach ($model->reportEquipmentFor($section) as $index => $equipment) {
+            $row = $this->singleWideRow($sheet, $row, $index === 0 ? $label : '', implode(' | ', array_filter([
+                (string) $equipment->equipment_no,
+                (string) $equipment->equipment_description,
+                (string) $equipment->model_type,
+                (string) $equipment->manufacturer,
+                $equipment->calibration_due_date ? 'Cal. due '.$equipment->calibration_due_date : '',
+            ])));
+        }
+
+        return $row;
     }
 }

@@ -106,6 +106,7 @@
   <div class="col-2 bg-dark p-0 border-dark middle"><h6 class="white text-bold-600 pl-1 mb-0 mid">Technique</h6></div>
   <div class="col-2 p-0 pl-1 border-dark text-16 black middle">{{$ultrasonic->nur_20}}</div>
 </div>
+@include('layouts.inspection.ndt.partials.report_equipment_show', ['model' => $ultrasonic, 'section' => 'ut_instrument', 'title' => 'Additional UT equipment (instruments, calibration blocks)', 'columns' => ['equipment_no' => 'Equipment No.', 'equipment_description' => 'Equipment', 'model_type' => 'Model / Type', 'manufacturer' => 'Manufacturer', 'calibration_due_date' => 'Calibration Due'], 'grid' => true])
 
 <div class="row">
 <div class="col-6 border-dark">

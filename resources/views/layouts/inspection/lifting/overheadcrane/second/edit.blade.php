@@ -467,6 +467,14 @@
                           <div class="card-content collapse show">
                               <div class="card-body">
                                   <div class="row">
+                                      <div class="col-12 mb-1">
+                                          <div class="form-group mb-0">
+                                              <div class="controls">
+                                                  <label>Select Equipment (Equipment Controlled List)</label>
+                                                  @include('layouts.repeated.equipment_picker', ['id' => 'locr2_35_picker', 'types' => ['Yoke', 'Shooting Coil'], 'fill' => ['equipment_no' => '#locr2_35', 'equipment_description' => '#locr2_34', 'calibration_due_date' => '#locr2_37']])
+                                              </div>
+                                          </div>
+                                      </div>
                                       <div class="col-12 col-sm-3">
                                           <div class="form-group mb-0">
                                               <div class="controls">
@@ -515,7 +523,7 @@
                                           <div class="form-group mb-0">
                                               <div class="controls">
                                                   <label>Due Date</label>
-                                                  <input type="text" class="form-control dp-date-range-from" id="locr2_37" name="locr2_37" placeholder="Due Date" value="{{$overheadCrane2->locr2_37}}" />
+                                                  <input type="text" class="form-control" id="locr2_37" name="locr2_37" placeholder="Due Date" value="{{$overheadCrane2->locr2_37}}" />
                                                   <div class="help-block"></div>
                                               </div>
                                           </div>
@@ -555,6 +563,13 @@
                               </div>
                           </div>
                       </div>
+                    <div class="card">
+                      <div class="card-content collapse show">
+                        <div class="card-body">
+                          @include('layouts.repeated.equipment_rows', ['section' => 'mpi', 'model' => $overheadCrane2, 'title' => 'Additional MPI equipment (yokes, UV lamps, coils)', 'types' => ['Yoke', 'Ultra Violet Lamp', 'UV Meter', 'Shooting Coil'], 'columns' => ['equipment_no', 'equipment_description', 'manufacturer', 'calibration_due_date']])
+                        </div>
+                      </div>
+                    </div>
                   </fieldset>
                   <h6>Final Conclusion</h6>
                   <fieldset>
@@ -628,9 +643,10 @@
         });
 
         $('.steps-validation').on('click','#input5', function(){
-          $('#steps-uid-0-p-4 input[type=text]').each(function(index, value){
+          $('#steps-uid-0-p-4 input[type=text]').not('.report-equipment-rows input').each(function(index, value){
             $(value).val("N/A");
           });
+          $('#locr2_35_picker').val('').trigger('change.select2');
         });
         $(".steps-validation").steps({
 						headerTag: "h6",

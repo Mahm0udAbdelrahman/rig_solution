@@ -278,7 +278,12 @@
                 <div class="card-content collapse show">
                     <div class="card-body" data-repeater-list="equipment_no">
                         <div class="row">
-                            <div class="col-7">
+                            <div class="col-4">
+                                <div class="form-group mb-0">
+                                    <label>Select Equipment</label>
+                                </div>
+                            </div>
+                            <div class="col-3">
                                 <div class="form-group mb-0">
                                     <label>Equipment No.</label>
                                 </div>
@@ -287,11 +292,19 @@
                         </div>
                         @foreach(isset($model) ? $model->equipment_no : [['equipment_no_value' => '']] as $item)
                             <div class="row" data-repeater-item>
-                                <div class="col-7">
+                                <div class="col-4">
+                                    <div class="form-group mb-0">
+                                        <div class="controls">
+                                            {{-- No name: the picker only fills the row, it is never submitted --}}
+                                            @include('layouts.repeated.equipment_picker', ['fill' => ['equipment_no' => '.equipment-no-value'], 'scope' => '[data-repeater-item]', 'class' => 'summary-equipment-picker', 'placeholder' => 'Search serial no. or name'])
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="col-3">
                                     <div class="form-group mb-0">
                                         <div class="controls">
                                             <input type="text" id="equipment_no_value" name="equipment_no_value"
-                                                   class="form-control" placeholder="Equipment No."
+                                                   class="form-control equipment-no-value" placeholder="Equipment No."
                                                    value="{{$item['equipment_no_value']}}"/>
                                             <div class="help-block"></div>
                                         </div>
@@ -313,6 +326,29 @@
                     </div>
                 </div>
             </div>
+            <script>
+              // jQuery is loaded at the bottom of the page, so wire everything up once the page has loaded
+              window.addEventListener('load', function () {
+                var $ = window.jQuery;
+                if (!$) return;
+
+                // Rows added by the repeater are cloned from the first row: give them an empty, working picker
+                $(document).on('click', '[data-repeater-create]', function () {
+                  $('[data-repeater-list="equipment_no"] [data-repeater-item]').each(function () {
+                    var $row = $(this);
+                    var $picker = $row.find('select.summary-equipment-picker');
+                    if (!$picker.length || $picker.data('select2')) return;
+                    // Cloned options still carry the source row's select2 cache ids
+                    $picker.find('option').removeAttr('data-select2-id');
+                    $picker.val('');
+                    $row.find('.equipment-no-value').val('');
+                    if (typeof window.initEquipmentPickers === 'function') {
+                      window.initEquipmentPickers($row);
+                    }
+                  });
+                });
+              });
+            </script>
         </div>
     </div>
 </fieldset>

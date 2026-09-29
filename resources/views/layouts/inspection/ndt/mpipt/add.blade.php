@@ -321,25 +321,25 @@
                                                         </div>
                                                     </div>
 
-                                                    <table class="table">
+                                                    <div class="table-responsive"><table class="table">
                                                         <thead>
                                                             <tr>
                                                                 <th scope="col">Equipment Used</th>
                                                                 <th scope="col">
                                                                     <fieldset>
-                                                                        <input type="checkbox" class="eu" name="nmpr_120" id="nmpr_120" disabled>
+                                                                        <input type="checkbox" class="eu" name="nmpr_120" id="nmpr_120">
                                                                         <label for="nmpr_120">Magnet</label>
                                                                     </fieldset>
                                                                 </th>
                                                                 <th scope="col">
                                                                     <fieldset>
-                                                                        <input type="checkbox" class="eu" name="nmpr_121" id="nmpr_121" disabled>
+                                                                        <input type="checkbox" class="eu" name="nmpr_121" id="nmpr_121">
                                                                         <label for="nmpr_121">UV Light</label>
                                                                     </fieldset>
                                                                 </th>
                                                                 <th scope="col">
                                                                     <fieldset>
-                                                                        <input type="checkbox" class="eu" name="nmpr_122" id="nmpr_122" disabled>
+                                                                        <input type="checkbox" class="eu" name="nmpr_122" id="nmpr_122">
                                                                         <label for="nmpr_122">Coil</label>
                                                                     </fieldset>
                                                                 </th>
@@ -347,33 +347,40 @@
                                                         </thead>
                                                         <tbody>
                                                             <tr>
+                                                                <th scope="row">Select Equipment</th>
+                                                                <td>@include('layouts.repeated.equipment_picker', ['fill' => ['equipment_no' => '#nmpr_14', 'manufacturer' => '#nmpr_17', 'calibration_due_date' => '#nmpr_20'], 'checks' => ['#nmpr_12', '#nmpr_120'], 'clearWith' => '#nmpr_120', 'types' => ['Yoke']])</td>
+                                                                <td>@include('layouts.repeated.equipment_picker', ['fill' => ['equipment_no' => '#nmpr_15', 'manufacturer' => '#nmpr_18', 'calibration_due_date' => '#nmpr_21'], 'checks' => ['#nmpr_12', '#nmpr_121'], 'clearWith' => '#nmpr_121', 'types' => ['Ultra Violet Lamp', 'UV Meter']])</td>
+                                                                <td>@include('layouts.repeated.equipment_picker', ['fill' => ['equipment_no' => '#nmpr_16', 'manufacturer' => '#nmpr_19', 'calibration_due_date' => '#nmpr_22'], 'checks' => ['#nmpr_12', '#nmpr_122'], 'clearWith' => '#nmpr_122', 'types' => ['Shooting Coil']])</td>
+                                                            </tr>
+                                                            <tr>
                                                                 <th scope="row">Equipment No</th>
-                                                                <td><input type="text" id="nmpr_14" name="nmpr_14" class="form-control magnet mt" placeholder="Contrast/Manufacturer" value="" data-validation--message="This field is " disabled></td>
-                                                                <td><input type="text" id="nmpr_15" name="nmpr_15" class="form-control uvl mt" placeholder="Indicator/ Manufacturer" value="" data-validation--message="This field is " disabled></td>
-                                                                <td><input type="text" id="nmpr_16" name="nmpr_16" class="form-control coil mt" placeholder="Indicator/ Manufacturer" value="" data-validation--message="This field is " disabled></td>
+                                                                <td><input type="text" id="nmpr_14" name="nmpr_14" class="form-control magnet mt" placeholder="NA" value="" data-validation--message="This field is " disabled></td>
+                                                                <td><input type="text" id="nmpr_15" name="nmpr_15" class="form-control uvl mt" placeholder="NA" value="" data-validation--message="This field is " disabled></td>
+                                                                <td><input type="text" id="nmpr_16" name="nmpr_16" class="form-control coil mt" placeholder="NA" value="" data-validation--message="This field is " disabled></td>
                                                             </tr>
                                                             <tr>
                                                                 <th scope="row">Manufacturer</th>
-                                                                <td><input type="text" id="nmpr_17" name="nmpr_17" class="form-control magnet mt" placeholder="Contrast/Expire Date" value="" data-validation--message="This field is " disabled></td>
-                                                                <td><input type="text" id="nmpr_18" name="nmpr_18" class="form-control uvl mt" placeholder="Indicator/ Expire Date" value="" data-validation--message="This field is " disabled></td>
-                                                                <td><input type="text" id="nmpr_19" name="nmpr_19" class="form-control coil mt" placeholder="Contrast/Expire Date" value="" data-validation--message="This field is " disabled></td>
+                                                                <td><input type="text" id="nmpr_17" name="nmpr_17" class="form-control magnet mt" placeholder="NA" value="" data-validation--message="This field is " disabled></td>
+                                                                <td><input type="text" id="nmpr_18" name="nmpr_18" class="form-control uvl mt" placeholder="NA" value="" data-validation--message="This field is " disabled></td>
+                                                                <td><input type="text" id="nmpr_19" name="nmpr_19" class="form-control coil mt" placeholder="NA" value="" data-validation--message="This field is " disabled></td>
                                                             </tr>
                                                             <tr>
                                                                 <th scope="row">Calibr. Due Date</th>
-                                                                <td><input type="text" id="nmpr_20" name="nmpr_20" class="form-control magnet mt" placeholder="Indicator/ Expire Date" value="" data-validation--message="This field is " disabled></td>
-                                                                <td><input type="text" id="nmpr_21" name="nmpr_21" class="form-control uvl mt" placeholder="Indicator/ Expire Date" value="" data-validation--message="This field is " disabled></td>
-                                                                <td><input type="text" id="nmpr_22" name="nmpr_22" class="form-control coil mt" placeholder="Contrast/Expire Date" value="" data-validation--message="This field is " disabled></td>
+                                                                <td><input type="text" id="nmpr_20" name="nmpr_20" class="form-control magnet mt" placeholder="NA" value="" data-validation--message="This field is " disabled></td>
+                                                                <td><input type="text" id="nmpr_21" name="nmpr_21" class="form-control uvl mt" placeholder="NA" value="" data-validation--message="This field is " disabled></td>
+                                                                <td><input type="text" id="nmpr_22" name="nmpr_22" class="form-control coil mt" placeholder="NA" value="" data-validation--message="This field is " disabled></td>
                                                             </tr>
                                                             <tr>
                                                                 <th scope="row">Equip.Test Criteria</th>
-                                                                <td><input type="text" id="nmpr_23" name="nmpr_23" class="form-control magnet mt" placeholder="Indicator/ Expire Date" value="" data-validation--message="This field is " disabled></td>
-                                                                <td><input type="text" id="nmpr_24" name="nmpr_24" class="form-control uvl mt" placeholder="Indicator/ Expire Date" value="" data-validation--message="This field is " disabled></td>
-                                                                <td><input type="text" id="nmpr_25" name="nmpr_25" class="form-control coil mt" placeholder="Indicator/ Expire Date" value="" data-validation--message="This field is " disabled></td>
+                                                                <td><input type="text" id="nmpr_23" name="nmpr_23" class="form-control magnet mt" placeholder="NA" value="" data-validation--message="This field is " disabled></td>
+                                                                <td><input type="text" id="nmpr_24" name="nmpr_24" class="form-control uvl mt" placeholder="NA" value="" data-validation--message="This field is " disabled></td>
+                                                                <td><input type="text" id="nmpr_25" name="nmpr_25" class="form-control coil mt" placeholder="NA" value="" data-validation--message="This field is " disabled></td>
                                                             </tr>
                                                         </tbody>
-                                                    </table>
+                                                    </table></div>
+                                                    @include('layouts.repeated.equipment_rows', ['section' => 'mpi', 'model' => null, 'title' => 'Additional MPI equipment', 'types' => ['Yoke', 'Ultra Violet Lamp', 'UV Meter', 'Shooting Coil'], 'checks' => ['#nmpr_12']])
                                               
-                                                    <table class="table">
+                                                    <div class="table-responsive"><table class="table">
                                                         <thead>
                                                             <tr>
                                                                 <th scope="col">Solution details</th>
@@ -396,7 +403,7 @@
                                                                 <td><input type="text" id="nmpr_40" name="nmpr_40" class="form-control eu mt" placeholder="Contrast/Expire Date" value="" data-validation--message="This field is" disabled></td>
                                                             </tr>
                                                         </tbody>
-                                                    </table>
+                                                    </table></div>
                                                 </div>
                                             </div>
                                         </div>
@@ -422,7 +429,7 @@
                                                     <hr />
                                                     <input type="text" id="nmpr_27" name="nmpr_27" class="form-control sd pt" placeholder="RSE Procedure" value="" data-validation--message="This field is " disabled/>
                                                     <hr />
-                                                    <table class="table">
+                                                    <div class="table-responsive"><table class="table">
                                                         <thead>
                                                             <tr>
                                                                 <th scope="col">Spray Details</th>
@@ -466,7 +473,7 @@
                                                                 <td><input type="text" id="nmpr_330" name="nmpr_330" class="form-control developer pt" placeholder="Developer / Dwell Time (min)" value="" data-validation--message="This field is " disabled></td>
                                                             </tr>
                                                         </tbody>
-                                                    </table>
+                                                    </table></div>
                                                 </div>
                                             </div>
                                         </div>
@@ -844,21 +851,31 @@
 
         /** MT */
 
+        /** Additional MPI equipment rows follow the MT checkbox like the Equipment Used table (the section marker stays enabled so an unticked MT clears them) */
+        function toggleMpiEquipmentRows(enabled){
+          $('.report-equipment-rows[data-section="mpi"]').find('select, input, button').not('[name="report_equipment_sections[]"], .report-equipment-add').prop('disabled', !enabled);
+        }
+        toggleMpiEquipmentRows(false);
+
         $('.steps-validation').on('ifChecked','#nmpr_12', function(){
           $.each($('.eu'), function(value) {
             $(this).prop("disabled", false);
           });
+          toggleMpiEquipmentRows(true);
         });
         
         $('.steps-validation').on('ifUnchecked','#nmpr_12', function(event){
-          $("#nmpr_120, #nmpr_121, #nmpr_122", ".nmpr_34", ".nmpr_3400").iCheck('uncheck');
+          $("#nmpr_120, #nmpr_121, #nmpr_122, .nmpr_34, .nmpr_3400").iCheck('uncheck');
+          toggleMpiEquipmentRows(false);
           $.each($('.eu'), function(value) {
             $(this).prop("disabled", true).val('');
             nmpr_12 = [];
           });
+          $('#nmpr_120, #nmpr_121, #nmpr_122').prop('disabled', false).iCheck('update');
         });
 
         $('.steps-validation').on('ifChecked','#nmpr_120', function(){
+            if (!$('#nmpr_12').is(':checked')) { $('#nmpr_12').iCheck('check'); }
             whenCheckRemove(null, '.magnet', false);
         });
         $('.steps-validation').on('ifUnchecked','#nmpr_120', function(){
@@ -866,6 +883,7 @@
         });
 
         $('.steps-validation').on('ifChecked','#nmpr_121', function(){
+            if (!$('#nmpr_12').is(':checked')) { $('#nmpr_12').iCheck('check'); }
             whenCheckRemove(null, '.uvl', false);
         });
         $('.steps-validation').on('ifUnchecked','#nmpr_121', function(){
@@ -873,6 +891,7 @@
         });
 
         $('.steps-validation').on('ifChecked','#nmpr_122', function(){
+            if (!$('#nmpr_12').is(':checked')) { $('#nmpr_12').iCheck('check'); }
             whenCheckRemove(null, '.coil', false);
         });
         $('.steps-validation').on('ifUnchecked','#nmpr_122', function(){

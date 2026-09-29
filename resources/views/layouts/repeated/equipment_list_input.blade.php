@@ -5,6 +5,11 @@
         <div class="row">
             <div class="col-3">
                 <div class="form-group mb-0">
+                    <label>Select Equipment</label>
+                </div>
+            </div>
+            <div class="col-2">
+                <div class="form-group mb-0">
                     <label>Equipment No.</label>
                 </div>
             </div>
@@ -59,8 +64,16 @@
                 <div class="col-3">
                     <div class="form-group mb-0">
                         <div class="controls">
+                            {{-- No name: the picker only fills the row, it is never submitted --}}
+                            @include('layouts.repeated.equipment_picker', ['fill' => ['equipment_no' => '.equipment-no-value'], 'scope' => '[data-repeater-item]', 'class' => 'equipment-list-picker', 'placeholder' => 'Search serial no. or name'])
+                        </div>
+                    </div>
+                </div>
+                <div class="col-2">
+                    <div class="form-group mb-0">
+                        <div class="controls">
                             <input type="text" id="equipment_no_value" name="equipment_no_value"
-                                   class="form-control" placeholder="Equipment No."
+                                   class="form-control equipment-no-value" placeholder="Equipment No."
                                    value="{{$equipmentNumberValue}}"/>
                             <div class="help-block"></div>
                         </div>
@@ -84,7 +97,7 @@
                     <div class="form-group mb-0">
                         <div class="controls">
                             <input type="text" id="other_equipment" name="other_equipment"
-                                   class="form-control" placeholder="Enter other equipment"
+                                   class="form-control other-equipment" placeholder="Enter other equipment"
                                    value="{{ $otherEquipmentValue }}"/>
                             <div class="help-block"></div>
                         </div>
@@ -104,53 +117,71 @@
 </div>
 
 <script>
-  $(document).ready(function() {
-    // Initialize repeater
-    // $('[data-repeater-list="equipment_no"]').repeater({
-    //   show: function () {
-    //     $(this).slideDown();
-    //   },
-    //   hide: function (deleteElement) {
-    //     if (confirm('Are you sure you want to delete this element?')) {
-    //       $(this).slideUp(deleteElement);
-    //     }
-    //   },
-    //   isFirstItemUndeletable: true // Ensures the first item cannot be deleted
-    // });
+  // jQuery is loaded at the bottom of the page, so wire everything up once the page has loaded
+  window.addEventListener('load', function () {
+    var $ = window.jQuery;
+    if (!$) return;
+
+    function toggleOtherEquipment($select) {
+      var $row = $select.closest('[data-repeater-item]');
+      $row.find('.other-equipment-wrapper').toggle($select.val() === 'Other');
+    }
 
     // Toggle other equipment input based on selected option
-    $(document).on('change', '.equipment-used', function() {
-      var $row = $(this).closest('.row');
-      var selectedValue = $(this).val();
-      if (selectedValue === 'Other') {
-        $row.find('.other-equipment-wrapper').show();
-      } else {
-        $row.find('.other-equipment-wrapper').hide();
-      }
+    $(document).on('change', '.equipment-used', function () {
+      toggleOtherEquipment($(this));
     });
 
-    // Ensure only one row is added at a time
-    // $(document).on('click', '[data-repeater-create]', function() {
-    //   var $list = $(this).closest('.card-body').find('[data-repeater-list="equipment_no"]');
-    //   var $firstItem = $list.find('[data-repeater-item]:first');
-    //
-    //   // Clone the first item and append
-    //   var $newItem = $firstItem.clone();
-    //   $list.append($newItem);
-    //
-    //   // Initialize select2 or other plugins if needed for the new item
-    //   $newItem.find('.other-equipment-wrapper').hide(); // Hide other equipment input initially for the new item
-    // });
+    // Picking equipment from the register also sets "Equipment Used" (or "Other" + its description)
+    $(document).on('change', 'select.equipment-list-picker', function () {
+      var $row = $(this).closest('[data-repeater-item]');
+      var $used = $row.find('.equipment-used');
+      var $other = $row.find('.other-equipment');
+      var data = $(this).find('option:selected').data('equipment') || {};
+      var description = $.trim(data.equipment_description == null ? '' : String(data.equipment_description));
+      var used = '';
+      var other = '';
+
+      if ($(this).val()) {
+        $used.find('option').each(function () {
+          if (this.value !== '' && this.value !== 'Other' && $.trim(this.value).toLowerCase() === description.toLowerCase()) {
+            used = this.value;
+            return false;
+          }
+        });
+        if (!used) {
+          used = 'Other';
+          other = description;
+        }
+      }
+
+      $other.val(other);
+      $used.val(used).trigger('change');
+    });
+
+    // Rows added by the repeater are cloned from the first row: give them an empty, working picker
+    function initNewEquipmentRows() {
+      $('[data-repeater-list="equipment_no"] [data-repeater-item]').each(function () {
+        var $row = $(this);
+        var $picker = $row.find('select.equipment-list-picker');
+        if (!$picker.length || $picker.data('select2')) return;
+        // Cloned options still carry the source row's select2 cache ids
+        $picker.find('option').removeAttr('data-select2-id');
+        $picker.val('');
+        $row.find('.equipment-no-value').val('');
+        toggleOtherEquipment($row.find('.equipment-used'));
+        if (typeof window.initEquipmentPickers === 'function') {
+          window.initEquipmentPickers($row);
+        }
+      });
+    }
+
+    // The repeater appends the new row in its own click handler, which runs before this delegated one
+    $(document).on('click', '[data-repeater-create]', initNewEquipmentRows);
 
     // Initialize visibility based on initial values
-    $('.equipment-used').each(function() {
-      var $row = $(this).closest('.row');
-      var selectedValue = $(this).val();
-      if (selectedValue === 'Other') {
-        $row.find('.other-equipment-wrapper').show();
-      } else {
-        $row.find('.other-equipment-wrapper').hide();
-      }
+    $('.equipment-used').each(function () {
+      toggleOtherEquipment($(this));
     });
   });
 </script>

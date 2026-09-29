@@ -7,10 +7,11 @@ use Illuminate\Database\Eloquent\Model;
 
 use App\Models\Inspection\Lifting\Forklift;
 use App\Traits\HasInspectionLogo;
+use App\Traits\HasReportEquipment;
 
 class Forklift2 extends Model
 {
-    use HasFactory, HasInspectionLogo;
+    use HasFactory, HasInspectionLogo, HasReportEquipment;
 
     protected $fillable = [
        'forklift_id',

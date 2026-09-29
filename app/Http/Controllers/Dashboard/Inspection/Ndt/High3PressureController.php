@@ -263,6 +263,7 @@ class High3PressureController extends Controller
 
         if($store)
         {
+            $store->syncReportEquipment($request);
             $store->report()->create([
                 'job_request_id' => $request->lcr_1,
                 'code' => $code,
@@ -406,6 +407,13 @@ class High3PressureController extends Controller
 
         if($update)
         {
+            // Additional equipment rows: a forked revision starts from the current rows, then gets what the form posted
+            if ($update instanceof \Illuminate\Database\Eloquent\Model) {
+                $high3Pressure->copyReportEquipmentTo($update);
+                $update->syncReportEquipment($request);
+            } else {
+                $high3Pressure->syncReportEquipment($request);
+            }
             $user = Auth::id();
             if ($request->publish == 'yes')
             {

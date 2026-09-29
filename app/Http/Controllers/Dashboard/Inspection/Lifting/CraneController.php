@@ -280,6 +280,7 @@ class CraneController extends Controller
 				'sync' => 1,
 				'user_id' => Auth::id(),
 			]);
+			$store->syncReportEquipment($request);
 
 			return response()->json([
 				'last_id' => $store->id,
@@ -420,13 +421,18 @@ class CraneController extends Controller
                 $newCrane2 = $crane2->replicate();
                 $newCrane2->crane_id = $update->id;
                 $newCrane2->save();
+                $crane2->copyReportEquipmentTo($newCrane2);
             }
 			/************ *****************************/
+			// the new revision keeps the additional equipment of the approved one (posted sections replace it below)
+			$crane->copyReportEquipmentTo($update);
+			$update->syncReportEquipment($request);
 			$report_id = $update->id;
 		} else {
 			$update = $crane->update($data);
 			$report_id = $crane->id;
 			$user_approved = $crane->report->user_id_approved;
+			$crane->syncReportEquipment($request);
 		}
 
 

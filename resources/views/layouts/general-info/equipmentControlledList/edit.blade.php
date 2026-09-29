@@ -65,8 +65,8 @@
                                     </div>
                                     <div class="col-md-6 col-12">
                                         <div class="form-group">
-                                            <label for="date_into_service" class="font-weight-bold">Date into Service</label>
-                                            <input type="date" id="date_into_service" name="date_into_service" class="form-control date-field" value="{{ $equipment->date_into_service ? \Carbon\Carbon::parse($equipment->date_into_service)->format('Y-m-d') : '' }}">
+                                            <label for="date_into_service_display" class="font-weight-bold">Date into Service</label>
+                                            @include('layouts.general-info.equipmentControlledList.partials.date-input', ['name' => 'date_into_service', 'value' => $equipment->date_into_service])
                                         </div>
                                     </div>
                                 </div>
@@ -80,8 +80,8 @@
                                 <div class="row">
                                     <div class="col-md-4 col-12">
                                         <div class="form-group">
-                                            <label for="calibration_date" class="font-weight-bold">Calibration Date</label>
-                                            <input type="date" id="calibration_date" name="calibration_date" class="form-control date-field" value="{{ $equipment->calibration_date ? \Carbon\Carbon::parse($equipment->calibration_date)->format('Y-m-d') : '' }}">
+                                            <label for="calibration_date_display" class="font-weight-bold">Calibration Date</label>
+                                            @include('layouts.general-info.equipmentControlledList.partials.date-input', ['name' => 'calibration_date', 'value' => $equipment->calibration_date])
                                         </div>
                                     </div>
                                     @php
@@ -110,8 +110,8 @@
                                     </div>
                                     <div class="col-md-4 col-12">
                                         <div class="form-group">
-                                            <label for="calibration_due_date" class="font-weight-bold">Calibration Due Date</label>
-                                            <input type="date" id="calibration_due_date" name="calibration_due_date" class="form-control date-field" value="{{ $equipment->calibration_due_date ? \Carbon\Carbon::parse($equipment->calibration_due_date)->format('Y-m-d') : '' }}" readonly>
+                                            <label for="calibration_due_date_display" class="font-weight-bold">Calibration Due Date</label>
+                                            @include('layouts.general-info.equipmentControlledList.partials.date-input', ['name' => 'calibration_due_date', 'value' => $equipment->calibration_due_date, 'readonly' => true])
                                             <small class="text-muted">Calculated from Calibration Date + Interval</small>
                                         </div>
                                     </div>
@@ -216,13 +216,12 @@ $(document).ready(function() {
         var months = intervalMonths[interval];
         var calDate = $('#calibration_date').val();
         // Older intervals (e.g. Pre-Use) keep their saved due date and stay editable
-        $('#calibration_due_date').prop('readonly', !!months);
+        $('#calibration_due_date_display').prop('readonly', !!months);
         if (!months) {
             return;
         }
         if (!calDate) {
-            $('#calibration_due_date').val('');
-            syncDateField($('#calibration_due_date')[0]);
+            setDateField('calibration_due_date', '');
             return;
         }
         var parts = calDate.split('-').map(Number);
@@ -230,12 +229,11 @@ $(document).ready(function() {
         var lastDay = new Date(target.getFullYear(), target.getMonth() + 1, 0).getDate();
         target.setDate(Math.min(parts[2], lastDay));
         var pad = function(n) { return String(n).padStart(2, '0'); };
-        $('#calibration_due_date').val(target.getFullYear() + '-' + pad(target.getMonth() + 1) + '-' + pad(target.getDate()));
-        syncDateField($('#calibration_due_date')[0]);
+        setDateField('calibration_due_date', target.getFullYear() + '-' + pad(target.getMonth() + 1) + '-' + pad(target.getDate()));
     }
 
     $('input[name="interval"], #calibration_date').on('change input', updateDueDate);
-    $('#calibration_due_date').prop('readonly', !!intervalMonths[$('input[name="interval"]:checked').val()]);
+    $('#calibration_due_date_display').prop('readonly', !!intervalMonths[$('input[name="interval"]:checked').val()]);
 
     $('#equipmentEditForm').on('submit', function(e) {
         e.preventDefault();

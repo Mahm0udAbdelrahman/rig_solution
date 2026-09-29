@@ -581,6 +581,14 @@
             <div class="card-content collapse show">
               <div class="card-body">
                 <div class="row">
+                  <div class="col-12 mb-1">
+                    <div class="form-group mb-0">
+                        <div class="controls">
+                          <label>Select Equipment (Equipment Controlled List)</label>
+                          @include('layouts.repeated.equipment_picker', ['id' => 'lter_39_picker', 'types' => ['Yoke', 'Shooting Coil'], 'fill' => ['equipment_no' => '#lter_39', 'equipment_description' => '#lter_38', 'calibration_due_date' => '#lter_41']])
+                        </div>
+                    </div>
+                  </div>
                   <div class="col-12 col-sm-3">
                     <div class="form-group mb-0">
                         <div class="controls">
@@ -626,7 +634,7 @@
                     <div class="form-group mb-0">
                         <div class="controls">
                           <label>Due Date</label>
-                          <input type="text" class="form-control in111 dp-date-range-from" id="lter_41" name="lter_41" placeholder="Due Date" />
+                          <input type="text" class="form-control in111" id="lter_41" name="lter_41" placeholder="Due Date" />
 
                         <div class="help-block"></div></div>
                     </div>
@@ -690,11 +698,18 @@
                     <div class="form-group mb-0">
                         <div class="controls">
                             <label>NDT Conclusion</label>
-                            <input type="text" id="lter_46" name="lter_46" class="form-control in111" placeholder="NDT Conclusion" value=""   />
+                            <input type="text" id="lter_46" name="lter_46" class="form-control in111" placeholder="NDT Conclusion" value="Magnetic particle inspection was carried out on available welds of lifting points and found free from any surface defects or cracks at time of inspection"   />
                         <div class="help-block"></div></div>
                     </div>
                   </div>
                 </div>
+              </div>
+            </div>
+          </div>
+          <div class="card">
+            <div class="card-content collapse show">
+              <div class="card-body">
+                @include('layouts.repeated.equipment_rows', ['section' => 'mpi', 'model' => null, 'title' => 'Additional MPI equipment (yokes, UV lamps, coils)', 'types' => ['Yoke', 'Ultra Violet Lamp', 'UV Meter', 'Shooting Coil'], 'columns' => ['equipment_no', 'equipment_description', 'manufacturer', 'calibration_due_date']])
               </div>
             </div>
           </div>
@@ -706,11 +721,19 @@
             <div class="card-content collapse show">
               <div class="card-body">
                 <div class="row">
+                  <div class="col-12 mb-1">
+                    <div class="form-group mb-0">
+                        <div class="controls">
+                          <label>Select Load Cell (Equipment Controlled List)</label>
+                          @include('layouts.repeated.equipment_picker', ['id' => 'lter_49_picker', 'types' => ['Load Cell'], 'match' => 'serial_number', 'fill' => ['serial_number' => '#lter_49', 'capacity_range' => '#lter_47', 'manufacturer' => '#lter_48', 'calibration_due_date' => '#lter_50']])
+                        </div>
+                    </div>
+                  </div>
                   <div class="col-12 col-sm-3">
                     <div class="form-group mb-0">
                         <div class="controls">
                           <label>Range</label>
-                          <input type="text" id="lter_47" name="lter_47" class="form-control in222" placeholder="Standard" value="" required="" data-validation-required-message="This field is required"/>
+                          <input type="text" id="lter_47" name="lter_47" class="form-control in222" placeholder="Range" value="" required="" data-validation-required-message="This field is required"/>
                         <div class="help-block"></div></div>
                     </div>
                   </div>
@@ -718,7 +741,7 @@
                     <div class="form-group mb-0">
                         <div class="controls">
                           <label>Manufacturer</label>
-                          <input type="text" id="lter_48" name="lter_48" class="form-control in222" placeholder="Equipment type" value="" required="" data-validation-required-message="This field is required">
+                          <input type="text" id="lter_48" name="lter_48" class="form-control in222" placeholder="Manufacturer" value="" required="" data-validation-required-message="This field is required">
                         <div class="help-block"></div></div>
                     </div>
                   </div>
@@ -726,7 +749,7 @@
                     <div class="form-group mb-0">
                         <div class="controls">
                           <label>Serial No</label>
-                          <input type="text" id="lter_49" name="lter_49" class="form-control in222" placeholder="Equipment No" value="" required="" data-validation-required-message="This field is required">
+                          <input type="text" id="lter_49" name="lter_49" class="form-control in222" placeholder="Serial No" value="" required="" data-validation-required-message="This field is required">
                         <div class="help-block"></div></div>
                     </div>
                   </div>
@@ -734,7 +757,7 @@
                     <div class="form-group mb-0">
                         <div class="controls">
                           <label>Calibration Due Date</label>
-                          <input type="text" id="lter_50" name="lter_50" class="form-control in222" placeholder="Pole spacing" value="" required="" data-validation-required-message="This field is required">
+                          <input type="text" id="lter_50" name="lter_50" class="form-control in222" placeholder="Calibration Due Date" value="" required="" data-validation-required-message="This field is required">
                         <div class="help-block"></div></div>
                     </div>
                   </div>
@@ -743,6 +766,13 @@
             </div>
           </div>
           <!-------------------------------------------------------------------------------->
+          <div class="card">
+            <div class="card-content collapse show">
+              <div class="card-body">
+                @include('layouts.repeated.equipment_rows', ['section' => 'load_test', 'model' => null, 'title' => 'Additional load test equipment (load cells, water bags, jacks)', 'types' => ['Load Cell', 'Water Bag', 'Jack', 'Pad Eye Tester', 'Hand Pump'], 'columns' => ['equipment_no', 'equipment_description', 'capacity_range', 'manufacturer', 'calibration_due_date']])
+              </div>
+            </div>
+          </div>
           <div class="card">
             <div class="card-content collapse show">
               <div class="card-body">
@@ -854,12 +884,14 @@ $('.steps-validation').on('click','#input111', function(){
   $('#steps-uid-0-p-3 .in111').each(function(index, value){
     $(value).val("N/A");
   });
+  $('#lter_39_picker').val('').trigger('change.select2');
 });
 
 $('.steps-validation').on('click','#input222', function(){
   $('#steps-uid-0-p-3 .in222').each(function(index, value){
     $(value).val("N/A");
   });
+  $('#lter_49_picker').val('').trigger('change.select2');
 });
 
 /************************************************/

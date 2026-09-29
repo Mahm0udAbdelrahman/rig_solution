@@ -454,6 +454,17 @@
                             <div class="card-content collapse show">
                                 <div class="card-body">
                                     <div class="row">
+                                        <div class="col-12">
+                                            <div class="form-group">
+                                                <div class="controls">
+                                                    <label>Select Equipment</label>
+                                                    @include('layouts.repeated.equipment_picker', ['fill' => ['capacity_range' => '#nwhr_28', 'calibration_due_date' => '#nwhr_31'], 'match' => 'calibration_due_date', 'types' => ['Pressure Gauge', 'Chart Test Pressure', 'Hyd. Calibrator']])
+                                                    <div class="help-block"></div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="row">
                                         <div class="col-12 col-sm-3">
                                             <div class="form-group">
                                                 <div class="controls">

@@ -244,6 +244,7 @@
   </div>
 </div>
 <!----------------------------------->
+@include('layouts.inspection.lifting.partials.equipment_rows_print', ['model' => $forklift2, 'section' => 'mpi'])
 <div class="row border-dark" style="padding-top: 0 !important; padding-bottom: 0 !important;">
   <div class="col-8">
     <div class="row">

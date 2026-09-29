@@ -9,10 +9,11 @@ use Illuminate\Database\Eloquent\Model;
 use App\Models\WorkFlow\JobRequest;
 use App\Models\Inspection\InspectionReport;
 use App\Traits\HasInspectionLogo;
+use App\Traits\HasReportEquipment;
 
 class HighPressure extends Model
 {
-    use HasFactory, HasInspectionLogo;
+    use HasFactory, HasInspectionLogo, HasReportEquipment;
 
     protected $fillable = [
        'job_request_id',

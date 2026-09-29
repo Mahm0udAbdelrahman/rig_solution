@@ -448,6 +448,14 @@
             <div class="card-content collapse show">
               <div class="card-body">
                 <div class="row">
+                  <div class="col-12 mb-1">
+                    <div class="form-group mb-0">
+                        <div class="controls">
+                          <label>Select Equipment (Equipment Controlled List)</label>
+                          @include('layouts.repeated.equipment_picker', ['id' => 'lfr2_34_picker', 'types' => ['Yoke', 'Shooting Coil'], 'fill' => ['equipment_no' => '#lfr2_34', 'equipment_description' => '#lfr2_33', 'calibration_due_date' => '#lfr2_36']])
+                        </div>
+                    </div>
+                  </div>
                   <div class="col-12 col-sm-3">
                     <div class="form-group mb-0">
                         <div class="controls">
@@ -493,7 +501,7 @@
                         <div class="controls">
 
                           <label>Due Date</label>
-                          <input type="text" class="form-control dp-date-range-from" id="lfr2_36" name="lfr2_36" placeholder="Due Date" />
+                          <input type="text" class="form-control" id="lfr2_36" name="lfr2_36" placeholder="Due Date" />
 
 
                         <div class="help-block"></div></div>
@@ -550,6 +558,13 @@
             </div>
           </div>
 
+          <div class="card">
+            <div class="card-content collapse show">
+              <div class="card-body">
+                @include('layouts.repeated.equipment_rows', ['section' => 'mpi', 'model' => null, 'title' => 'Additional MPI equipment (yokes, UV lamps, coils)', 'types' => ['Yoke', 'Ultra Violet Lamp', 'UV Meter', 'Shooting Coil'], 'columns' => ['equipment_no', 'equipment_description', 'manufacturer', 'calibration_due_date']])
+              </div>
+            </div>
+          </div>
         </fieldset>
         <h6>Step 4</h6>
         <fieldset>
@@ -663,9 +678,10 @@ $('.steps-validation').on('click','#input6', function(){
 });
 
 $('.steps-validation').on('click','#input102', function(){
-  $('#steps-uid-0-p-2 input[type=text]').each(function(index, value){
+  $('#steps-uid-0-p-2 input[type=text]').not('.report-equipment-rows input').each(function(index, value){
     $(value).val("N/A");
   });
+  $('#lfr2_34_picker').val('').trigger('change.select2');
 });
 
 

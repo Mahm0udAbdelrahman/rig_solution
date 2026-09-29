@@ -320,6 +320,7 @@
 						</div>
 				</div>
 		</div>
+		@include('layouts.inspection.lifting.partials.equipment_rows_print', ['model' => $crane, 'section' => 'load_test'])
 		<div class="row row-flex border-dark" style="padding-top: 4px; padding-bottom: 4px;">
 				<div class="col-8">
 						<p class="black bnew">Is this equipment safe to operate?</p>

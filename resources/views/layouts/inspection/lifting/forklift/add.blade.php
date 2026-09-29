@@ -281,6 +281,13 @@
                 <div class="card">
                   <div class="card-content collapse show">
                     <div class="card-body">
+                      @include('layouts.repeated.equipment_rows', ['section' => 'load_test', 'model' => null, 'title' => 'Additional load test equipment (load cells, water bags, jacks)', 'types' => ['Load Cell', 'Water Bag', 'Jack', 'Pad Eye Tester', 'Hand Pump'], 'columns' => ['equipment_no', 'equipment_description', 'capacity_range', 'manufacturer', 'calibration_due_date']])
+                    </div>
+                  </div>
+                </div>
+                <div class="card">
+                  <div class="card-content collapse show">
+                    <div class="card-body">
                       <div class="row">
                         <div class="col-12">
                           <div class="form-group mb-0">

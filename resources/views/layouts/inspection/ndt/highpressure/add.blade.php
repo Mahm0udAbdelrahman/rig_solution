@@ -352,6 +352,17 @@
                             <div class="card-content">
                                 <div class="card-body">
                                     <div class="row">
+                                        <div class="col-12">
+                                            <div class="form-group">
+                                                <div class="controls">
+                                                    <label>Select Equipment</label>
+                                                    @include('layouts.repeated.equipment_picker', ['fill' => ['model_type' => '#nhpr_19', 'serial_number' => '#nhpr_20', 'manufacturer' => '#nhpr_21', 'calibration_due_date' => '#nhpr_30'], 'match' => 'serial_number', 'types' => ['Flow Detector UT', 'UT Thickness Gauge']])
+                                                    <div class="help-block"></div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="row">
                                         <div class="col-4">
                                             <div class="form-group">
                                                 <div class="controls">
@@ -457,6 +468,7 @@
                                         </div>
                                     </div>
 
+                                    @include('layouts.repeated.equipment_rows', ['section' => 'ut_instrument', 'model' => null, 'title' => 'Additional UT equipment (instruments, calibration blocks)', 'types' => ['Flow Detector UT', 'UT Thickness Gauge', 'UT STD Block', 'Step Block'], 'columns' => ['equipment_no', 'equipment_description', 'model_type', 'manufacturer', 'calibration_due_date']])
                                 </div>
                             </div>
                         </div>

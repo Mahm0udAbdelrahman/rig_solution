@@ -7,10 +7,11 @@ use Illuminate\Database\Eloquent\Model;
 
 use App\Models\Inspection\Lifting\OverheadCrane;
 use App\Traits\HasInspectionLogo;
+use App\Traits\HasReportEquipment;
 
 class OverheadCrane2 extends Model
 {
-    use HasFactory, HasInspectionLogo;
+    use HasFactory, HasInspectionLogo, HasReportEquipment;
 
     protected $fillable = [
        'overhead_crane_id',

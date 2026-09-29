@@ -102,6 +102,7 @@
   <div class="col-10 p-0 pl-1 border-dark text-16 black">{{$forklift->lfr_19}}</div>
 </div>
 <!----------------------------------->
+@include('layouts.inspection.lifting.partials.equipment_rows_print', ['model' => $forklift, 'section' => 'load_test'])
 <div class="row row-flex">
   <div class="bg-dark col-2 p-0 border-dark">
       <h6 class="white text-bold-600 pl-1 mb-0">Reference Standard</h6>

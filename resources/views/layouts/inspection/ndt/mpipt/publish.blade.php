@@ -379,6 +379,7 @@
                                                             </tr>
                                                         </tbody>
                                                     </table>
+                                                    @include('layouts.inspection.ndt.partials.report_equipment_show', ['model' => $mpipt, 'section' => 'mpi', 'title' => 'Additional MPI equipment'])
                                               
                                                     <table class="table">
                                                         <thead>

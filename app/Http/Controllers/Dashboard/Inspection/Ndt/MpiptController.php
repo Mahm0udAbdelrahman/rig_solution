@@ -289,6 +289,7 @@ class MpiptController extends Controller
         ]);
 
         if ($store) {
+            $store->syncReportEquipment($request);
             $store->report()->create([
                 'job_request_id' => $request->lcr_1,
                 'code' => $code,
@@ -430,6 +431,13 @@ class MpiptController extends Controller
         }
 
         if ($update) {
+            // Additional equipment rows: a forked revision starts from the current rows, then gets what the form posted
+            if ($update instanceof \Illuminate\Database\Eloquent\Model) {
+                $mpipt->copyReportEquipmentTo($update);
+                $update->syncReportEquipment($request);
+            } else {
+                $mpipt->syncReportEquipment($request);
+            }
             $user = Auth::id();
             if ($request->publish == 'yes') {
                 $user = NULL;

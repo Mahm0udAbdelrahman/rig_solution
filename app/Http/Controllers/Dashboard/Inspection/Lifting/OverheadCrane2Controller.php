@@ -106,6 +106,7 @@ class OverheadCrane2Controller extends Controller
 
         if ($store_overhead_crane2)
         {
+            $store_overhead_crane2->syncReportEquipment($request);
             return response()->json([
                 'success' => $this->action_message(0, $this->page_name)
             ]);
@@ -234,7 +235,7 @@ class OverheadCrane2Controller extends Controller
         ];
 
         if ($overheadCrane->report && $overheadCrane->report->user_id_approved != null) {
-            $update = DB::transaction(function () use ($overheadCrane, $overheadCrane2, $data) {
+            $update = DB::transaction(function () use ($overheadCrane, $overheadCrane2, $data, $request) {
                 $newOverheadCrane = $overheadCrane->replicate();
                 $newOverheadCrane->save();
 
@@ -242,6 +243,11 @@ class OverheadCrane2Controller extends Controller
                 $newOverheadCrane2->fill($data);
                 $newOverheadCrane2->overhead_crane_id = $newOverheadCrane->id;
                 $newOverheadCrane2->save();
+
+                // the new revision keeps the additional equipment of the approved one (posted sections replace it)
+                $overheadCrane->copyReportEquipmentTo($newOverheadCrane);
+                $overheadCrane2->copyReportEquipmentTo($newOverheadCrane2);
+                $newOverheadCrane2->syncReportEquipment($request);
 
                 $this->persistInspectionReportState($overheadCrane, [
                     'status' => 1,
@@ -255,6 +261,7 @@ class OverheadCrane2Controller extends Controller
             });
         } else {
             $update = $overheadCrane2->update($data);
+            $overheadCrane2->syncReportEquipment($request);
         }
 
         if($update)

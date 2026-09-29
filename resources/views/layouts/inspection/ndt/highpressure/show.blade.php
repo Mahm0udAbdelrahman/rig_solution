@@ -162,6 +162,7 @@
     <div class="col-2 bg-dark p-0 border-dark middle"><h6 class="white text-bold-600 pl-1 mb-0 mid">Calibration Due</h6></div>
     <div class="col-2 p-0 pl-1 border-dark text-16 black middle">{{$highPressure->nhpr_30}}</div>
 </div>
+@include('layouts.inspection.ndt.partials.report_equipment_show', ['model' => $highPressure, 'section' => 'ut_instrument', 'title' => 'Additional UT equipment (instruments, calibration blocks)', 'columns' => ['equipment_no' => 'Equipment No.', 'equipment_description' => 'Equipment', 'model_type' => 'Model / Type', 'manufacturer' => 'Manufacturer', 'calibration_due_date' => 'Calibration Due'], 'grid' => true])
 
 <div class="row" style="margin-bottom: 3px;">
   <h6 class="col-12 bg-dark white text-bold-600 pl-1 mb-0 border-dark col-3 text-center">Measurement Data sheet</h6>

@@ -302,6 +302,7 @@
         <h6 class="bg-dark col-4 p-0 white text-bold-600 pl-1 mb-0 border-dark">Deflection of Main Girder Crane During over load:</h6>
         <p class="col-8 border-dark text-16 black">{{$overheadcrane->locr_43}}</p>
     </div>
+    @include('layouts.inspection.lifting.partials.equipment_rows_print', ['model' => $overheadcrane, 'section' => 'load_test'])
     <div class="row row-flex border-dark">
         <div class="col-8">
             <p class="black bnew">Is this equipment safe to operate?</p>

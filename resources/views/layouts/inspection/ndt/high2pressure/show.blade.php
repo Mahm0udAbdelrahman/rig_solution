@@ -161,6 +161,7 @@
       <div class="col-2 bg-dark p-0 border-dark middle"><h6 class="white text-bold-600 pl-1 mb-0 mid">Calibration Due</h6></div>
       <div class="col-2 p-0 pl-1 border-dark text-16 black middle">{{$high2Pressure->nh2pr_30}}</div>
   </div>
+  @include('layouts.inspection.ndt.partials.report_equipment_show', ['model' => $high2Pressure, 'section' => 'ut_instrument', 'title' => 'Additional UT equipment (instruments, calibration blocks)', 'columns' => ['equipment_no' => 'Equipment No.', 'equipment_description' => 'Equipment', 'model_type' => 'Model / Type', 'manufacturer' => 'Manufacturer', 'calibration_due_date' => 'Calibration Due'], 'grid' => true])
   <div class="row" style="margin-bottom: 3px;">
     <div class="col-12 border-dark mid11" style="height: 160px;">
       <img class="media-object" style="max-width: 100%; width: fit-content; height: 100%;" src="{{Storage::url('camera/inspection/ndt/high2Pressure/')}}{{$high2Pressure->nh2pr_31}}" alt="" />

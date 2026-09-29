@@ -244,6 +244,7 @@
 					<p class="border-dark p-0 mb-0 text-12 pl-1 black col-3">{{$treatingIron->getMtvalue('nmpr_24', 'ntir_29')}}</p>
 					<p class="border-dark p-0 mb-0 text-12 pl-1 black col-3">{{$treatingIron->getMtvalue('nmpr_25', 'ntir_29')}}</p>
 				</div>
+				@include('layouts.inspection.ndt.partials.report_equipment_show', ['model' => $treatingIron, 'section' => 'mpi', 'title' => 'Additional MPI equipment', 'grid' => true])
 
 
 
@@ -302,6 +303,7 @@
 					<div class="col-3 bg-dark p-0 border-dark white text-bold-600">Calibration Block</div>
 					<div class="col-3 p-0 pl-1 border-dark text-12 black">{{$treatingIron->ntir_42 ?? "N/A"}}</div>
 				</div>
+				@include('layouts.inspection.ndt.partials.report_equipment_show', ['model' => $treatingIron, 'section' => 'ut_instrument', 'title' => 'Additional UT equipment (instruments, calibration blocks)', 'columns' => ['equipment_no' => 'Equipment No.', 'equipment_description' => 'Equipment', 'model_type' => 'Model / Type', 'manufacturer' => 'Manufacturer', 'calibration_due_date' => 'Calibration Due'], 'grid' => true])
 
 				<div class="row">
 						<div class="col-12 p-0 pl-1 border-dark text-16 black">C-2: Reading (mm)</div>

@@ -99,6 +99,8 @@ class MpiptReportWorksheetRenderer extends AbstractLiftingReportWorksheetRendere
             ])))],
         ]);
 
+        $row = $this->additionalEquipmentRows($sheet, $row, $mpipt, 'mpi', 'Additional MPI equipment');
+
         $row = $this->sectionTitle($sheet, $row, 'Liquid Penetrant Testing');
         $row = $this->tripleValueRow($sheet, $row, [
             ['PT Procedure', (string) $mpipt->getMtvalue('nmpr_27', 'nmpr_13')],
@@ -207,5 +209,27 @@ class MpiptReportWorksheetRenderer extends AbstractLiftingReportWorksheetRendere
         }
 
         return (string) ($temperatureValue ?: 'N/A');
+    }
+
+    /**
+     * Additional equipment rows of a report section (report_equipment), one line each
+     */
+    private function additionalEquipmentRows(Worksheet $sheet, int $row, $model, string $section, string $label): int
+    {
+        if (!method_exists($model, 'reportEquipmentFor')) {
+            return $row;
+        }
+
+        foreach ($model->reportEquipmentFor($section) as $index => $equipment) {
+            $row = $this->singleWideRow($sheet, $row, $index === 0 ? $label : '', implode(' | ', array_filter([
+                (string) $equipment->equipment_no,
+                (string) $equipment->equipment_description,
+                (string) $equipment->model_type,
+                (string) $equipment->manufacturer,
+                $equipment->calibration_due_date ? 'Cal. due '.$equipment->calibration_due_date : '',
+            ])));
+        }
+
+        return $row;
     }
 }

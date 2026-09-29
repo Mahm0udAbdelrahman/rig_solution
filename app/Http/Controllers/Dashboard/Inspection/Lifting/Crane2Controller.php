@@ -105,6 +105,7 @@ class Crane2Controller extends Controller
 
 	      if ($store_crane2)
 				{
+	          $store_crane2->syncReportEquipment($request);
 	          return response()->json([
 	              'success' => $this->action_message(0, $this->page_name)
 	          ]);
@@ -233,7 +234,7 @@ class Crane2Controller extends Controller
         ];
 
         if ($crane->report && $crane->report->user_id_approved != null) {
-            $update = DB::transaction(function () use ($crane, $crane2, $data) {
+            $update = DB::transaction(function () use ($crane, $crane2, $data, $request) {
                 $newCrane = $crane->replicate();
                 $newCrane->save();
 
@@ -241,6 +242,11 @@ class Crane2Controller extends Controller
                 $newCrane2->fill($data);
                 $newCrane2->crane_id = $newCrane->id;
                 $newCrane2->save();
+
+                // the new revision keeps the additional equipment of the approved one (posted sections replace it)
+                $crane->copyReportEquipmentTo($newCrane);
+                $crane2->copyReportEquipmentTo($newCrane2);
+                $newCrane2->syncReportEquipment($request);
 
                 $this->persistInspectionReportState($crane, [
                     'status' => 1,
@@ -254,6 +260,7 @@ class Crane2Controller extends Controller
             });
         } else {
             $update = $crane2->update($data);
+            $crane2->syncReportEquipment($request);
         }
 
 	      if($update)

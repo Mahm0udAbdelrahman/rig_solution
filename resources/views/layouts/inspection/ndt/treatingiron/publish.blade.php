@@ -452,6 +452,7 @@
 																												</tr>
 																										</tbody>
 																								</table>
+																								@include('layouts.inspection.ndt.partials.report_equipment_show', ['model' => $treatingIron, 'section' => 'mpi', 'title' => 'Additional MPI equipment'])
 																						</div>
 																				</div>
 																		</div>
@@ -617,6 +618,7 @@
 																						</div>
 																				</div>
 																		</div>
+																    @include('layouts.inspection.ndt.partials.report_equipment_show', ['model' => $treatingIron, 'section' => 'ut_instrument', 'title' => 'Additional UT equipment (instruments, calibration blocks)', 'columns' => ['equipment_no' => 'Equipment No.', 'equipment_description' => 'Equipment', 'model_type' => 'Model / Type', 'manufacturer' => 'Manufacturer', 'calibration_due_date' => 'Calibration Due']])
 																</div>
 														</div>
 												</div>

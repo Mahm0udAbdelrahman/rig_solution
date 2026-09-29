@@ -289,6 +289,7 @@ class OverheadCraneController extends Controller
               'sync' => 1,
               'user_id' => Auth::id(),
           ]);
+          $store->syncReportEquipment($request);
           // Notification::send(User::all(), new InspectionReport(str_pad($store->code+1, 3,'0',STR_PAD_LEFT), $request->locr_1));
           return response()->json([
               'last_id' => $store->id,
@@ -426,12 +427,16 @@ class OverheadCraneController extends Controller
 		{
 			$update = $overheadCrane->create($data);
 			$report_id = $update->id;
+			// the new revision keeps the additional equipment of the approved one (posted sections replace it below)
+			$overheadCrane->copyReportEquipmentTo($update);
+			$update->syncReportEquipment($request);
 		}
 		else
 		{
 			$update = $overheadCrane->update($data);
 			$report_id = $overheadCrane->id;
 			$user_approved = $overheadCrane->report->user_id_approved;
+			$overheadCrane->syncReportEquipment($request);
 		}
 
         if($update)

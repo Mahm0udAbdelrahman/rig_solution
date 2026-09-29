@@ -107,6 +107,7 @@ class Forklift2Controller extends Controller
       ]);
 
       if($store_forklift2){
+          $store_forklift2->syncReportEquipment($request);
           return response()->json([
             'success' => $this->action_message(0, $this->page_name)
           ]);
@@ -253,7 +254,7 @@ class Forklift2Controller extends Controller
         ];
 
         if ($isApprovedRevision) {
-            $update = DB::transaction(function () use ($forklift, $forklift2, $data) {
+            $update = DB::transaction(function () use ($forklift, $forklift2, $data, $request) {
                 $newForklift = $forklift->replicate();
                 $newForklift->save();
 
@@ -261,6 +262,11 @@ class Forklift2Controller extends Controller
                 $newForklift2->fill($data);
                 $newForklift2->forklift_id = $newForklift->id;
                 $newForklift2->save();
+
+                // the new revision keeps the additional equipment of the approved one (posted sections replace it)
+                $forklift->copyReportEquipmentTo($newForklift);
+                $forklift2->copyReportEquipmentTo($newForklift2);
+                $newForklift2->syncReportEquipment($request);
 
                 $this->persistInspectionReportState($forklift, [
                     'status' => 1,
@@ -274,6 +280,7 @@ class Forklift2Controller extends Controller
             });
         } else {
             $update = $forklift2->update($data);
+            $forklift2->syncReportEquipment($request);
         }
 
         return response()->json([

@@ -332,6 +332,7 @@ class ThroughExaminationController extends Controller
             'sync' => 1,
             'user_id' => Auth::id(),
           ]);
+          $store->syncReportEquipment($request);
           // Notification::send(User::all(), new InspectionReport(str_pad($store->code+1, 3,'0',STR_PAD_LEFT), $request->lter_1));
           return response()->json([
               'last_id' => $store->id,
@@ -506,12 +507,16 @@ class ThroughExaminationController extends Controller
         {
           $update = ThroughExamination::query()->create($data);
           $report_id = $update->id;
+          // the new revision keeps the additional equipment of the approved one (posted sections replace it below)
+          $throughExamination->copyReportEquipmentTo($update);
+          $update->syncReportEquipment($request);
         }
         else
         {
           $update = $throughExamination->update($data);
           $report_id = $throughExamination->id;
           $user_approved = $currentReport->user_id_approved;
+          $throughExamination->syncReportEquipment($request);
         }
 
         if($update)

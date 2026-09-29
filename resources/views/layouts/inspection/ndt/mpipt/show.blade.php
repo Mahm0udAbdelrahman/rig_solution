@@ -238,6 +238,7 @@
       <p class="border-dark p-0 mb-0 text-16 black col-3">{{$mpipt->getMtvalue('nmpr_24', 'nmpr_12')}}</p>
       <p class="border-dark p-0 mb-0 text-16 black col-3">{{$mpipt->getMtvalue('nmpr_25', 'nmpr_12')}}</p>
     </div>
+    @include('layouts.inspection.ndt.partials.report_equipment_show', ['model' => $mpipt, 'section' => 'mpi', 'title' => 'Additional MPI equipment', 'grid' => true, 'rowStyle' => 'margin: auto;'])
 
     <div class="row" style="margin: auto;">
       <h6 class="bg-dark white text-bold-600 p-0 mb-0 border-dark col-3 middle">Solution Details</h6>

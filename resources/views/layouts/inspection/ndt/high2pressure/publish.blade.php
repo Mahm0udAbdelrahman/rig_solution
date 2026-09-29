@@ -443,6 +443,7 @@
 									</div>
 								</div>
 
+							    @include('layouts.inspection.ndt.partials.report_equipment_show', ['model' => $high2Pressure, 'section' => 'ut_instrument', 'title' => 'Additional UT equipment (instruments, calibration blocks)', 'columns' => ['equipment_no' => 'Equipment No.', 'equipment_description' => 'Equipment', 'model_type' => 'Model / Type', 'manufacturer' => 'Manufacturer', 'calibration_due_date' => 'Calibration Due']])
 							</div>
 						</div>
 					</div>

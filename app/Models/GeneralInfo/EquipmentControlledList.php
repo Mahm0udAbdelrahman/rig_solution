@@ -69,6 +69,54 @@ class EquipmentControlledList extends Model
     }
 
     /**
+     * Equipment offered in the report equipment pickers (everything still in service), loaded once per request
+     */
+    public static function pickerOptions()
+    {
+        static $options;
+
+        return $options ??= self::query()
+            ->where(function ($q) {
+                $q->whereNull('status')->orWhere('status', '!=', 'Out of Service');
+            })
+            ->orderBy('serial_number')
+            ->get();
+    }
+
+    /**
+     * Values a report picker copies into its form fields
+     */
+    public function getPickerDataAttribute()
+    {
+        return [
+            'equipment_no' => $this->serial_number ?: $this->internal_code,
+            'serial_number' => $this->serial_number,
+            'internal_code' => $this->internal_code,
+            'equipment_description' => $this->equipment_description,
+            'manufacturer' => $this->manufacturer,
+            'model_type' => $this->model_type,
+            'capacity_range' => $this->capacity_range,
+            'calibrated_by' => $this->calibrated_by,
+            'calibration_date' => $this->calibration_date ? $this->calibration_date->format('d-m-Y') : '',
+            'calibration_due_date' => $this->calibration_due_date ? $this->calibration_due_date->format('d-m-Y') : '',
+        ];
+    }
+
+    public function getPickerLabelAttribute()
+    {
+        $label = trim(($this->serial_number ?: $this->internal_code) . ' — ' . $this->equipment_description, ' —');
+        if ($this->internal_code && $this->serial_number) {
+            $label .= ' (' . $this->internal_code . ')';
+        }
+        if ($this->calibration_due_date) {
+            $label .= ' · Due ' . $this->calibration_due_date->format('d-m-Y')
+                . ($this->calibration_due_date->isPast() ? ' (Overdue)' : '');
+        }
+
+        return $label;
+    }
+
+    /**
      * Determine dynamic alarm status if not explicitly set
      */
     public function getComputedAlarmAttribute()

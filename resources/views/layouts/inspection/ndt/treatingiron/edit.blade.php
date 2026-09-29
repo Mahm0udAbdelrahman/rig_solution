@@ -504,7 +504,7 @@
                                     <div class="row">
                                         <div class="col-12">
                                             <div class="skin skin-square form-group">
-                                                <table class="table">
+                                                <div class="table-responsive"><table class="table">
                                                     <thead>
                                                     <tr>
                                                         <th scope="col">Equipment Used</th>
@@ -533,22 +533,28 @@
                                                     </thead>
                                                     <tbody>
                                                     <tr>
+                                                        <th scope="row">Select Equipment</th>
+                                                        <td>@include('layouts.repeated.equipment_picker', ['fill' => ['equipment_no' => '#nmpr_14', 'manufacturer' => '#nmpr_17', 'calibration_due_date' => '#nmpr_20'], 'checks' => ['#mpi-inspection', '#nmpr_120'], 'clearWith' => '#nmpr_120', 'types' => ['Yoke']])</td>
+                                                        <td>@include('layouts.repeated.equipment_picker', ['fill' => ['equipment_no' => '#nmpr_15', 'manufacturer' => '#nmpr_18', 'calibration_due_date' => '#nmpr_21'], 'checks' => ['#mpi-inspection', '#nmpr_121'], 'clearWith' => '#nmpr_121', 'types' => ['Ultra Violet Lamp', 'UV Meter']])</td>
+                                                        <td>@include('layouts.repeated.equipment_picker', ['fill' => ['equipment_no' => '#nmpr_16', 'manufacturer' => '#nmpr_19', 'calibration_due_date' => '#nmpr_22'], 'checks' => ['#mpi-inspection', '#nmpr_122'], 'clearWith' => '#nmpr_122', 'types' => ['Shooting Coil']])</td>
+                                                    </tr>
+                                                    <tr>
                                                         <th scope="row">Equipment No</th>
                                                         <td><input type="text" id="nmpr_14" name="nmpr_14"
                                                                    class="form-control magnet mt"
-                                                                   placeholder="Contrast/Manufacturer"
+                                                                   placeholder="NA"
                                                                    value="{{$treatingIron->getMtvalue('nmpr_14', 'ntir_29')}}"
                                                                    data-validation--message="This field is " disabled>
                                                         </td>
                                                         <td><input type="text" id="nmpr_15" name="nmpr_15"
                                                                    class="form-control uvl mt"
-                                                                   placeholder="Indicator/ Manufacturer"
+                                                                   placeholder="NA"
                                                                    value="{{$treatingIron->getMtvalue('nmpr_15', 'ntir_29')}}"
                                                                    data-validation--message="This field is " disabled>
                                                         </td>
                                                         <td><input type="text" id="nmpr_16" name="nmpr_16"
                                                                    class="form-control coil mt"
-                                                                   placeholder="Indicator/ Manufacturer"
+                                                                   placeholder="NA"
                                                                    value="{{$treatingIron->getMtvalue('nmpr_16', 'ntir_29')}}"
                                                                    data-validation--message="This field is " disabled>
                                                         </td>
@@ -557,19 +563,19 @@
                                                         <th scope="row">Manufacturer</th>
                                                         <td><input type="text" id="nmpr_17" name="nmpr_17"
                                                                    class="form-control magnet mt"
-                                                                   placeholder="Contrast/Expire Date"
+                                                                   placeholder="NA"
                                                                    value="{{$treatingIron->getMtvalue('nmpr_17', 'ntir_29')}}"
                                                                    data-validation--message="This field is " disabled>
                                                         </td>
                                                         <td><input type="text" id="nmpr_18" name="nmpr_18"
                                                                    class="form-control uvl mt"
-                                                                   placeholder="Indicator/ Expire Date"
+                                                                   placeholder="NA"
                                                                    value="{{$treatingIron->getMtvalue('nmpr_18', 'ntir_29')}}"
                                                                    data-validation--message="This field is " disabled>
                                                         </td>
                                                         <td><input type="text" id="nmpr_19" name="nmpr_19"
                                                                    class="form-control coil mt"
-                                                                   placeholder="Contrast/Expire Date"
+                                                                   placeholder="NA"
                                                                    value="{{$treatingIron->getMtvalue('nmpr_19', 'ntir_29')}}"
                                                                    data-validation--message="This field is " disabled>
                                                         </td>
@@ -578,19 +584,19 @@
                                                         <th scope="row">Calibr. Due Date</th>
                                                         <td><input type="text" id="nmpr_20" name="nmpr_20"
                                                                    class="form-control magnet mt"
-                                                                   placeholder="Indicator/ Expire Date"
+                                                                   placeholder="NA"
                                                                    value="{{$treatingIron->getMtvalue('nmpr_20', 'ntir_29')}}"
                                                                    data-validation--message="This field is " disabled>
                                                         </td>
                                                         <td><input type="text" id="nmpr_21" name="nmpr_21"
                                                                    class="form-control uvl mt"
-                                                                   placeholder="Indicator/ Expire Date"
+                                                                   placeholder="NA"
                                                                    value="{{$treatingIron->getMtvalue('nmpr_21', 'ntir_29')}}"
                                                                    data-validation--message="This field is " disabled>
                                                         </td>
                                                         <td><input type="text" id="nmpr_22" name="nmpr_22"
                                                                    class="form-control coil mt"
-                                                                   placeholder="Contrast/Expire Date"
+                                                                   placeholder="NA"
                                                                    value="{{$treatingIron->getMtvalue('nmpr_22', 'ntir_29')}}"
                                                                    data-validation--message="This field is " disabled>
                                                         </td>
@@ -599,25 +605,26 @@
                                                         <th scope="row">Equip.Test Criteria</th>
                                                         <td><input type="text" id="nmpr_23" name="nmpr_23"
                                                                    class="form-control magnet mt"
-                                                                   placeholder="Indicator/ Expire Date"
+                                                                   placeholder="NA"
                                                                    value="{{$treatingIron->getMtvalue('nmpr_23', 'ntir_29')}}"
                                                                    data-validation--message="This field is " disabled>
                                                         </td>
                                                         <td><input type="text" id="nmpr_24" name="nmpr_24"
                                                                    class="form-control uvl mt"
-                                                                   placeholder="Indicator/ Expire Date"
+                                                                   placeholder="NA"
                                                                    value="{{$treatingIron->getMtvalue('nmpr_24', 'ntir_29')}}"
                                                                    data-validation--message="This field is " disabled>
                                                         </td>
                                                         <td><input type="text" id="nmpr_25" name="nmpr_25"
                                                                    class="form-control coil mt"
-                                                                   placeholder="Indicator/ Expire Date"
+                                                                   placeholder="NA"
                                                                    value="{{$treatingIron->getMtvalue('nmpr_25', 'ntir_29')}}"
                                                                    data-validation--message="This field is " disabled>
                                                         </td>
                                                     </tr>
                                                     </tbody>
-                                                </table>
+                                                </table></div>
+                                                @include('layouts.repeated.equipment_rows', ['section' => 'mpi', 'model' => $treatingIron, 'title' => 'Additional MPI equipment', 'types' => ['Yoke', 'Ultra Violet Lamp', 'UV Meter', 'Shooting Coil'], 'checks' => ['#mpi-inspection']])
                                             </div>
                                         </div>
                                     </div>
@@ -668,6 +675,17 @@
                         <div class="card ut-wall-thickness-section">
                             <div class="card-content collapse show">
                                 <div class="card-body">
+                                    <div class="row">
+                                        <div class="col-12">
+                                            <div class="form-group">
+                                                <div class="controls">
+                                                    <label>Select Equipment</label>
+                                                    @include('layouts.repeated.equipment_picker', ['fill' => ['model_type' => '#ntir_31', 'serial_number' => '#ntir_32', 'manufacturer' => '#ntir_37', 'calibration_due_date' => '#ntir_38'], 'match' => 'serial_number', 'types' => ['Flow Detector UT', 'UT Thickness Gauge'], 'checks' => ['#ut-wall-thickness']])
+                                                    <div class="help-block"></div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
                                     <div class="row">
                                         <div class="col-12 col-sm-4">
                                             <div class="form-group">
@@ -820,6 +838,7 @@
                                             </div>
                                         </div>
                                     </div>
+                                    @include('layouts.repeated.equipment_rows', ['section' => 'ut_instrument', 'model' => $treatingIron, 'title' => 'Additional UT equipment (instruments, calibration blocks)', 'types' => ['Flow Detector UT', 'UT Thickness Gauge', 'UT STD Block', 'Step Block'], 'columns' => ['equipment_no', 'equipment_description', 'model_type', 'manufacturer', 'calibration_due_date'], 'checks' => ['#ut-wall-thickness']])
                                 </div>
                             </div>
                         </div>
@@ -1293,16 +1312,33 @@
 			}
 
 			function toggleInspectionType(id, checked) {
+				var $section = $('.' + id + '-section');
+				// Additional equipment rows are handled below: never fill them with 'NA'
+				var notRows = function () { return !$(this).closest('.report-equipment-rows').length; };
 				if (!checked) {
-					$('.' + id + '-section').find('input[type="text"], textarea').val('NA');
-					$('.' + id + '-section').find('input, button, input[type="checkbox"], textarea').prop('disabled', true);
+					$section.find('input[type="text"], textarea').filter(notRows).val('NA');
+					$section.find('input, button, input[type="checkbox"], textarea').filter(notRows).prop('disabled', true);
 				} else {
-					$('.' + id + '-section').find('input[type="text"], textarea').each(function() {
+					$section.find('input[type="text"], textarea').filter(notRows).each(function() {
 					    if ($(this).val() === 'NA') {
 					        $(this).val('');
 					    }
 					});
-					$('.' + id + '-section').find('input, button, input[type="checkbox"], textarea').prop('disabled', false);
+					$section.find('input, button, input[type="checkbox"], textarea').filter(notRows).prop('disabled', false);
+				}
+				// Additional equipment rows (pickers, fields, Add/Remove buttons) follow their section; the section marker
+				// input stays enabled so an unticked section clears its rows on save
+				// The Add button stays usable: adding a row turns the section back on
+				$section.find('.report-equipment-rows').find('select, input, button').not('[name="report_equipment_sections[]"], .report-equipment-add').prop('disabled', !checked);
+				// Equipment pickers and the MPI column checkboxes stay usable: picking or ticking turns the section on.
+				// A switched-off section's fields read NA, so its pickers are cleared.
+				$section.find('#nmpr_120, #nmpr_121, #nmpr_122').prop('disabled', false).iCheck('update');
+				if (!checked) {
+					$section.find('select.equipment-picker').filter(notRows).each(function () {
+						if ($(this).val()) {
+							$(this).val('').trigger('change.select2');
+						}
+					});
 				}
 			}
 
@@ -1399,6 +1435,8 @@
         $("#nmpr_122").prop("disabled", false);
       }
       $('.steps-validation').on('ifChecked', '#nmpr_120', function () {
+        // Ticking a column also turns on the MPI section
+        if (!$('#mpi-inspection').is(':checked')) { $('#mpi-inspection').iCheck('check'); }
         $.each($('.magnet'), function (value) {
           if (this.value !== '') {
             mt.id = this.id;
@@ -1420,6 +1458,8 @@
       });
 
       $('.steps-validation').on('ifChecked', '#nmpr_121', function () {
+        // Ticking a column also turns on the MPI section
+        if (!$('#mpi-inspection').is(':checked')) { $('#mpi-inspection').iCheck('check'); }
         $.each($('.uvl'), function (value) {
           if (this.value !== '') {
             mt.id = this.id;
@@ -1440,6 +1480,8 @@
       });
 
       $('.steps-validation').on('ifChecked', '#nmpr_122', function () {
+        // Ticking a column also turns on the MPI section
+        if (!$('#mpi-inspection').is(':checked')) { $('#mpi-inspection').iCheck('check'); }
         $.each($('.coil'), function (value) {
           if (this.value !== '') {
             mt.id = this.id;

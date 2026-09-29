@@ -327,6 +327,9 @@ class CustomController extends Controller
             $store_inspectionReport->save();
             if ($store_inspectionReport) {
                 $this->cloneDuplicateInspectionMedia($inspectionReport->reportable, $store_inspectionReport);
+                if (method_exists($inspectionReport->reportable, 'copyReportEquipmentTo')) {
+                    $inspectionReport->reportable->copyReportEquipmentTo($store_inspectionReport);
+                }
                 $report_model = strtolower(str_replace('App\Models\Inspection\Lifting\\', '', $inspectionReport->reportable_type));
                 if (in_array($report_model, $second)) {
                         $report_model_2 = $report_model.'2';
@@ -339,6 +342,9 @@ class CustomController extends Controller
                             $store_second_inspectionReport            = $inspectionReport->reportable->$report_model_2->replicate();
                             $store_second_inspectionReport->$model_id = $store_inspectionReport->id;
                             $store_second_inspectionReport->save();
+                            if (method_exists($inspectionReport->reportable->$report_model_2, 'copyReportEquipmentTo')) {
+                                $inspectionReport->reportable->$report_model_2->copyReportEquipmentTo($store_second_inspectionReport);
+                            }
                     }
                 }
 

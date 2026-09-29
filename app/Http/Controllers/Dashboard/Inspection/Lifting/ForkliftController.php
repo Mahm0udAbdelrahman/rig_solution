@@ -306,6 +306,7 @@ class ForkliftController extends Controller
             'sync' => 1,
             'user_id' => Auth::id(),
           ]);
+          $store->syncReportEquipment($request);
           // Notification::send(User::all(), new InspectionReport(str_pad($store->code+1, 3,'0',STR_PAD_LEFT), $request->lfr_1));
           return response()->json([
               'last_id' => $store->id,
@@ -453,12 +454,16 @@ class ForkliftController extends Controller
         $update = $forklift->create($data);
         $update->forklift2()->save($forklift->forklift2);
         $report_id = $update->id;
+        // the new revision keeps the additional equipment of the approved one (posted sections replace it below)
+        $forklift->copyReportEquipmentTo($update);
+        $update->syncReportEquipment($request);
       }
       else
       {
         $update = $forklift->update($data);
         $report_id = $forklift->id;
         $user_approved = $forklift->report->user_id_approved;
+        $forklift->syncReportEquipment($request);
       }
 
       if($update)
