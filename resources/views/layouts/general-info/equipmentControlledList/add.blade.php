@@ -65,7 +65,7 @@
                                     <div class="col-md-6 col-12">
                                         <div class="form-group">
                                             <label for="date_into_service" class="font-weight-bold">Date into Service</label>
-                                            <input type="date" id="date_into_service" name="date_into_service" class="form-control">
+                                            <input type="date" id="date_into_service" name="date_into_service" class="form-control date-field">
                                         </div>
                                     </div>
                                 </div>
@@ -80,7 +80,7 @@
                                     <div class="col-md-4 col-12">
                                         <div class="form-group">
                                             <label for="calibration_date" class="font-weight-bold">Calibration Date</label>
-                                            <input type="date" id="calibration_date" name="calibration_date" class="form-control">
+                                            <input type="date" id="calibration_date" name="calibration_date" class="form-control date-field">
                                         </div>
                                     </div>
                                     <div class="col-md-4 col-12">
@@ -99,7 +99,7 @@
                                     <div class="col-md-4 col-12">
                                         <div class="form-group">
                                             <label for="calibration_due_date" class="font-weight-bold">Calibration Due Date</label>
-                                            <input type="date" id="calibration_due_date" name="calibration_due_date" class="form-control" readonly>
+                                            <input type="date" id="calibration_due_date" name="calibration_due_date" class="form-control date-field" readonly>
                                             <small class="text-muted">Calculated from Calibration Date + Interval</small>
                                         </div>
                                     </div>
@@ -193,6 +193,7 @@
 @endsection
 
 @section('footer')
+@include('layouts.general-info.equipmentControlledList.partials.date-fields')
 <script>
 $(document).ready(function() {
     var intervalMonths = @json(\App\Models\GeneralInfo\EquipmentControlledList::$INTERVALS);
@@ -203,6 +204,7 @@ $(document).ready(function() {
         var calDate = $('#calibration_date').val();
         if (!months || !calDate) {
             $('#calibration_due_date').val('');
+            syncDateField($('#calibration_due_date')[0]);
             return;
         }
         var parts = calDate.split('-').map(Number);
@@ -211,6 +213,7 @@ $(document).ready(function() {
         target.setDate(Math.min(parts[2], lastDay));
         var pad = function(n) { return String(n).padStart(2, '0'); };
         $('#calibration_due_date').val(target.getFullYear() + '-' + pad(target.getMonth() + 1) + '-' + pad(target.getDate()));
+        syncDateField($('#calibration_due_date')[0]);
     }
 
     $('input[name="interval"], #calibration_date').on('change input', updateDueDate);
