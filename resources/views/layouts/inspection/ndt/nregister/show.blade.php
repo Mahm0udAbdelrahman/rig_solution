@@ -334,6 +334,7 @@ Route::currentRouteName() == "nregister.show" || Route::currentRouteName() == "d
 <!-- upload actions scripts -->
 <script src="{{asset('app-assets/js/html2canvas.js')}}"></script>
 <script src="{{asset('app-assets/js/jspdf.js')}}"></script>
+<script src="{{asset('app-assets/js/chunked-pdf-upload.js')}}"></script>
 <script>
 	function setPdfUploadState(isLoading, message) {
 		var $button = $('#uploadpdf');
@@ -441,23 +442,14 @@ Route::currentRouteName() == "nregister.show" || Route::currentRouteName() == "d
 		}
 		var blob = doc.output('blob');
 
-		setPdfUploadState(true, 'Saving PDF...');
-		var formData = new FormData();
-		formData.append('pdf', blob, 'nregister-report.pdf');
-		formData.append('imageurl', '{{$imageurl}}');
-		formData.append('folder', '{{$folder}}');
-		@if(!empty($for_approve_url))
-		formData.append('report_id', '{{$for_approve_url}}');
-		@endif
-
-		return $.ajax({
-			headers: { 'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content') },
-			type: 'POST',
+		return uploadPdfInChunks(blob, {
 			url: "{{route('report.generatePdf')}}",
-			cache: false,
-			data: formData,
-			processData: false,
-			contentType: false
+			fields: {
+				imageurl: '{{$imageurl}}',
+				folder: '{{$folder}}',
+				report_id: '{{$for_approve_url ?? ''}}'
+			},
+			onProgress: function (n, total) { setPdfUploadState(true, 'Saving PDF (' + n + '/' + total + ')'); }
 		});
 	}
 

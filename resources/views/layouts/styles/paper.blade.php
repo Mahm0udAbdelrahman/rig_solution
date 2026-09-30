@@ -192,6 +192,11 @@
 												"{{ asset('app-assets/js/jspdf.js') }}",
 												function () { return typeof window.jspdf !== 'undefined' && typeof window.jspdf.jsPDF === 'function'; }
 										);
+								}).then(function () {
+										return loadScriptOnce(
+												"{{ asset('app-assets/js/chunked-pdf-upload.js') }}",
+												function () { return typeof window.uploadPdfInChunks === 'function'; }
+										);
 								});
 						}
 
@@ -275,28 +280,19 @@
 						}
 						var blob = doc.output("blob");
 
-						setPdfUploadState(true, 'Saving PDF...');
-						var formData = new FormData();
-						formData.append('pdf', blob);
-						formData.append('imageurl', '{{$imageurl}}');
-						formData.append('folder', '{{$folder}}');
-						@if(!empty($for_approve_url))
-						formData.append('report_id', '{{$for_approve_url}}');
-						@endif
-						return $.ajax({
-								headers: {'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')},
-								type: 'POST',
+						return uploadPdfInChunks(blob, {
 								url: "{{route('report.generatePdf')}}",
-								cache: false,
-								data: formData,
-								processData: false,
-								contentType: false,
-								success: function(data){
+								fields: {
+										imageurl: '{{$imageurl}}',
+										folder: '{{$folder}}',
+										report_id: '{{$for_approve_url ?? ''}}'
+								},
+								onProgress: function (n, total) { setPdfUploadState(true, 'Saving PDF (' + n + '/' + total + ')'); }
+						}).then(function(data){
 										toastr.info('Good Job !', (data && data.success) ? data.success : 'PDF Uploaded Successfully !', { positionClass: 'toast-bottom-left', "showMethod": "slideDown", "hideMethod": "slideUp", "progressBar": true, timeOut: 1500 });
 										setTimeout(function () {
 												window.location.reload();
 										}, 600);
-								},
 						});
 				}
 

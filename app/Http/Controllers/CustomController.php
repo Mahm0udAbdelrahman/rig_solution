@@ -169,6 +169,10 @@ class CustomController extends Controller
          ***************************/
     public function generatePdf(Request $request)
     {
+        if ($request->filled('upload_id')) {
+            return $this->generatePdfFromChunks($request);
+        }
+
         $request->validate([
             'pdf' => ['required', 'file'],
             'folder' => ['required', 'string'],
@@ -182,6 +186,74 @@ class CustomController extends Controller
                 trim((string) $request->imageurl).'.pdf',
                 'public'
             );
+
+        return $this->finalizeGeneratedPdf($request, $storedPath);
+
+    }//end generatePdf()
+
+
+        /****************************
+         * Receive PDF In Small Chunks (Avoids upload_max_filesize / post_max_size For Many-Page Reports)
+         ***************************/
+    private function generatePdfFromChunks(Request $request)
+    {
+        $request->validate([
+            'upload_id' => ['required', 'string', 'regex:/^[A-Za-z0-9_-]{8,64}$/'],
+            'chunk_index' => ['required', 'integer', 'min:0'],
+            'total_chunks' => ['required', 'integer', 'min:1', 'max:2000'],
+            'chunk' => ['required', 'file'],
+            'folder' => ['required', 'string'],
+            'imageurl' => ['required', 'string'],
+            'report_id' => ['nullable', 'integer', 'min:1'],
+        ]);
+
+        $index = (int) $request->input('chunk_index');
+        $total = (int) $request->input('total_chunks');
+        if ($index >= $total) {
+            return response()->json(['errors' => ['chunk_index' => ['Invalid chunk index.']]], 422);
+        }
+
+        $chunkDir = storage_path('app/pdf-chunks/'.$request->input('upload_id'));
+        if (!is_dir($chunkDir)) {
+            mkdir($chunkDir, 0775, true);
+        }
+        $request->file('chunk')->move($chunkDir, 'part'.$index);
+
+        if ($index < $total - 1) {
+            return response()->json(['success' => 'Chunk '.($index + 1).'/'.$total.' received']);
+        }
+
+        // Last chunk: stitch all parts together in order.
+        $assembledPath = $chunkDir.'/assembled.pdf';
+        $out = fopen($assembledPath, 'wb');
+        for ($i = 0; $i < $total; $i++) {
+            $part = $chunkDir.'/part'.$i;
+            if (!is_file($part)) {
+                fclose($out);
+                File::deleteDirectory($chunkDir);
+                return response()->json(['errors' => ['chunk' => ['Missing chunk '.($i + 1).' of '.$total.'.']]], 422);
+            }
+            $in = fopen($part, 'rb');
+            stream_copy_to_stream($in, $out);
+            fclose($in);
+        }
+        fclose($out);
+
+        $storedPath = trim((string) $request->folder, '/').'/'.trim((string) $request->imageurl).'.pdf';
+        $stream = fopen($assembledPath, 'rb');
+        $saved = Storage::disk('public')->put($storedPath, $stream, 'public');
+        if (is_resource($stream)) {
+            fclose($stream);
+        }
+        File::deleteDirectory($chunkDir);
+
+        return $this->finalizeGeneratedPdf($request, $saved ? $storedPath : false);
+
+    }//end generatePdfFromChunks()
+
+
+    private function finalizeGeneratedPdf(Request $request, $storedPath)
+    {
         if ($storedPath) {
                 FileManager::upsertPublicFile($storedPath, now());
 
@@ -199,7 +271,9 @@ class CustomController extends Controller
                 );
         }
 
-    }//end generatePdf()
+        return response()->json(['errors' => ['pdf' => ['Unable to save the PDF file.']]], 500);
+
+    }//end finalizeGeneratedPdf()
 
 
         /************************************************************************************************/

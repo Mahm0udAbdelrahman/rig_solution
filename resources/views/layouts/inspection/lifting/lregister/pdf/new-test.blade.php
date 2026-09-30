@@ -118,6 +118,7 @@
 
 <script src="{{asset('app-assets/js/html2canvas.js')}}"></script>
 <script src="{{asset('app-assets/js/jspdf.js')}}"></script>
+<script src="{{asset('app-assets/js/chunked-pdf-upload.js')}}"></script>
 <script>
 
   function setPdfUploadState(isLoading, message) {
@@ -201,23 +202,16 @@
     }
     var blob = doc.output('blob');
 
-    setPdfUploadState(true, 'Saving PDF...');
-    var formData = new FormData();
-    formData.append('folder', '{{$folder}}');
-    formData.append('imageurl', '{{$imageurl}}');
-    formData.append('pdf', blob, 'lregister-report.pdf');
-    @if(!empty($for_approve_url))
-    formData.append('report_id', '{{$for_approve_url}}');
-    @endif
-    return $.ajax({
-      headers: {'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')},
-      type: 'POST',
+    return uploadPdfInChunks(blob, {
       url: "{{route('report.generatePdf')}}",
-      cache: false,
-      data: formData,
-      processData: false,
-      contentType: false,
-      success: function(data){
+      fields: {
+        folder: '{{$folder}}',
+        imageurl: '{{$imageurl}}',
+        report_id: '{{$for_approve_url ?? ''}}'
+      },
+      onProgress: function (n, total) { setPdfUploadState(true, 'Saving PDF (' + n + '/' + total + ')'); }
+    }).then(
+      function(data){
         toastr.info('Good Job !', (data && data.success) ? data.success : 'PDF Uploaded Successfully !', {
           positionClass: 'toast-bottom-left',
           showMethod: "slideDown",
@@ -230,14 +224,17 @@
           }
         });
       },
-      error: function(xhr){
+      function(xhr){
         var message = 'Upload failed';
+        if (xhr.status === 413) {
+          message = 'File is too large for the server.';
+        }
         if (xhr.responseJSON && xhr.responseJSON.errors) {
           message = Object.values(xhr.responseJSON.errors).flat().join(' | ');
         }
         toastr.error(message, 'The pdf failed to upload.', { positionClass: 'toast-bottom-left', showMethod: 'slideDown', hideMethod: 'slideUp', progressBar: true, timeOut: 4000, fadeOut: 1000 });
-      },
-    });
+      }
+    );
   }
 
   function print_pdf()
@@ -283,24 +280,7 @@
       }
       else
       {
-        setPdfUploadState(true);
-        captureReportPagesSequentially()
-          .then(uploadCapturedSnapshots)
-          .then(convert_pdf)
-          .then(function () {
-            setPdfUploadState(false);
-          })
-          .catch(function () {
-            setPdfUploadState(false);
-            toastr.error('Capture failed', 'Unable to build the full PDF', {
-              positionClass: 'toast-bottom-left',
-              showMethod: 'slideDown',
-              hideMethod: 'slideUp',
-              progressBar: true,
-              timeOut: 3000,
-              fadeOut: 1000
-            });
-          });
+        $('#uploadpdf').trigger('click');
       }
       return false;
     }
