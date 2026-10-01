@@ -215,6 +215,8 @@ class SummaryController extends Controller
      */
     public function store(Request $request)
     {
+        $this->validateRequiredReportFields($request, ['lcr_1', 'nsr_2', 'nsr_11', 'nsr_12', 'nsr_13']);
+
 
       $job_request = JobRequest::find($request->lcr_1);
       $code = json_decode(json_encode(CustomController::getReportData($job_request)))->original->lastcode;
@@ -328,6 +330,8 @@ class SummaryController extends Controller
      */
     public function update(Request $request, Summary $summary)
     {
+        $this->validateRequiredReportFields($request, ['lcr_1', 'nsr_2', 'nsr_11', 'nsr_12', 'nsr_13']);
+
       $code = $this->resolveInspectionSubmittedCode($request, $summary);
 
 

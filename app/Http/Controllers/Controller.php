@@ -99,6 +99,29 @@ class Controller extends BaseController
         return $url;
     }
 
+    /**
+     * Stop before saving when a form field that feeds a NOT NULL column is empty.
+     * Answers 422 with the field names, so the form can open the right step and highlight them
+     * (instead of the database rejecting the insert with an SQL error).
+     */
+    protected function validateRequiredReportFields(Request $request, array $fields): void
+    {
+        $missing = [];
+        foreach ($fields as $field) {
+            $value = $request->input($field);
+            if ($value === null || (is_string($value) && trim($value) === '') || (is_array($value) && !$value)) {
+                $missing[$field] = ['This field is required.'];
+            }
+        }
+
+        if ($missing) {
+            throw new \Illuminate\Http\Exceptions\HttpResponseException(response()->json([
+                'message' => 'Please fill in the required fields highlighted in red.',
+                'errors' => $missing,
+            ], 422));
+        }
+    }
+
 	public function check_if_report_edit($report, $current_report)
 	{
 		$have_edit = new \stdClass();

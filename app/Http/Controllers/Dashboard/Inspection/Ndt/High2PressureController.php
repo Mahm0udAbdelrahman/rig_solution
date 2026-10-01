@@ -222,6 +222,8 @@ class High2PressureController extends Controller
      */
     public function store(Request $request)
     {
+        $this->validateRequiredReportFields($request, ['lcr_1', 'nhpr_2', 'lcr_6', 'lcr_7', 'nhpr_9', 'nhpr_10', 'nhpr_12', 'nhpr_13', 'nhpr_14', 'nhpr_15', 'nhpr_16', 'nhpr_17', 'nhpr_18', 'nhpr_19', 'nhpr_20', 'nhpr_21', 'nhpr_22', 'nhpr_23', 'nhpr_24', 'nhpr_25', 'nhpr_26', 'nhpr_27', 'nhpr_35']);
+
 
       $job_request = JobRequest::find($request->lcr_1);
       $code = json_decode(json_encode(CustomController::getReportData($job_request)))->original->lastcode;
@@ -374,6 +376,8 @@ class High2PressureController extends Controller
      */
     public function update(Request $request, High2Pressure $high2Pressure)
     {
+        $this->validateRequiredReportFields($request, ['lcr_1', 'nhpr_2', 'lcr_6', 'lcr_7', 'nhpr_9', 'nhpr_10', 'nhpr_12', 'nhpr_13', 'nhpr_14', 'nhpr_15', 'nhpr_16', 'nhpr_17', 'nhpr_18', 'nhpr_19', 'nhpr_20', 'nhpr_21', 'nhpr_22', 'nhpr_23', 'nhpr_24', 'nhpr_25', 'nhpr_26', 'nhpr_27', 'nhpr_35']);
+
       $code = $this->resolveInspectionSubmittedCode($request, $high2Pressure);
 
       $path = $request->file('nhpr_33');

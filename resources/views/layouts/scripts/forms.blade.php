@@ -183,7 +183,9 @@
 						}
 				};
 
-				window.jumpToFirstWizardErrorStep = function (formElement, currentIndex) {
+				// markedOnly: only react to fields already marked as errors (page load, server errors), never to
+				// required fields the user simply has not filled in yet
+				window.jumpToFirstWizardErrorStep = function (formElement, currentIndex, markedOnly) {
 						try {
 								var $targetForm = formElement && formElement.jquery ? formElement : $(formElement || '.steps-validation').first();
 								if ($targetForm.length && !$targetForm.is('form')) {
@@ -215,9 +217,16 @@
 
 								// 2. Check DOM for fields with error classes or HTML5 invalid status
 								if (!$firstInvalid.length) {
-										$firstInvalid = $targetForm.find('.is-invalid, :input.is-invalid, .error:not(label), :input.error, :input:invalid').filter(function () {
+										// jQuery 3.4 has no ":invalid" selector (it throws), so HTML5 validity is checked by hand
+										var notDisabled = function () {
 												return !$(this).prop('disabled');
-										}).first();
+										};
+										$firstInvalid = $targetForm.find('.is-invalid, :input.is-invalid, .error:not(label), :input.error').filter(notDisabled).first();
+										if (!$firstInvalid.length && !markedOnly) {
+												$firstInvalid = $targetForm.find(':input').filter(function () {
+														return this.validity && !this.validity.valid;
+												}).filter(notDisabled).first();
+										}
 								}
 
 								// 3. Check for form-group with error class (.has-error, .danger)
@@ -238,7 +247,7 @@
 								}
 
 								// 5. Check manually for empty required inputs in visible/hidden step bodies
-								if (!$firstInvalid.length) {
+								if (!$firstInvalid.length && !markedOnly) {
 										$targetForm.find('.content > .body, fieldset').each(function () {
 												var manual = window.manualValidateWizardVisibleStep ? window.manualValidateWizardVisibleStep($(this)) : { valid: true };
 												if (!manual.valid && manual.firstInvalid && manual.firstInvalid.length) {
@@ -393,7 +402,7 @@
 								// Auto check for server-side validation errors on page load after wizard initialization
 								var $formInstance = $(this);
 								setTimeout(function () {
-										window.jumpToFirstWizardErrorStep($formInstance);
+										window.jumpToFirstWizardErrorStep($formInstance, undefined, true);
 								}, 250);
 
 								return wizardInstance;
@@ -405,10 +414,67 @@
 				$(document).ready(function () {
 						setTimeout(function () {
 								$('.steps-validation, form.wizard').each(function () {
-										window.jumpToFirstWizardErrorStep($(this));
+										window.jumpToFirstWizardErrorStep($(this), undefined, true);
 								});
 						}, 350);
 				});
+
+				// Mark the fields named in a 422 response (errors: {field: [message]}), then open their step and scroll to the first one.
+				// Returns true when at least one field was found on the page.
+				window.showInspectionServerErrors = function ($form, errors) {
+						if (!$form || !$form.length || !errors) {
+								return false;
+						}
+
+						$form.find('.server-error-msg').remove();
+						$form.find('.server-invalid').removeClass('is-invalid error server-invalid');
+						$form.find('.server-error-group').removeClass('has-error danger server-error-group');
+
+						var marked = 0;
+						$.each(errors, function (fieldName, errorMsgs) {
+								var cleanName = fieldName.replace(/\.(\d+)/g, '[$1]');
+								var $field = $form.find('[name="' + fieldName + '"], [name="' + cleanName + '"], [name="' + fieldName + '[]"]').first();
+								if (!$field.length && /^[A-Za-z0-9_-]+$/.test(fieldName)) {
+										$field = $form.find('#' + fieldName).first();
+								}
+								if (!$field.length) {
+										return;
+								}
+								marked++;
+
+								// A radio / checkbox group is marked as a whole
+								var $targets = $field.is(':radio, :checkbox') && $field.attr('name')
+										? $form.find('[name="' + $field.attr('name') + '"]')
+										: $field;
+								$targets.addClass('is-invalid error server-invalid');
+
+								var $group = $field.closest('.form-group, .controls');
+								if ($group.length) {
+										$group.addClass('has-error danger server-error-group');
+										$group.append($('<div class="help-block danger server-error-msg"></div>').text((errorMsgs && errorMsgs[0]) || 'This field is required.'));
+								}
+						});
+
+						if (marked) {
+								window.jumpToFirstWizardErrorStep($form, undefined, true);
+						}
+
+						return marked > 0;
+				};
+
+				// A server-marked field stops being highlighted as soon as the user fills it
+				if (!window.__inspectionServerErrorClearBound) {
+						$(document).on('input change ifChanged', '.server-invalid', function () {
+								var $field = $(this);
+								var $targets = $field.is(':radio, :checkbox') && $field.attr('name')
+										? $field.closest('form').find('[name="' + $field.attr('name') + '"]')
+										: $field;
+								$targets.removeClass('is-invalid error server-invalid');
+								var $group = $field.closest('.server-error-group');
+								$group.removeClass('has-error danger server-error-group').find('.server-error-msg').remove();
+						});
+						window.__inspectionServerErrorClearBound = true;
+				}
 
 				window.resolveInspectionAjaxErrorMessage = function (xhr, fallbackMessage) {
 						if (xhr && xhr.responseJSON) {
@@ -519,29 +585,16 @@
 										var message = window.resolveInspectionAjaxErrorMessage(xhr, settings.errorMessage);
 										window.__inspectionAjaxErrorSilenceUntil = Date.now() + 1200;
 
-										if (xhr && xhr.responseJSON && xhr.responseJSON.errors) {
-												$.each(xhr.responseJSON.errors, function (fieldName, errorMsgs) {
-														var cleanName = fieldName.replace(/\.(\d+)/g, '[$1]');
-														var $field = $form.find('[name="' + fieldName + '"], [name="' + cleanName + '"], [name="' + fieldName + '[]"]').first();
-														if ($field.length) {
-																$field.addClass('is-invalid error');
-																var $fg = $field.closest('.form-group, .controls');
-																if ($fg.length) {
-																		$fg.addClass('has-error danger');
-																		if (!$fg.find('.help-block.danger, .invalid-feedback').length) {
-																				$fg.append('<div class="help-block danger error-msg">' + (errorMsgs[0] || 'Invalid value') + '</div>');
-																		}
-																}
-														}
-												});
-												window.jumpToFirstWizardErrorStep($form);
-										}
+										// Fields found on the page get highlighted and a "Missing Required Data" popup: no extra toast then
+										var fieldsShown = xhr && xhr.responseJSON && xhr.responseJSON.errors
+												? window.showInspectionServerErrors($form, xhr.responseJSON.errors)
+												: false;
 
 										if (typeof settings.onError === 'function') {
 												settings.onError(xhr, message, $form, $button);
 										}
 
-										if (typeof toastr !== 'undefined') {
+										if (!fieldsShown && typeof toastr !== 'undefined') {
 												toastr.error(message, 'Submit failed', {
 														positionClass: 'toast-bottom-left',
 														showMethod: 'slideDown',
@@ -591,19 +644,8 @@
 
 								if (xhr && xhr.responseJSON && xhr.responseJSON.errors) {
 										var $form = $('.steps-validation, form.wizard').first();
-										if ($form.length) {
-												$.each(xhr.responseJSON.errors, function (fieldName, errorMsgs) {
-														var cleanName = fieldName.replace(/\.(\d+)/g, '[$1]');
-														var $field = $form.find('[name="' + fieldName + '"], [name="' + cleanName + '"], [name="' + fieldName + '[]"]').first();
-														if ($field.length) {
-																$field.addClass('is-invalid error');
-																var $fg = $field.closest('.form-group, .controls');
-																if ($fg.length) {
-																		$fg.addClass('has-error danger');
-																}
-														}
-												});
-												window.jumpToFirstWizardErrorStep($form);
+										if (window.showInspectionServerErrors($form, xhr.responseJSON.errors)) {
+												return;
 										}
 								}
 

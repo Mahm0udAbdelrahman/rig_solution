@@ -224,6 +224,8 @@ class HighPressureController extends Controller
      */
     public function store(Request $request)
     {
+        $this->validateRequiredReportFields($request, ['lcr_1', 'nhpr_2', 'lcr_60', 'lcr_7', 'nhpr_9', 'nhpr_10', 'nhpr_12', 'nhpr_13', 'nhpr_14', 'nhpr_15', 'nhpr_16', 'nhpr_17', 'nhpr_18', 'nhpr_19', 'nhpr_20', 'nhpr_21', 'nhpr_22', 'nhpr_23', 'nhpr_24', 'nhpr_25', 'nhpr_26', 'nhpr_27', 'nhpr_31']);
+
         $request->validate([
             'lcr_1' => ['required', 'exists:job_requests,id'],
             'lcr_60' => ['required'],
@@ -374,6 +376,8 @@ class HighPressureController extends Controller
      */
     public function update(Request $request, HighPressure $highPressure)
     {
+        $this->validateRequiredReportFields($request, ['lcr_1', 'nhpr_2', 'lcr_60', 'lcr_7', 'nhpr_9', 'nhpr_10', 'nhpr_13', 'nhpr_14', 'nhpr_15', 'nhpr_16', 'nhpr_17', 'nhpr_18', 'nhpr_19', 'nhpr_20', 'nhpr_21', 'nhpr_22', 'nhpr_23', 'nhpr_24', 'nhpr_25', 'nhpr_26', 'nhpr_27', 'nhpr_31']);
+
       $request->validate([
         'lcr_1' => ['required', 'exists:job_requests,id'],
         'lcr_60' => ['required'],

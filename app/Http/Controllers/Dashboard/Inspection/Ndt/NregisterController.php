@@ -209,6 +209,8 @@ class NregisterController extends Controller
 	 */
 	public function store(Request $request)
 	{
+		$this->validateRequiredReportFields($request, ['job_request_id']);
+
 		$data = $request->all();
 		$created = Nregister::create($data);
 		$code = $data['code'];

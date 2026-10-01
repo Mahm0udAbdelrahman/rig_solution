@@ -199,6 +199,8 @@ class TreatingIronController extends Controller
 	 */
 	public function store(Request $request)
 	{
+		$this->validateRequiredReportFields($request, ['lcr_1', 'ntir_2', 'lcr_60', 'lcr_7', 'contactway', 'ntir_10', 'ntir_12', 'ntir_13', 'ntir_14', 'nmpr_12', 'ntir_49']);
+
 		$job_request = JobRequest::find($request->lcr_1);
 		$code = json_decode(json_encode(CustomController::getReportData($job_request)))->original->lastcode;
 
@@ -371,6 +373,8 @@ class TreatingIronController extends Controller
 	 */
 	public function update(Request $request, TreatingIron $treatingIron)
 	{
+		$this->validateRequiredReportFields($request, ['lcr_1', 'ntir_2', 'lcr_60', 'lcr_7', 'contactway', 'ntir_10', 'ntir_12', 'ntir_13', 'ntir_14', 'nmpr_12', 'ntir_49']);
+
 		$currentReport = $treatingIron->report;
 
 		$code = $this->resolveInspectionSubmittedCode($request, $treatingIron);

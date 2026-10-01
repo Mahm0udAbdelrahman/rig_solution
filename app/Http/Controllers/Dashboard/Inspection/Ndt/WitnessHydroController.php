@@ -210,6 +210,8 @@ class WitnessHydroController extends Controller
      */
     public function store(Request $request)
     {
+        $this->validateRequiredReportFields($request, ['lcr_1', 'nwhr_2', 'lcr_6', 'lcr_7', 'contactway', 'nwhr_9', 'nwhr_10', 'nwhr_13', 'nwhr_14', 'nwhr_15', 'nwhr_16', 'nwhr_17', 'nwhr_18', 'nwhr_19', 'nwhr_20', 'nwhr_21', 'nwhr_22', 'nwhr_23', 'nwhr_24', 'nwhr_25', 'nwhr_26', 'nwhr_27', 'nwhr_28', 'nwhr_29', 'nwhr_30', 'nwhr_31', 'nwhr_32', 'nwhr_33', 'nwhr_34', 'nwhr_35', 'nwhr_37', 'nwhr_38', 'nwhr_39']);
+
 				$path = $request->file('nwhr_36');
 				$path_crypt = NULL;
 				if ($path != NULL)
@@ -359,6 +361,8 @@ class WitnessHydroController extends Controller
      */
     public function update(Request $request, WitnessHydro $witnessHydro)
     {
+        $this->validateRequiredReportFields($request, ['lcr_1', 'nwhr_2', 'lcr_6', 'lcr_7', 'contactway', 'nwhr_9', 'nwhr_10', 'nwhr_13', 'nwhr_14', 'nwhr_15', 'nwhr_16', 'nwhr_17', 'nwhr_18', 'nwhr_19', 'nwhr_20', 'nwhr_21', 'nwhr_22', 'nwhr_23', 'nwhr_24', 'nwhr_25', 'nwhr_26', 'nwhr_27', 'nwhr_28', 'nwhr_29', 'nwhr_30', 'nwhr_31', 'nwhr_32', 'nwhr_33', 'nwhr_34', 'nwhr_35', 'nwhr_37', 'nwhr_38', 'nwhr_39']);
+
 				$code = $this->resolveInspectionSubmittedCode($request, $witnessHydro);
 
 				$path = $request->file('nwhr_36');

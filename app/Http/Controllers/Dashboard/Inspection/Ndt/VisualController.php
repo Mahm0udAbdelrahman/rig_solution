@@ -233,6 +233,8 @@ class VisualController extends Controller
      */
     public function store(Request $request)
     {
+        $this->validateRequiredReportFields($request, ['lcr_1', 'nvr_2', 'nvr_6', 'nvr_8', 'nvr_9', 'nvr_10', 'nvr_11', 'nvr_12', 'nvr_13', 'nvr_14', 'nvr_15', 'nvr_16', 'nvr_17', 'nvr_18', 'nvr_19', 'nvr_20', 'nvr_21', 'nvr_26']);
+
         $newone = [];
         $paymentsArr = $request['payments'] ? $request['payments'] : [0 => ['nvr_22' => '']];
         foreach($paymentsArr as $key => $value)
@@ -373,6 +375,8 @@ class VisualController extends Controller
      */
     public function update(Request $request, Visual $visual)
     {
+        $this->validateRequiredReportFields($request, ['lcr_1', 'nvr_2', 'nvr_6', 'nvr_8', 'nvr_9', 'nvr_10', 'nvr_11', 'nvr_12', 'nvr_13', 'nvr_14', 'nvr_15', 'nvr_16', 'nvr_17', 'nvr_18', 'nvr_19', 'nvr_20', 'nvr_21', 'nvr_26']);
+
         $code = $this->resolveInspectionSubmittedCode($request, $visual);
 
         $newone = [];

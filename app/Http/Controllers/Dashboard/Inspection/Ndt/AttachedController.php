@@ -215,6 +215,8 @@ class AttachedController extends Controller
      */
     public function store(Request $request)
     {
+        $this->validateRequiredReportFields($request, ['lcr_1', 'nar_2', 'nar_6', 'nar_15']);
+
       $newone = [];
       foreach($request['payments'] as $key => $value)
       {
@@ -349,6 +351,8 @@ class AttachedController extends Controller
      */
     public function update(Request $request, Attached $attached)
     {
+        $this->validateRequiredReportFields($request, ['lcr_1', 'nar_2', 'nar_6', 'nar_15']);
+
 
       $code = $this->resolveInspectionSubmittedCode($request, $attached);
 

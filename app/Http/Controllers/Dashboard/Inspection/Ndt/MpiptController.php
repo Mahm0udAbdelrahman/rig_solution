@@ -248,6 +248,8 @@ class MpiptController extends Controller
      */
     public function store(Request $request)
     {
+        $this->validateRequiredReportFields($request, ['lcr_1', 'nmpr_2', 'nmpr_6', 'nmpr_8', 'nmpr_11', 'nmpr_47', 'nmpr_48', 'nmpr_51']);
+
         $newone = [];
         foreach ($request['payments'] as $key => $value) {
             $newone[$key]['nmpr_49'] = $value['nmpr_49'];
@@ -380,6 +382,8 @@ class MpiptController extends Controller
      */
     public function update(Request $request, Mpipt $mpipt)
     {
+        $this->validateRequiredReportFields($request, ['lcr_1', 'nmpr_2', 'nmpr_6', 'nmpr_8', 'nmpr_11', 'nmpr_47', 'nmpr_48', 'nmpr_51']);
+
         $code = $this->resolveInspectionSubmittedCode($request, $mpipt);
 
         $newone = [];

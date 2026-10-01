@@ -220,6 +220,8 @@ class UltrasonicController extends Controller
      */
     public function store(Request $request)
     {
+        $this->validateRequiredReportFields($request, ['lcr_1', 'nur_2', 'nur_6', 'nur_8', 'nur_11', 'nur_12', 'nur_13', 'nur_14', 'nur_15', 'nur_16', 'nur_17', 'nur_18', 'nur_19', 'nur_20', 'nur_102', 'nur_45', 'nur_46', 'nur_48', 'nur_49', 'nur_50', 'nur_51', 'nur_52', 'nur_53', 'nur_54', 'nur_55', 'nur_64']);
+
 
         $path = $request->file('nur_47');
 
@@ -377,6 +379,8 @@ class UltrasonicController extends Controller
      */
     public function update(Request $request, Ultrasonic $ultrasonic)
     {
+        $this->validateRequiredReportFields($request, ['lcr_1', 'nur_2', 'nur_6', 'nur_8', 'nur_11', 'nur_12', 'nur_13', 'nur_14', 'nur_15', 'nur_16', 'nur_17', 'nur_18', 'nur_19', 'nur_20', 'nur_102', 'nur_45', 'nur_46', 'nur_48', 'nur_49', 'nur_50', 'nur_51', 'nur_52', 'nur_53', 'nur_54', 'nur_55', 'nur_64']);
+
 				$code = $this->resolveInspectionSubmittedCode($request, $ultrasonic);
 
 				$path = $request->file('nur_47');

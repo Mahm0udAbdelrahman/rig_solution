@@ -231,6 +231,8 @@ class DrawingInspectionController extends Controller
      */
     public function store(Request $request)
     {
+        $this->validateRequiredReportFields($request, ['job_request_id']);
+
         $data  = $request->all();
 				$data['report_image'] = null;
 				if ($request->hasFile('report_image')) {
