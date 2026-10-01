@@ -30,6 +30,9 @@ class EquipmentControlledList extends Model
         'status',
         'date_removed_from_service',
         'notes',
+        'certificate_path',
+        'certificate_name',
+        'certificate_uploaded_at',
         'user_id',
     ];
 
@@ -37,7 +40,10 @@ class EquipmentControlledList extends Model
         'date_into_service' => 'date',
         'calibration_date' => 'date',
         'calibration_due_date' => 'date',
+        'certificate_uploaded_at' => 'datetime',
     ];
+
+    protected $appends = ['certificate_url'];
 
     /**
      * Calibration intervals offered on the register, mapped to their length in months
@@ -61,6 +67,14 @@ class EquipmentControlledList extends Model
         return Carbon::parse($calibrationDate)
             ->addMonthsNoOverflow(self::$INTERVALS[$interval])
             ->format('Y-m-d');
+    }
+
+    /**
+     * Public link to the uploaded calibration certificate, or null when none was uploaded
+     */
+    public function getCertificateUrlAttribute()
+    {
+        return $this->certificate_path ? asset('storage/' . $this->certificate_path) : null;
     }
 
     public function user()

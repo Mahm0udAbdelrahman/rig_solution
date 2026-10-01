@@ -19,36 +19,36 @@ class EquipmentControlledListPolicy
 
     public function viewAny(User $user)
     {
-        return $user->hasPermission('equipment_controlled_list', 'all') || $user->hasPermission('equipment_controlled_list', 'show');
+        return $user->hasPermission('equipmentcontrolledlist', 'all') || $user->hasPermission('equipmentcontrolledlist', 'show');
     }
 
     public function view(User $user, EquipmentControlledList $equipment)
     {
-        return $user->hasPermission('equipment_controlled_list', 'show') || $user->hasPermission('equipment_controlled_list', 'all');
+        return $user->hasPermission('equipmentcontrolledlist', 'show') || $user->hasPermission('equipmentcontrolledlist', 'all');
     }
 
     public function create(User $user)
     {
-        return $user->hasPermission('equipment_controlled_list', 'create') || $user->hasPermission('equipment_controlled_list', 'all');
+        return $user->hasPermission('equipmentcontrolledlist', 'create') || $user->hasPermission('equipmentcontrolledlist', 'all');
     }
 
     public function update(User $user, EquipmentControlledList $equipment)
     {
-        return $user->hasPermission('equipment_controlled_list', 'edit') || $user->hasPermission('equipment_controlled_list', 'all');
+        return $user->hasPermission('equipmentcontrolledlist', 'edit') || $user->hasPermission('equipmentcontrolledlist', 'all');
     }
 
     public function delete(User $user, EquipmentControlledList $equipment)
     {
-        return $user->hasPermission('equipment_controlled_list', 'delete') || $user->hasPermission('equipment_controlled_list', 'all');
+        return $user->hasPermission('equipmentcontrolledlist', 'delete') || $user->hasPermission('equipmentcontrolledlist', 'all');
     }
 
     public function restore(User $user, EquipmentControlledList $equipment)
     {
-        return $user->hasPermission('equipment_controlled_list', 'edit') || $user->hasPermission('equipment_controlled_list', 'all');
+        return $user->hasPermission('equipmentcontrolledlist', 'edit') || $user->hasPermission('equipmentcontrolledlist', 'all');
     }
 
     public function forceDelete(User $user, EquipmentControlledList $equipment)
     {
-        return $user->hasPermission('equipment_controlled_list', 'delete') || $user->hasPermission('equipment_controlled_list', 'all');
+        return $user->hasPermission('equipmentcontrolledlist', 'delete') || $user->hasPermission('equipmentcontrolledlist', 'all');
     }
 }

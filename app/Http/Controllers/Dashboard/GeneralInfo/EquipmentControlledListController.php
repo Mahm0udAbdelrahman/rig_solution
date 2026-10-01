@@ -7,6 +7,7 @@ use App\Models\GeneralInfo\EquipmentControlledList;
 use Illuminate\Http\Request;
 use Yajra\DataTables\DataTables;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Storage;
 use Carbon\Carbon;
 
 class EquipmentControlledListController extends Controller
@@ -25,6 +26,8 @@ class EquipmentControlledListController extends Controller
      */
     public function index()
     {
+        $this->authorize('viewAny', EquipmentControlledList::class);
+
         $totalEquipments = EquipmentControlledList::count();
         $activeEquipments = EquipmentControlledList::where('status', 'Active')->count();
         $underMaintenance = EquipmentControlledList::where('status', 'Under Maintenance')->count();
@@ -42,14 +45,13 @@ class EquipmentControlledListController extends Controller
         })->count();
 
         return view('layouts.general-info.equipmentControlledList.index', [
-            'page_name' => $this->page_name,
+            'page_name' => $this->page_name('All', 'Equipment'),
             'totalEquipments' => $totalEquipments,
             'activeEquipments' => $activeEquipments,
             'underMaintenance' => $underMaintenance,
             'underCalibration' => $underCalibration,
             'outOfService' => $outOfService,
             'alarmDueCount' => $alarmDueCount,
-            'route' => 'equipmentControlledList',
         ]);
     }
 
@@ -58,6 +60,8 @@ class EquipmentControlledListController extends Controller
      */
     public function getDataForDataTable(Request $request)
     {
+        $this->authorize('viewAny', EquipmentControlledList::class);
+
         $query = EquipmentControlledList::query();
 
         // Optional status filter
@@ -127,19 +131,26 @@ class EquipmentControlledListController extends Controller
                 }
             })
             ->addColumn('action', function ($row) {
-                $btn = '<div class="btn-group" role="group">';
-                
-                $btn .= '<button type="button" class="btn btn-sm btn-info view-details" data-id="' . $row->id . '" title="View Details"><i class="la la-eye"></i></button>';
+                $btn = '';
 
-                if (Auth::user()->isSuperAdmin() || Auth::user()->hasPermission('equipment_controlled_list', 'edit') || Auth::user()->hasPermission('equipment_controlled_list', 'all')) {
-                    $btn .= '<a href="' . route('equipment-controlled-list.edit', $row->id) . '" class="btn btn-sm btn-primary" title="Edit"><i class="la la-pencil"></i></a>';
+                if (Auth::user()->can('update', $row)) {
+                    $btn .= '<button type="button" class="btn btn-icon btn-primary mr-1 upload-certificate" data-id="' . $row->id . '" data-name="' . e($row->certificate_name) . '" data-url="' . e($row->certificate_url) . '" title="' . ($row->certificate_path ? 'Replace Certificate' : 'Upload Certificate') . '"><i class="la la-upload"></i></button>';
                 }
 
-                if (Auth::user()->isSuperAdmin() || Auth::user()->hasPermission('equipment_controlled_list', 'delete') || Auth::user()->hasPermission('equipment_controlled_list', 'all')) {
-                    $btn .= '<button type="button" data-id="' . $row->id . '" class="btn btn-sm btn-danger delete" title="Delete"><i class="la la-trash"></i></button>';
+                if ($row->certificate_path) {
+                    $btn .= '<a class="btn btn-secondary mr-1" target="_blank" href="' . e($row->certificate_url) . '">View Certificate</a>';
                 }
-                
-                $btn .= '</div>';
+
+                $btn .= '<button type="button" class="btn btn-dark mr-1 view-details" data-id="' . $row->id . '">Open Details</button>';
+
+                if (Auth::user()->can('update', $row)) {
+                    $btn .= '<a href="' . route('equipment-controlled-list.edit', $row->id) . '" class="btn btn-icon btn-info mr-1"><i class="la la-pencil"></i></a>';
+                }
+
+                if (Auth::user()->can('delete', $row)) {
+                    $btn .= '<button type="button" data-id="' . $row->id . '" class="btn btn-icon btn-danger delete mr-1"><i class="la la-trash"></i></button>';
+                }
+
                 return $btn;
             })
             ->rawColumns(['calibration_due_date', 'recalibration_alarm', 'status', 'action'])
@@ -153,8 +164,10 @@ class EquipmentControlledListController extends Controller
      */
     public function create()
     {
+        $this->authorize('create', EquipmentControlledList::class);
+
         return view('layouts.general-info.equipmentControlledList.add', [
-            'page_name' => 'Add Equipment',
+            'page_name' => $this->page_name(0, 'Equipment'),
             'route' => 'equipment-controlled-list.store',
         ]);
     }
@@ -167,6 +180,8 @@ class EquipmentControlledListController extends Controller
      */
     public function store(Request $request)
     {
+        $this->authorize('create', EquipmentControlledList::class);
+
         $validated = $request->validate([
             'equipment_description' => 'required|string|max:255',
             'internal_code' => 'nullable|string|max:255',
@@ -224,12 +239,14 @@ class EquipmentControlledListController extends Controller
     public function show($id)
     {
         $equipment = EquipmentControlledList::findOrFail($id);
+        $this->authorize('view', $equipment);
         return response()->json([
             'success' => true,
             'data' => $equipment,
             'formatted_service_date' => $equipment->date_into_service ? Carbon::parse($equipment->date_into_service)->format('d-M-Y') : 'N/A',
             'formatted_cal_date' => $equipment->calibration_date ? Carbon::parse($equipment->calibration_date)->format('d-M-Y') : 'N/A',
             'formatted_due_date' => $equipment->calibration_due_date ? Carbon::parse($equipment->calibration_due_date)->format('d-M-Y') : 'N/A',
+            'formatted_certificate_date' => $equipment->certificate_uploaded_at ? $equipment->certificate_uploaded_at->format('d-M-Y H:i') : null,
         ]);
     }
 
@@ -242,9 +259,10 @@ class EquipmentControlledListController extends Controller
     public function edit($id)
     {
         $equipment = EquipmentControlledList::findOrFail($id);
+        $this->authorize('update', $equipment);
 
         return view('layouts.general-info.equipmentControlledList.edit', [
-            'page_name' => 'Edit Equipment',
+            'page_name' => $this->page_name(1, 'Equipment'),
             'route' => 'equipment-controlled-list.update',
             'equipment' => $equipment,
         ]);
@@ -260,6 +278,7 @@ class EquipmentControlledListController extends Controller
     public function update(Request $request, $id)
     {
         $equipment = EquipmentControlledList::findOrFail($id);
+        $this->authorize('update', $equipment);
 
         $validated = $request->validate([
             'equipment_description' => 'required|string|max:255',
@@ -298,6 +317,46 @@ class EquipmentControlledListController extends Controller
     }
 
     /**
+     * Upload or replace the calibration certificate (PDF or image) of an existing equipment.
+     *
+     * @param  \Illuminate\Http\Request  $request
+     * @param  int  $id
+     * @return \Illuminate\Http\Response
+     */
+    public function uploadCertificate(Request $request, $id)
+    {
+        $equipment = EquipmentControlledList::findOrFail($id);
+        $this->authorize('update', $equipment);
+
+        $request->validate([
+            'certificate' => 'required|file|mimes:pdf,jpg,jpeg,png,webp|max:10240',
+        ], [
+            'certificate.mimes' => 'The certificate must be a PDF or an image (JPG, PNG, WEBP).',
+            'certificate.max' => 'The certificate must not be larger than 10 MB.',
+        ]);
+
+        $file = $request->file('certificate');
+        $path = $file->store('equipment-certificates/' . $equipment->id, 'public');
+
+        $oldPath = $equipment->certificate_path;
+
+        $equipment->update([
+            'certificate_path' => $path,
+            'certificate_name' => $file->getClientOriginalName(),
+            'certificate_uploaded_at' => now(),
+        ]);
+
+        if ($oldPath && $oldPath !== $path) {
+            Storage::disk('public')->delete($oldPath);
+        }
+
+        return response()->json([
+            'success' => $oldPath ? 'Certificate replaced successfully!' : 'Certificate uploaded successfully!',
+            'url' => $equipment->certificate_url,
+        ]);
+    }
+
+    /**
      * Remove the specified resource from storage.
      *
      * @param  int  $id
@@ -306,9 +365,15 @@ class EquipmentControlledListController extends Controller
     public function destroy($id)
     {
         $equipment = EquipmentControlledList::findOrFail($id);
+        $this->authorize('delete', $equipment);
+        $certificatePath = $equipment->certificate_path;
         $remove = $equipment->delete();
 
         if ($remove) {
+            if ($certificatePath) {
+                Storage::disk('public')->delete($certificatePath);
+            }
+
             return response()->json([
                 'success' => 'Equipment deleted successfully!',
             ]);

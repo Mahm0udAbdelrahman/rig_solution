@@ -1,4 +1,3 @@
-<script src="{{ asset('app-assets/js/core/libraries/jquery_ui/jquery-ui.min.js') }}"></script>
 <script>
 // Set a date-input field from a Y-m-d value (hidden input) and show it as dd-mm-yyyy
 function setDateField(name, ymd) {

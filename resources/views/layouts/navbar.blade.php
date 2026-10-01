@@ -315,7 +315,6 @@
               @endif
               <!---------------------------------------------------------------------------------->
               @if(auth()->user()->canany(['create', 'viewAny'], \App\Models\GeneralInfo\item::class) ||
-                  auth()->user()->canany(['create', 'viewAny'], \App\Models\GeneralInfo\Tool::class) ||
                   auth()->user()->canany(['create', 'viewAny'], \App\Models\GeneralInfo\EquipmentControlledList::class) ||
                   auth()->user()->canany(['create', 'viewAny'], \App\Models\GeneralInfo\Specification::class) ||
                   (bool) auth()->user()->isSuperAdmin())
@@ -342,18 +341,6 @@
                         @can('create', App\Models\GeneralInfo\item::class)
                         <li><a class="menu-item {{request()->routeIs('item.create') ? 'active' : ''}}" href="{{route('item.create')}}"><i></i><span data-i18n="All Items">New Item</span></a></li>
                         @endcan
-                    </ul>
-                  </li>
-                  @endcan
-                  @canany(['create', 'viewAny'], \App\Models\GeneralInfo\Tool::class)
-                  <li><a class="menu-item {{request()->routeIs('tool.*') ? 'active' : ''}}" href="#"><i class="la la-legal"></i><span data-i18n="All Items">Tools</span></a>
-                    <ul class="menu-content">
-                      @can('viewAny', App\Models\GeneralInfo\Tool::class)
-                      <li><a class="menu-item {{request()->routeIs('tool.index') ? 'active' : ''}}" href="{{route('tool.index')}}"><i></i><span data-i18n="All Items">All Tools</span></a></li>
-                      @endcan
-                      @can('create', App\Models\GeneralInfo\Tool::class)
-                      <li><a class="menu-item {{request()->routeIs('tool.create') ? 'active' : ''}}" href="{{route('tool.create')}}"><i></i><span data-i18n="All Items">New Tool</span></a></li>
-                      @endcan
                     </ul>
                   </li>
                   @endcan
