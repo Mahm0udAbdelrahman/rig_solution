@@ -44,7 +44,35 @@ window.addEventListener('load', function () {
         });
     };
 
+    function isOther($picker) {
+        return $picker.val() === 'other';
+    }
+
+    // Values that only mean "nothing here" (sections switched off fill NA)
+    function isBlank(value) {
+        return /^\s*(n\/?a|-)?\s*$/i.test(value || '');
+    }
+
+    // Register items fill read-only fields; "Other" lets the user type them
+    function applyLock($picker) {
+        var locked = !isOther($picker);
+        eachTarget($picker, function (key, $target) {
+            $target.prop('readonly', locked).toggleClass('equipment-picker-target', locked);
+        });
+    }
+
     function fillFrom($picker) {
+        applyLock($picker);
+        if (isOther($picker)) {
+            // Start the manual entry empty, then put the cursor in the first field the user can see
+            var $first = null;
+            eachTarget($picker, function (key, $target) {
+                if ($target.val() !== '') $target.val('').trigger('change');
+                if (!$first && $target.is(':visible')) $first = $target;
+            });
+            if ($first) $first.trigger('focus');
+            return;
+        }
         var data = $picker.find('option:selected').data('equipment') || {};
         eachTarget($picker, function (key, $target) {
             var value = data[key] == null ? '' : String(data[key]);
@@ -62,14 +90,24 @@ window.addEventListener('load', function () {
         eachTarget($picker, function (targetKey, $target) {
             if (targetKey === key && current === null) current = $target.val();
         });
-        if (!current) return;
-        $picker.find('option').each(function () {
-            var data = $(this).data('equipment');
-            if (data && String(data[key]) === current) {
-                $picker.val(this.value).trigger('change.select2');
-                return false;
-            }
+        var found = false;
+        if (!isBlank(current)) {
+            $picker.find('option').each(function () {
+                var data = $(this).data('equipment');
+                if (data && String(data[key]) === current) {
+                    $picker.val(this.value).trigger('change.select2');
+                    found = true;
+                    return false;
+                }
+            });
+        }
+        if (found || !$picker.find('option[value="other"]').length || $picker.prop('disabled')) return;
+        // Saved values that are not in the register were typed by hand: keep them editable under "Other"
+        var typed = false;
+        eachTarget($picker, function (targetKey, $target) {
+            if (!isBlank($target.val())) typed = true;
         });
+        if (typed) $picker.val('other').trigger('change.select2');
     }
 
     function syncToggle($picker) {
@@ -78,12 +116,14 @@ window.addEventListener('load', function () {
             $picker.val('').trigger('change.select2');
         }
         var toggle = $picker.data('toggle-with');
-        if (!toggle) return;
-        var enabled = $(toggle).is(':checked');
-        $picker.prop('disabled', !enabled);
-        if (!enabled && $picker.val()) {
-            $picker.val('').trigger('change.select2');
+        if (toggle) {
+            var enabled = $(toggle).is(':checked');
+            $picker.prop('disabled', !enabled);
+            if (!enabled && $picker.val()) {
+                $picker.val('').trigger('change.select2');
+            }
         }
+        applyLock($picker);
     }
 
     // Initialise pickers inside scope (call again for rows added later, e.g. repeaters)
@@ -103,11 +143,9 @@ window.addEventListener('load', function () {
                     $picker.select2({ width: '100%', placeholder: $picker.data('placeholder'), allowClear: true });
                 }
             }
-            eachTarget($picker, function (key, $target) {
-                $target.prop('readonly', true).addClass('equipment-picker-target');
-            });
             syncToggle($picker);
             preselect($picker);
+            applyLock($picker);
         });
     };
 

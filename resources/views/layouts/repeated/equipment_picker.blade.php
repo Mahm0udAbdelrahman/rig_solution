@@ -14,11 +14,14 @@
         'name' => 'report_equipment[...]',    // optional: submit the chosen register id under this name
         'selected' => 12,                     // optional: register id to select on load (kept even if now out of service)
         'placeholder' => 'Select equipment',
+        'other' => false,                     // optional: hide the "Other (enter manually)" option (shown by default)
     ])
 
     Fill keys: equipment_no (serial, or internal code when no serial), serial_number, internal_code,
     equipment_description, manufacturer, model_type, capacity_range, calibrated_by,
     calibration_date, calibration_due_date (dates as dd-mm-yyyy).
+
+    "Other (enter manually)" unlocks the fill targets so the user can type equipment that is not in the register.
 --}}
 @php
     $pickerFill = $fill ?? [];
@@ -46,6 +49,9 @@
         @if(!empty($clearWith)) data-clear-with="{{ $clearWith }}" @endif
         @if(!empty($scope)) data-scope="{{ $scope }}" @endif>
     <option value=""></option>
+    @if(($other ?? true) && $pickerFill)
+        <option value="other">Other (enter manually)</option>
+    @endif
     @foreach($pickerEquipments as $pickerEquipment)
         <option value="{{ $pickerEquipment->id }}" data-equipment='@json($pickerEquipment->picker_data)' @if($pickerSelected == $pickerEquipment->id) selected @endif>{{ $pickerEquipment->picker_label }}</option>
     @endforeach

@@ -66,7 +66,8 @@ trait HasReportEquipment
                     $values[$field] = $value === '' ? null : mb_substr($value, 0, 255);
                 }
                 $equipmentId = EquipmentControlledList::whereKey((int) ($row['equipment_id'] ?? 0))->value('id');
-                if (!$equipmentId && !$values['equipment_no']) {
+                // Rows entered by hand ("Other") have no register id: keep them when anything was typed
+                if (!$equipmentId && !array_filter($values)) {
                     continue;
                 }
 
