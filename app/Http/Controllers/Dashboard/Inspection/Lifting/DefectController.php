@@ -225,6 +225,8 @@ class DefectController extends Controller
      */
     public function store(Request $request)
     {
+        $this->validateRequiredReportFields($request, ['lcr_1', 'lcr_2', 'lcr_6']);
+
         /******************************/
         $newone = [];
         foreach ($request['payments'] as $key => $value) {
@@ -348,6 +350,8 @@ class DefectController extends Controller
      */
     public function update(Request $request, Defect $defect)
     {
+        $this->validateRequiredReportFields($request, ['lcr_1', 'lcr_2', 'lcr_6']);
+
 
 
         $code = $this->resolveInspectionSubmittedCode($request, $defect);

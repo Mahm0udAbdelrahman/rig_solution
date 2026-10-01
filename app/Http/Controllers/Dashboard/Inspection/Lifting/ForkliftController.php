@@ -247,6 +247,8 @@ class ForkliftController extends Controller
      */
     public function store(Request $request)
     {
+        $this->validateRequiredReportFields($request, ['lcr_1', 'lfr_2', 'lcr_6', 'lcr_7', 'lfr_8', 'lfr_10', 'lfr_11', 'lfr_12', 'lfr_13', 'lfr_15', 'lfr_16', 'lfr_17', 'lfr_18', 'lfr_19', 'lfr_20', 'lfr_21', 'lfr_23', 'lfr_24', 'lfr_25', 'lfr_26', 'lfr_27', 'lfr_31', 'lfr_32', 'lfr_33']);
+
 
       $path = $request->file('lfr_34');
       $path_crypt = NULL;
@@ -391,6 +393,8 @@ class ForkliftController extends Controller
      */
     public function update(Request $request, Forklift $forklift)
     {
+        $this->validateRequiredReportFields($request, ['lcr_1', 'lfr_2', 'lcr_6', 'lcr_7', 'lfr_8', 'lfr_10', 'lfr_11', 'lfr_12', 'lfr_13', 'lfr_15', 'lfr_16', 'lfr_17', 'lfr_18', 'lfr_19', 'lfr_20', 'lfr_21', 'lfr_23', 'lfr_24', 'lfr_25', 'lfr_26', 'lfr_27', 'lfr_31', 'lfr_32', 'lfr_33']);
+
       $isApprovedRevision = $this->shouldForkApprovedInspectionRevision($forklift);
       $code = $this->resolveInspectionSubmittedCode($request, $forklift);
 

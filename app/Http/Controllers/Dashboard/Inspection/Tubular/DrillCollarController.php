@@ -224,6 +224,8 @@ class DrillCollarController extends Controller
      */
     public function store(Request $request)
     {
+        $this->validateRequiredReportFields($request, ['job_request_id', 'code']);
+
         $data  = $request->all();
         $created = DrillCollar::create($data);
         $code = $data['code'];
@@ -335,6 +337,8 @@ class DrillCollarController extends Controller
      */
     public function update(Request $request, DrillCollar $drillCollar)
     {
+        $this->validateRequiredReportFields($request, ['job_request_id', 'code'], true);
+
         $data = $request->all();
         if ($this->shouldForkApprovedInspectionRevision($drillCollar)) {
             $data['job_request_id'] = $drillCollar->job_request_id;

@@ -223,6 +223,8 @@ class DrillPipeController extends Controller
      */
     public function store(Request $request)
     {
+        $this->validateRequiredReportFields($request, ['job_request_id', 'code']);
+
         $data  = $request->all();
 //        dd($data);
         $created = DrillPipe::create($data);
@@ -332,6 +334,8 @@ class DrillPipeController extends Controller
      */
     public function update(Request $request, DrillPipe $drillPipe)
     {
+        $this->validateRequiredReportFields($request, ['job_request_id', 'code'], true);
+
         $data = $request->all();
         if ($this->shouldForkApprovedInspectionRevision($drillPipe)) {
             $data['job_request_id'] = $drillPipe->job_request_id;

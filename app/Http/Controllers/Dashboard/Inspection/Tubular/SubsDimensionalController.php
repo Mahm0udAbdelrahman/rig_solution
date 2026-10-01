@@ -237,6 +237,8 @@ class SubsDimensionalController extends Controller
      */
     public function store(Request $request)
     {
+        $this->validateRequiredReportFields($request, ['job_request_id', 'code']);
+
         $data  = $request->all();
         $created = SubsDimensional::create($data);
         $code = $data['code'];
@@ -349,6 +351,8 @@ class SubsDimensionalController extends Controller
      */
     public function update(Request $request, SubsDimensional $subsDimensional)
     {
+        $this->validateRequiredReportFields($request, ['job_request_id', 'code'], true);
+
         $data = $request->all();
         if ($this->shouldForkApprovedInspectionRevision($subsDimensional)) {
             $data['job_request_id'] = $subsDimensional->job_request_id;

@@ -245,6 +245,8 @@ class StabilizerInspectionController extends Controller
      */
     public function store(Request $request)
     {
+        $this->validateRequiredReportFields($request, ['job_request_id', 'code']);
+
         $data  = $request->all();
 //        dd($data);
         $created = StabilizerInspection::create($data);
@@ -357,6 +359,8 @@ class StabilizerInspectionController extends Controller
      */
     public function update(Request $request, StabilizerInspection $stabilizerInspection)
     {
+        $this->validateRequiredReportFields($request, ['job_request_id', 'code'], true);
+
         $data = $request->all();
         if ($this->shouldForkApprovedInspectionRevision($stabilizerInspection)) {
             $data['job_request_id'] = $stabilizerInspection->job_request_id;

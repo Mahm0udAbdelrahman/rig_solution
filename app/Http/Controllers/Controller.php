@@ -101,17 +101,26 @@ class Controller extends BaseController
 
     /**
      * Stop before saving when a form field that feeds a NOT NULL column is empty.
-     * Answers 422 with the field names, so the form can open the right step and highlight them
+     * AJAX forms get 422 with the field names; normal form posts go back to the form with the input kept
+     * and the errors flashed. Either way the form opens the right step and highlights the fields
      * (instead of the database rejecting the insert with an SQL error).
+     * $onlyPresent: check only fields the form actually sent (updates that save $request->all()).
      */
-    protected function validateRequiredReportFields(Request $request, array $fields): void
+    protected function validateRequiredReportFields(Request $request, array $fields, bool $onlyPresent = false): void
     {
         $missing = [];
         foreach ($fields as $field) {
+            if ($onlyPresent && !$request->exists($field)) {
+                continue;
+            }
             $value = $request->input($field);
             if ($value === null || (is_string($value) && trim($value) === '') || (is_array($value) && !$value)) {
                 $missing[$field] = ['This field is required.'];
             }
+        }
+
+        if ($missing && !$request->expectsJson()) {
+            throw \Illuminate\Validation\ValidationException::withMessages($missing);
         }
 
         if ($missing) {

@@ -235,6 +235,8 @@ class PblController extends Controller
      */
     public function store(Request $request)
     {
+        $this->validateRequiredReportFields($request, ['job_request_id', 'code']);
+
 		$data  = $request->all();
 		$inspectionData = $data['inspection_data'] ?? [];
 
@@ -339,6 +341,8 @@ class PblController extends Controller
      */
     public function update(Request $request, Pbl $pbl)
     {
+        $this->validateRequiredReportFields($request, ['job_request_id', 'code'], true);
+
         $data = $request->all();
 		$inspectionData = $data['inspection_data'] ?? [];
 		$oldInspectionData = $pbl->inspection_data;

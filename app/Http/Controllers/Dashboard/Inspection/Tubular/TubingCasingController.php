@@ -222,6 +222,8 @@ class TubingCasingController extends Controller
      */
     public function store(Request $request)
     {
+        $this->validateRequiredReportFields($request, ['job_request_id', 'code']);
+
         $data  = $request->all();
 //        dd($data);
         $created = TubingCasing::create($data);
@@ -330,6 +332,8 @@ class TubingCasingController extends Controller
      */
     public function update(Request $request, TubingCasing $tubingCasing)
     {
+        $this->validateRequiredReportFields($request, ['job_request_id', 'code'], true);
+
         $data = $request->all();
         if ($this->shouldForkApprovedInspectionRevision($tubingCasing)) {
             $data['job_request_id'] = $tubingCasing->job_request_id;

@@ -815,5 +815,21 @@
 				});
 		</script>
 		@stack('bottom-child-scripts')
+		@if(isset($errors) && $errors->any())
+		<script>
+				// A normal (non-AJAX) form post came back with validation errors: mark the fields and open their step
+				$(function () {
+						setTimeout(function () {
+								var $form = $('.steps-validation, form.wizard').first();
+								if (!window.showInspectionServerErrors || !window.showInspectionServerErrors($form, @json($errors->getMessages())))
+								{
+										if (typeof toastr !== 'undefined') {
+												toastr.error(@json($errors->first()), 'Submit failed', { positionClass: 'toast-bottom-left', timeOut: 6000 });
+										}
+								}
+						}, 400);
+				});
+		</script>
+		@endif
 		<script src="{{asset('app-assets/js/scripts/forms/validation/form-validation.js')}}"></script>
 @endsection

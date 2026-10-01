@@ -217,6 +217,8 @@ class PipesSummaryReportController extends Controller
      */
     public function store(Request $request)
     {
+        $this->validateRequiredReportFields($request, ['job_request_id', 'code']);
+
         $data  = $request->all();
         $created = PipesSummaryReport::create($data);
         $code = $data['code'];
@@ -308,6 +310,8 @@ class PipesSummaryReportController extends Controller
      */
     public function update(Request $request, PipesSummaryReport $pipesSummaryReport)
     {
+        $this->validateRequiredReportFields($request, ['job_request_id', 'code'], true);
+
         $data = $request->all();
         if ($this->shouldForkApprovedInspectionRevision($pipesSummaryReport)) {
             $data['job_request_id'] = $pipesSummaryReport->job_request_id;

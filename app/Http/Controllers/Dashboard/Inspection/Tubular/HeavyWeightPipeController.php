@@ -219,6 +219,8 @@ class HeavyWeightPipeController extends Controller
      */
     public function store(Request $request)
     {
+        $this->validateRequiredReportFields($request, ['job_request_id', 'code']);
+
         $data  = $request->all();
         $created = HeavyWeightPipe::create($data);
         $code = $data['code'];
@@ -326,6 +328,8 @@ class HeavyWeightPipeController extends Controller
      */
     public function update(Request $request, HeavyWeightPipe $heavyWeightPipe)
     {
+        $this->validateRequiredReportFields($request, ['job_request_id', 'code'], true);
+
         $data = $request->all();
         if ($this->shouldForkApprovedInspectionRevision($heavyWeightPipe)) {
             $data['job_request_id'] = $heavyWeightPipe->job_request_id;

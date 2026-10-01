@@ -231,6 +231,8 @@ class OverheadCraneController extends Controller
      */
     public function store(Request $request)
     {
+        $this->validateRequiredReportFields($request, ['lcr_1', 'locr_2', 'lcr_6', 'lcr_7', 'locr_8', 'locr_10', 'locr_11', 'locr_12', 'locr_13', 'locr_15', 'locr_16', 'locr_17', 'locr_18', 'locr_19', 'locr_20', 'locr_21', 'locr_22', 'locr_23', 'locr_24', 'locr_25', 'locr_26', 'locr_28', 'locr_29', 'locr_30', 'locr_31', 'locr_32', 'locr_36', 'locr_37', 'locr_38', 'locr_39', 'locr_40', 'locr_41', 'locr_42', 'locr_43', 'locr_44']);
+
         $job_request = JobRequest::find($request->lcr_1);
         $code = json_decode(json_encode(CustomController::getReportData($job_request)))->original->lastcode;
 
@@ -373,6 +375,8 @@ class OverheadCraneController extends Controller
      */
     public function update(Request $request, OverheadCrane $overheadCrane)
     {
+        $this->validateRequiredReportFields($request, ['lcr_1', 'locr_2', 'lcr_6', 'lcr_7', 'locr_8', 'locr_10', 'locr_11', 'locr_12', 'locr_13', 'locr_15', 'locr_16', 'locr_17', 'locr_18', 'locr_19', 'locr_20', 'locr_21', 'locr_22', 'locr_23', 'locr_24', 'locr_25', 'locr_26', 'locr_28', 'locr_29', 'locr_30', 'locr_31', 'locr_32', 'locr_36', 'locr_37', 'locr_38', 'locr_39', 'locr_40', 'locr_41', 'locr_42', 'locr_43', 'locr_44']);
+
         $isApprovedRevision = $this->shouldForkApprovedInspectionRevision($overheadCrane);
         $code = $this->resolveInspectionSubmittedCode($request, $overheadCrane);
 

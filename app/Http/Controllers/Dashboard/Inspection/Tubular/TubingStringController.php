@@ -227,6 +227,8 @@ class TubingStringController extends Controller
      */
     public function store(Request $request)
     {
+        $this->validateRequiredReportFields($request, ['job_request_id']);
+
         $data = $this->normalizeTubingStringPayload($request);
         $created = TubingString::create($data);
         $code = $data['code'];
@@ -334,6 +336,8 @@ class TubingStringController extends Controller
      */
     public function update(Request $request, TubingString $tubingString)
     {
+        $this->validateRequiredReportFields($request, ['job_request_id'], true);
+
         $data = $this->normalizeTubingStringPayload($request, $tubingString);
         if ($this->shouldForkApprovedInspectionRevision($tubingString)) {
             $data['job_request_id'] = $tubingString->job_request_id;

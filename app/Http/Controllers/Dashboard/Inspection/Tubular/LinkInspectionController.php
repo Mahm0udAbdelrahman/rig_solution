@@ -240,6 +240,8 @@ class LinkInspectionController extends Controller
      */
     public function store(Request $request)
     {
+        $this->validateRequiredReportFields($request, ['job_request_id', 'code']);
+
         $data  = $request->all();
         // dd($data);
         $created = LinkInspection::create($data);
@@ -350,6 +352,8 @@ class LinkInspectionController extends Controller
      */
     public function update(Request $request, LinkInspection $linkInspection)
     {
+        $this->validateRequiredReportFields($request, ['job_request_id', 'code'], true);
+
         $data = $request->all();
         if ($this->shouldForkApprovedInspectionRevision($linkInspection)) {
             $data['job_request_id'] = $linkInspection->job_request_id;

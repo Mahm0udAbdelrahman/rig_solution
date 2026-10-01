@@ -259,6 +259,8 @@ class ThroughExaminationController extends Controller
      */
     public function store(Request $request)
     {
+        $this->validateRequiredReportFields($request, ['lcr_1', 'lcr_6', 'lcr_7', 'lter_8', 'lter_15', 'lter_16', 'lter_17', 'lter_18', 'lter_19', 'lter_20', 'lter_21', 'lter_22', 'lter_23', 'lter_24', 'lter_26', 'lter_27', 'lter_28', 'lter_29', 'lter_30', 'lter_34', 'lter_35', 'lter_37', 'lter_38', 'lter_39', 'lter_40', 'lter_41', 'lter_42', 'lter_43', 'lter_44', 'lter_45', 'lter_46', 'lter_47', 'lter_48', 'lter_49', 'lter_50', 'lter_51']);
+
 
       $path = $request->file('lter_36');
       $path_crypt = NULL;
@@ -424,6 +426,8 @@ class ThroughExaminationController extends Controller
      */
     public function update(Request $request, ThroughExamination $throughExamination)
     {
+        $this->validateRequiredReportFields($request, ['lcr_1', 'lcr_6', 'lcr_7', 'lter_8', 'lter_15', 'lter_16', 'lter_17', 'lter_18', 'lter_19', 'lter_20', 'lter_21', 'lter_22', 'lter_23', 'lter_24', 'lter_26', 'lter_27', 'lter_28', 'lter_29', 'lter_30', 'lter_34', 'lter_35', 'lter_37', 'lter_38', 'lter_39', 'lter_40', 'lter_41', 'lter_42', 'lter_43', 'lter_44', 'lter_45', 'lter_46', 'lter_47', 'lter_48', 'lter_49', 'lter_50', 'lter_51']);
+
       $currentReport = $throughExamination->report;
 
       if (!$currentReport) {

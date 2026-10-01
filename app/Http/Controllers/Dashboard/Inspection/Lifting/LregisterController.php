@@ -202,6 +202,8 @@ class LregisterController extends Controller
      */
     public function store(Request $request)
     {
+        $this->validateRequiredReportFields($request, ['lcr_1', 'lcr_60', 'lcr_70']);
+
         $job_request = JobRequest::find($request->lcr_1);
         $code        = json_decode(json_encode(CustomController::getReportData($job_request)))->original->lastcode;
 

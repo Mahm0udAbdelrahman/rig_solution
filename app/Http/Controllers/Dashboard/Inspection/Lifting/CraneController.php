@@ -224,6 +224,8 @@ class CraneController extends Controller
 	 */
 	public function store(Request $request)
 	{
+		$this->validateRequiredReportFields($request, ['lcr_1', 'lcr_2', 'lcr_6', 'lcr_7', 'lcr_8', 'lcr_10', 'lcr_11', 'lcr_12', 'lcr_13', 'lcr_15', 'lcr_16', 'lcr_17', 'lcr_18', 'lcr_19', 'lcr_20', 'lcr_21', 'lcr_22', 'lcr_23', 'lcr_24', 'lcr_25', 'lcr_26', 'lcr_28', 'lcr_29', 'lcr_30', 'lcr_31', 'lcr_32', 'lcr_36', 'lcr_37', 'lcr_42', 'lcr_43', 'lcr_44', 'lcr_45', 'lcr_46']);
+
 		$job_request = JobRequest::find($request->lcr_1);
 		$code = json_decode(json_encode(CustomController::getReportData($job_request)))->original->lastcode;
 
@@ -364,6 +366,8 @@ class CraneController extends Controller
 	 */
 	public function update(Request $request, Crane $crane)
 	{
+		$this->validateRequiredReportFields($request, ['lcr_1', 'lcr_2', 'lcr_6', 'lcr_7', 'lcr_8', 'lcr_10', 'lcr_11', 'lcr_12', 'lcr_13', 'lcr_15', 'lcr_16', 'lcr_17', 'lcr_18', 'lcr_19', 'lcr_20', 'lcr_21', 'lcr_22', 'lcr_23', 'lcr_24', 'lcr_25', 'lcr_26', 'lcr_28', 'lcr_29', 'lcr_30', 'lcr_31', 'lcr_32', 'lcr_36', 'lcr_37', 'lcr_42', 'lcr_43', 'lcr_44', 'lcr_45', 'lcr_46']);
+
 		$isApprovedRevision = $this->shouldForkApprovedInspectionRevision($crane);
 		$code = $this->resolveInspectionSubmittedCode($request, $crane);
 
