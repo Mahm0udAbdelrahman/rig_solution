@@ -3,44 +3,145 @@
 @include('layouts.styles.datatables')
 
 @section('content')
-		<section class="users-list-wrapper">
-				<div class="users-list">
-						@if ($totalEquipments == 0)
-								@include('layouts.repeated.nodata', ['route' => auth()->user()->can('create', App\Models\GeneralInfo\EquipmentControlledList::class) ? 'equipment-controlled-list' : null])
-						@else
-								@can('create', 'App\Models\GeneralInfo\EquipmentControlledList')
-										<a href="{{route('equipment-controlled-list.create')}}" class="btn btn-primary clear"><i class="la la-plus"></i> Create New {{ucfirst(str_replace('All ', '', substr($page_name, 0, -1)))}}</a>
-								@endcan
-								<div class="card">
-										<div class="card-content">
-												<div class="card-body">
-														<div class="table-responsive">
-																<table id="users-list" class="table table-striped table-bordered dataex-fixh-responsive row-grouping">
-																		<thead>
-																				<tr>
-																					<th>Internal Code</th>
-																					<th width="15%">Description</th>
-																					<th>Serial No</th>
-																					<th>Manufacturer</th>
-																					<th>Model / Type</th>
-																					<th>Capacity / Range</th>
-																					<th>Calib. Date</th>
-																					<th>Due Date</th>
-																					<th>Calibrated By</th>
-																					<th>Location</th>
-																					<th>Alarm</th>
-																					<th>Status</th>
-																					<th>Actions</th>
-																				</tr>
-																		</thead>
-																</table>
-														</div>
-												</div>
-										</div>
-								</div>
-						@endif
-				</div>
-		</section>
+<div class="content-body">
+    <!-- Quick Stats Cards -->
+    <div class="row">
+        <div class="col-xl-3 col-lg-6 col-12">
+            <div class="card pull-up border-top-primary border-top-3">
+                <div class="card-content">
+                    <div class="card-body">
+                        <div class="media d-flex">
+                            <div class="media-body text-left">
+                                <h3 class="info">{{ $totalEquipments }}</h3>
+                                <h6 class="text-muted font-small-3">Total Controlled Equipments</h6>
+                            </div>
+                            <div>
+                                <i class="la la-cube info font-large-2 float-right"></i>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-xl-3 col-lg-6 col-12">
+            <div class="card pull-up border-top-success border-top-3">
+                <div class="card-content">
+                    <div class="card-body">
+                        <div class="media d-flex">
+                            <div class="media-body text-left">
+                                <h3 class="success">{{ $activeEquipments }}</h3>
+                                <h6 class="text-muted font-small-3">Active Equipments</h6>
+                            </div>
+                            <div>
+                                <i class="la la-check-circle success font-large-2 float-right"></i>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-xl-3 col-lg-6 col-12">
+            <div class="card pull-up border-top-warning border-top-3">
+                <div class="card-content">
+                    <div class="card-body">
+                        <div class="media d-flex">
+                            <div class="media-body text-left">
+                                <h3 class="warning">{{ $underMaintenance + $underCalibration }}</h3>
+                                <h6 class="text-muted font-small-3">Maintenance / Calibration</h6>
+                            </div>
+                            <div>
+                                <i class="la la-wrench warning font-large-2 float-right"></i>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-xl-3 col-lg-6 col-12">
+            <div class="card pull-up border-top-danger border-top-3">
+                <div class="card-content">
+                    <div class="card-body">
+                        <div class="media d-flex">
+                            <div class="media-body text-left">
+                                <h3 class="danger">{{ $recalibrateEquipments }}</h3>
+                                <h6 class="text-muted font-small-3">Re-Calibrate (Due Date Passed)</h6>
+                            </div>
+                            <div>
+                                <i class="la la-refresh danger font-large-2 float-right"></i>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Main Section -->
+    <section class="users-list-wrapper">
+        <div class="users-list">
+            <div class="d-flex justify-content-between align-items-center mb-1 flex-wrap">
+                <div>
+                    @can('create', App\Models\GeneralInfo\EquipmentControlledList::class)
+                    <a href="{{ route('equipment-controlled-list.create') }}" class="btn btn-primary font-weight-bold shadow-sm">
+                        <i class="la la-plus"></i> Add New Equipment
+                    </a>
+                    @endcan
+                    <div class="btn-group ml-50">
+                        <button type="button" class="btn btn-success font-weight-bold shadow-sm dropdown-toggle" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                            <i class="la la-download"></i> Export ISO Form
+                        </button>
+                        <div class="dropdown-menu">
+                            <a class="dropdown-item" href="{{ route('equipment-controlled-list.export', 'pdf') }}"><i class="la la-file-pdf-o mr-50"></i> PDF</a>
+                            <a class="dropdown-item" href="{{ route('equipment-controlled-list.export', 'excel') }}"><i class="la la-file-excel-o mr-50"></i> Excel</a>
+                        </div>
+                    </div>
+                </div>
+                <div class="btn-group" role="group">
+                    <button type="button" class="btn btn-outline-primary btn-sm filter-status-btn active" data-status="">All Status</button>
+                    <button type="button" class="btn btn-outline-success btn-sm filter-status-btn" data-status="Active">Active</button>
+                    <button type="button" class="btn btn-outline-warning btn-sm filter-status-btn" data-status="Under Maintenance">Under Maintenance</button>
+                    <button type="button" class="btn btn-outline-info btn-sm filter-status-btn" data-status="Under Calibration">Under Calibration</button>
+                    <button type="button" class="btn btn-outline-danger btn-sm filter-status-btn" data-status="Re-Calibrate">Re-Calibrate</button>
+                    <button type="button" class="btn btn-outline-secondary btn-sm filter-status-btn" data-status="Out of Service">Out of Service</button>
+                </div>
+            </div>
+
+            <div class="card">
+                <div class="card-header bg-primary text-white d-flex justify-content-between align-items-center" style="border-radius: 4px 4px 0 0;">
+                    <h4 class="card-title text-white mb-0"><i class="la la-table mr-1"></i>Equipment Controlled List</h4>
+                    <span class="badge badge-light text-primary font-weight-bold">Integrated Management System</span>
+                </div>
+                <div class="card-content">
+                    <div class="card-body">
+                        <div class="table-responsive">
+                            <table id="equipment-table" class="table table-striped table-bordered dataex-fixh-responsive row-grouping w-100">
+                                <thead>
+                                    <tr class="bg-light">
+                                        <th>Description</th>
+                                        <th>Internal Code</th>
+                                        <th>Manufacturer</th>
+                                        <th>Model / Type</th>
+                                        <th>Capacity / Range</th>
+                                        <th>Serial No</th>
+                                        <th>Service Date</th>
+                                        <th>Interval</th>
+                                        <th>Calib. Date</th>
+                                        <th>Due Date</th>
+                                        <th>Calibrated By</th>
+                                        <th>Location</th>
+                                        <th>Status</th>
+                                        <th>Date Removed</th>
+                                        <th>Action</th>
+                                    </tr>
+                                </thead>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+</div>
 
 <!-- View Details Modal -->
 <div class="modal fade" id="equipmentDetailsModal" tabindex="-1" role="dialog" aria-labelledby="equipmentDetailsModalLabel" aria-hidden="true">
@@ -66,7 +167,6 @@
         </div>
     </div>
 </div>
-
 <!-- Upload Certificate Modal -->
 <div class="modal fade" id="certificateModal" tabindex="-1" role="dialog" aria-labelledby="certificateModalLabel" aria-hidden="true">
     <div class="modal-dialog modal-dialog-centered" role="document">
@@ -99,46 +199,125 @@
 </div>
 @endsection
 
-@include('layouts.scripts.datatables', ['route' => 'equipment-controlled-list',
-'columns' => ['internal_code', 'equipment_description', 'serial_number', 'manufacturer', 'model_type', 'capacity_range', 'calibration_date', 'calibration_due_date', 'calibrated_by', 'location_department', 'recalibration_alarm', 'status', 'action'],
-'select_fields' => ['status' => ['' => 'ALL', 'Active' => 'Active', 'Under Maintenance' => 'Under Maintenance', 'Under Calibration' => 'Under Calibration', 'Out of Service' => 'Out of Service']],
-'disable_column_filters' => ['recalibration_alarm', 'action'],
-'non_orderable_columns' => ['action'],
-'non_searchable_columns' => ['action'],
-'datatable_options' => ['ordering' => true, 'order' => [[0, 'asc']]]])
+@section('footer')
+<script src="{{ asset('app-assets/vendors/js/tables/datatable/datatables.min.js') }}"></script>
+<script src="{{ asset('app-assets/vendors/js/tables/datatable/dataTables.responsive.min.js') }}"></script>
+<script src="{{ asset('app-assets/vendors/js/tables/datatable/dataTables.fixedHeader.min.js') }}"></script>
 
-@section('ajax')
 <script>
 $(document).ready(function() {
-    var table = window.currentDataTable;
-    if (!table) {
-        return;
-    }
+    var statusFilter = '';
 
-    // Alarm presets next to Clear Filters, styled like the inspection All / Approved / Need Approve pills
-    var alarmFilter = '';
-    var $presets = $('<div class="listing-toolbar-presets"></div>')
-        .append('<button type="button" class="btn btn-sm btn-outline-primary listing-toolbar-pill js-equipment-preset is-active" data-preset="">All ({{ $totalEquipments }})</button>')
-        .append('<button type="button" class="btn btn-sm btn-outline-primary listing-toolbar-pill js-equipment-preset" data-preset="calibrated">Calibrated</button>')
-        .append('<button type="button" class="btn btn-sm btn-outline-primary listing-toolbar-pill js-equipment-preset" data-preset="alarm">Re-calibration Due ({{ $alarmDueCount }})</button>');
-    $('.listing-table-toolbar .listing-toolbar-actions').first().after($presets);
-
-    table.on('preXhr.dt', function(e, settings, data) {
-        data.alarm_filter = alarmFilter;
+    var table = $('#equipment-table').DataTable({
+        processing: true,
+        serverSide: true,
+        responsive: true,
+        ajax: {
+            url: "{{ route('getDataForDataTable.equipment-controlled-list') }}",
+            data: function (d) {
+                d.status_filter = statusFilter;
+            }
+        },
+        columns: [
+            { data: 'equipment_description', name: 'equipment_description' },
+            { data: 'internal_code', name: 'internal_code' },
+            { data: 'manufacturer', name: 'manufacturer' },
+            { data: 'model_type', name: 'model_type' },
+            { data: 'capacity_range', name: 'capacity_range' },
+            { data: 'serial_number', name: 'serial_number' },
+            { data: 'date_into_service', name: 'date_into_service' },
+            { data: 'interval', name: 'interval' },
+            { data: 'calibration_date', name: 'calibration_date' },
+            { data: 'calibration_due_date', name: 'calibration_due_date' },
+            { data: 'calibrated_by', name: 'calibrated_by' },
+            { data: 'location_department', name: 'location_department' },
+            { data: 'status', name: 'status' },
+            { data: 'date_removed_from_service', name: 'date_removed_from_service' },
+            { data: 'action', name: 'action', orderable: false, searchable: false }
+        ],
+        order: [[1, 'asc']],
+        dom: '<"top"lfB>rt<"bottom"ip><"clear">',
+        lengthMenu: [[10, 25, 50, 100, -1], [10, 25, 50, 100, "All"]],
+        language: {
+            search: "_INPUT_",
+            searchPlaceholder: "Search equipment...",
+            lengthMenu: "Show _MENU_ records",
+        }
     });
 
-    $(document).on('click', '.js-equipment-preset', function() {
-        alarmFilter = $(this).data('preset') || '';
-        $('.js-equipment-preset').removeClass('is-active');
-        $(this).addClass('is-active');
-        table.draw();
+    // Filter Buttons Click
+    $('.filter-status-btn').on('click', function() {
+        $('.filter-status-btn').removeClass('active');
+        $(this).addClass('active');
+        statusFilter = $(this).data('status');
+        table.ajax.reload();
     });
 
-    // bound on the button itself so it runs before the shared (delegated) Clear Filters redraw
-    $('.js-clear-datatable-filters').on('click', function() {
-        alarmFilter = '';
-        $('.js-equipment-preset').removeClass('is-active');
-        $('.js-equipment-preset[data-preset=""]').addClass('is-active');
+    // Delete Item with SweetAlert
+    $(document).on('click', '.delete', function() {
+        var id = $(this).data('id');
+        var deleteUrl = "{{ route('equipment-controlled-list.index') }}/" + id;
+
+        if (typeof Swal !== 'undefined') {
+            Swal.fire({
+                title: 'Are You Sure ?',
+                text: "This item will be permanently deleted!",
+                type: 'error',
+                showCancelButton: true,
+                confirmButtonColor: '#ff4961',
+                cancelButtonColor: '#2c303b',
+                confirmButtonText: 'YES, DELETE IT !',
+                confirmButtonClass: 'btn btn-danger',
+                cancelButtonClass: 'btn btn-dark ml-1',
+                cancelButtonText: 'CANCEL',
+                buttonsStyling: false,
+            }).then(function (result) {
+                if (result.value) {
+                    $.ajax({
+                        headers: {'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')},
+                        url: deleteUrl,
+                        type: 'DELETE',
+                        dataType: 'JSON',
+                        success: function(response) {
+                            toastr.success(response.success || 'Item deleted successfully', 'Deleted !', {
+                                positionClass: 'toast-bottom-left',
+                                showMethod: 'slideDown',
+                                hideMethod: 'slideUp',
+                                progressBar: true,
+                                timeOut: 1500
+                            });
+                            table.ajax.reload(null, false);
+                        },
+                        error: function(xhr) {
+                            toastr.error('Error occurred while deleting item.', 'Error');
+                        }
+                    });
+                } else if (result.dismiss === Swal.DismissReason.cancel) {
+                    Swal.fire({
+                        title: 'Cancelled',
+                        text: 'Your data is safe :)',
+                        type: 'info',
+                        confirmButtonClass: 'btn btn-success',
+                    });
+                }
+            });
+        } else {
+            if (confirm('Are you sure you want to delete this equipment?')) {
+                $.ajax({
+                    headers: {'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')},
+                    url: deleteUrl,
+                    type: 'DELETE',
+                    dataType: 'JSON',
+                    success: function(response) {
+                        toastr.success(response.success || 'Item deleted successfully');
+                        table.ajax.reload(null, false);
+                    },
+                    error: function(xhr) {
+                        toastr.error('Error occurred while deleting item.');
+                    }
+                });
+            }
+        }
     });
 
     // Upload / Replace Certificate
@@ -183,7 +362,7 @@ $(document).ready(function() {
             success: function(response) {
                 toastr.success(response.success, 'Done !', { positionClass: 'toast-bottom-left', progressBar: true, timeOut: 1500 });
                 $('#certificateModal').modal('hide');
-                window.currentDataTable.ajax.reload(null, false);
+                table.ajax.reload(null, false);
             },
             error: function(xhr) {
                 var message = 'Error occurred while uploading the certificate.';
@@ -270,16 +449,12 @@ $(document).ready(function() {
                                 <div>${item.calibrated_by || 'N/A'}</div>
                             </div>
                             <div class="col-md-4 mb-2">
-                                <label class="font-weight-bold text-muted small">Alarm Status</label>
-                                <div><span class="badge badge-warning">${item.recalibration_alarm || 'N/A'}</span></div>
-                            </div>
-                            <div class="col-md-4 mb-2">
                                 <label class="font-weight-bold text-muted small">Location / Department</label>
                                 <div>${item.location_department || 'N/A'}</div>
                             </div>
                             <div class="col-md-4 mb-2">
                                 <label class="font-weight-bold text-muted small">Current Status</label>
-                                <div><span class="badge badge-success">${item.status || 'Active'}</span></div>
+                                <div><span class="badge ${res.display_status === 'Re-Calibrate' ? 'badge-danger' : 'badge-success'}">${res.display_status}</span></div>
                             </div>
                         </div>
                         <div class="row mt-2">

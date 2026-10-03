@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Dashboard\GeneralInfo;
 
 use App\Http\Controllers\Controller;
 use App\Models\GeneralInfo\EquipmentControlledList;
+use App\Services\GeneralInfo\EquipmentControlledListExport;
 use Illuminate\Http\Request;
 use Yajra\DataTables\DataTables;
 use Illuminate\Support\Facades\Auth;
@@ -28,30 +29,14 @@ class EquipmentControlledListController extends Controller
     {
         $this->authorize('viewAny', EquipmentControlledList::class);
 
-        $totalEquipments = EquipmentControlledList::count();
-        $activeEquipments = EquipmentControlledList::where('status', 'Active')->count();
-        $underMaintenance = EquipmentControlledList::where('status', 'Under Maintenance')->count();
-        $underCalibration = EquipmentControlledList::where('status', 'Under Calibration')->count();
-        $outOfService = EquipmentControlledList::where('status', 'Out of Service')->count();
-
-        $today = Carbon::today()->format('Y-m-d');
-        $alarmDueCount = EquipmentControlledList::where(function($q) use ($today) {
-            $q->where('recalibration_alarm', 'LIKE', '%Re-Calibrate%')
-              ->orWhere('recalibration_alarm', 'LIKE', '%Overdue%')
-              ->orWhere(function($sub) use ($today) {
-                  $sub->whereNotNull('calibration_due_date')
-                      ->where('calibration_due_date', '<=', $today);
-              });
-        })->count();
-
         return view('layouts.general-info.equipmentControlledList.index', [
-            'page_name' => $this->page_name('All', 'Equipment'),
-            'totalEquipments' => $totalEquipments,
-            'activeEquipments' => $activeEquipments,
-            'underMaintenance' => $underMaintenance,
-            'underCalibration' => $underCalibration,
-            'outOfService' => $outOfService,
-            'alarmDueCount' => $alarmDueCount,
+            'page_name' => $this->page_name,
+            'totalEquipments' => EquipmentControlledList::count(),
+            'activeEquipments' => EquipmentControlledList::query()->whereDisplayStatus('Active')->count(),
+            'recalibrateEquipments' => EquipmentControlledList::query()->whereDisplayStatus(EquipmentControlledList::STATUS_RECALIBRATE)->count(),
+            'underMaintenance' => EquipmentControlledList::query()->whereDisplayStatus('Under Maintenance')->count(),
+            'underCalibration' => EquipmentControlledList::query()->whereDisplayStatus('Under Calibration')->count(),
+            'outOfService' => EquipmentControlledList::query()->whereDisplayStatus('Out of Service')->count(),
         ]);
     }
 
@@ -64,25 +49,9 @@ class EquipmentControlledListController extends Controller
 
         $query = EquipmentControlledList::query();
 
-        // Optional status filter
+        // Status buttons filter on the status as displayed (Active past its due date = Re-Calibrate)
         if ($request->filled('status_filter')) {
-            $query->where('status', $request->status_filter);
-        }
-
-        // Optional alarm filter
-        if ($request->filled('alarm_filter')) {
-            if ($request->alarm_filter === 'alarm') {
-                $query->where(function($q) {
-                    $q->where('recalibration_alarm', 'LIKE', '%Re-Calibrate%')
-                      ->orWhere('recalibration_alarm', 'LIKE', '%Overdue%')
-                      ->orWhere(function($sub) {
-                          $sub->whereNotNull('calibration_due_date')
-                              ->where('calibration_due_date', '<=', Carbon::today()->format('Y-m-d'));
-                      });
-                });
-            } elseif ($request->alarm_filter === 'calibrated') {
-                $query->where('recalibration_alarm', 'LIKE', '%Calibrated%');
-            }
+            $query->whereDisplayStatus($request->status_filter);
         }
 
         return DataTables::of($query)
@@ -94,67 +63,65 @@ class EquipmentControlledListController extends Controller
             })
             ->editColumn('calibration_due_date', function ($row) {
                 if (!$row->calibration_due_date) return 'N/A';
-                $dueDate = Carbon::parse($row->calibration_due_date);
-                $formatted = $dueDate->format('d-m-y');
-                if ($dueDate->isPast()) {
+                $formatted = $row->calibration_due_date->format('d-m-y');
+                if ($row->is_overdue) {
                     return '<span class="text-danger font-weight-bold" title="Overdue">' . $formatted . ' <i class="la la-warning"></i></span>';
                 }
                 return $formatted;
             })
-            ->editColumn('recalibration_alarm', function ($row) {
-                $alarm = $row->recalibration_alarm ?: $row->computed_alarm;
-                if (!$alarm || $alarm === 'N/A') {
-                    return '<span class="badge badge-secondary">N/A</span>';
-                }
-                $lower = strtolower($alarm);
-                if (str_contains($lower, 're-calibrate') || str_contains($lower, 'overdue')) {
-                    return '<span class="badge badge-danger text-white"><i class="la la-bell"></i> ' . e($alarm) . '</span>';
-                } elseif (str_contains($lower, 'due soon')) {
-                    return '<span class="badge badge-warning text-white"><i class="la la-clock-o"></i> ' . e($alarm) . '</span>';
-                } else {
-                    return '<span class="badge badge-success text-white"><i class="la la-check"></i> ' . e($alarm) . '</span>';
-                }
-            })
             ->editColumn('status', function ($row) {
-                $status = $row->status ?: 'Active';
-                switch ($status) {
-                    case 'Active':
-                        return '<span class="badge badge-success">' . e($status) . '</span>';
-                    case 'Under Maintenance':
-                        return '<span class="badge badge-warning text-white">' . e($status) . '</span>';
-                    case 'Under Calibration':
-                        return '<span class="badge badge-info">' . e($status) . '</span>';
-                    case 'Out of Service':
-                        return '<span class="badge badge-danger">' . e($status) . '</span>';
-                    default:
-                        return '<span class="badge badge-light">' . e($status) . '</span>';
-                }
+                return self::statusBadge($row->display_status);
             })
             ->addColumn('action', function ($row) {
-                $btn = '';
+                $btn = '<div class="btn-group" role="group">';
 
-                if (Auth::user()->can('update', $row)) {
-                    $btn .= '<button type="button" class="btn btn-icon btn-primary mr-1 upload-certificate" data-id="' . $row->id . '" data-name="' . e($row->certificate_name) . '" data-url="' . e($row->certificate_url) . '" title="' . ($row->certificate_path ? 'Replace Certificate' : 'Upload Certificate') . '"><i class="la la-upload"></i></button>';
-                }
+                $btn .= '<button type="button" class="btn btn-sm btn-info view-details" data-id="' . $row->id . '" title="View Details"><i class="la la-eye"></i></button>';
 
                 if ($row->certificate_path) {
-                    $btn .= '<a class="btn btn-secondary mr-1" target="_blank" href="' . e($row->certificate_url) . '">View Certificate</a>';
+                    $btn .= '<a href="' . e($row->certificate_url) . '" target="_blank" class="btn btn-sm btn-success" title="View Certificate"><i class="la la-certificate"></i></a>';
                 }
 
-                $btn .= '<button type="button" class="btn btn-dark mr-1 view-details" data-id="' . $row->id . '">Open Details</button>';
-
                 if (Auth::user()->can('update', $row)) {
-                    $btn .= '<a href="' . route('equipment-controlled-list.edit', $row->id) . '" class="btn btn-icon btn-info mr-1"><i class="la la-pencil"></i></a>';
+                    $btn .= '<button type="button" class="btn btn-sm btn-warning upload-certificate" data-id="' . $row->id . '" data-name="' . e($row->certificate_name) . '" data-url="' . e($row->certificate_url) . '" title="' . ($row->certificate_path ? 'Replace Certificate' : 'Upload Certificate') . '"><i class="la la-upload"></i></button>';
+                    $btn .= '<a href="' . route('equipment-controlled-list.edit', $row->id) . '" class="btn btn-sm btn-primary" title="Edit"><i class="la la-pencil"></i></a>';
                 }
 
                 if (Auth::user()->can('delete', $row)) {
-                    $btn .= '<button type="button" data-id="' . $row->id . '" class="btn btn-icon btn-danger delete mr-1"><i class="la la-trash"></i></button>';
+                    $btn .= '<button type="button" data-id="' . $row->id . '" class="btn btn-sm btn-danger delete" title="Delete"><i class="la la-trash"></i></button>';
                 }
 
+                $btn .= '</div>';
                 return $btn;
             })
-            ->rawColumns(['calibration_due_date', 'recalibration_alarm', 'status', 'action'])
+            ->rawColumns(['calibration_due_date', 'status', 'action'])
             ->make(true);
+    }
+
+    private static function statusBadge($status)
+    {
+        $classes = [
+            'Active' => 'badge-success',
+            EquipmentControlledList::STATUS_RECALIBRATE => 'badge-danger',
+            'Under Maintenance' => 'badge-warning text-white',
+            'Under Calibration' => 'badge-info',
+            'Out of Service' => 'badge-secondary',
+        ];
+
+        return '<span class="badge ' . ($classes[$status] ?? 'badge-light') . '">' . e($status) . '</span>';
+    }
+
+    /**
+     * Export the whole list in the ISO form layout (RS-IMS-P10-F01) as PDF or Excel.
+     *
+     * @param  string  $format  pdf|excel
+     */
+    public function export($format)
+    {
+        $this->authorize('viewAny', EquipmentControlledList::class);
+
+        $export = new EquipmentControlledListExport();
+
+        return $format === 'excel' ? $export->downloadExcel() : $export->downloadPdf();
     }
 
     /**
@@ -246,6 +213,7 @@ class EquipmentControlledListController extends Controller
             'formatted_service_date' => $equipment->date_into_service ? Carbon::parse($equipment->date_into_service)->format('d-M-Y') : 'N/A',
             'formatted_cal_date' => $equipment->calibration_date ? Carbon::parse($equipment->calibration_date)->format('d-M-Y') : 'N/A',
             'formatted_due_date' => $equipment->calibration_due_date ? Carbon::parse($equipment->calibration_due_date)->format('d-M-Y') : 'N/A',
+            'display_status' => $equipment->display_status,
             'formatted_certificate_date' => $equipment->certificate_uploaded_at ? $equipment->certificate_uploaded_at->format('d-M-Y H:i') : null,
         ]);
     }

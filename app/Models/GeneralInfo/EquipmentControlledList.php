@@ -56,6 +56,67 @@ class EquipmentControlledList extends Model
     public static $DEFAULT_INTERVAL = 'Annual';
 
     /**
+     * Status shown instead of "Active" once the calibration due date has passed
+     */
+    const STATUS_RECALIBRATE = 'Re-Calibrate';
+
+    public static $STATUSES = ['Active', 'Under Maintenance', 'Under Calibration', 'Out of Service'];
+
+    /**
+     * Calibration due date has passed (due today is still valid)
+     */
+    public function getIsOverdueAttribute()
+    {
+        return $this->calibration_due_date && $this->calibration_due_date->lt(Carbon::today());
+    }
+
+    /**
+     * Status as shown on the list and the ISO export: an Active equipment whose due date has passed becomes Re-Calibrate.
+     * Under Maintenance / Under Calibration / Out of Service are kept as entered.
+     */
+    public function getDisplayStatusAttribute()
+    {
+        $status = $this->status ?: 'Active';
+
+        return ($status === 'Active' && $this->is_overdue) ? self::STATUS_RECALIBRATE : $status;
+    }
+
+    /**
+     * Re-calibration Alarm column of the ISO form: from the due date when there is one, otherwise the value entered
+     */
+    public function getIsoAlarmAttribute()
+    {
+        if ($this->calibration_due_date) {
+            return $this->is_overdue ? 'Re-Calibrate' : 'Calibrated';
+        }
+
+        return $this->recalibration_alarm ?: 'N/A';
+    }
+
+    /**
+     * Filter by the status as displayed (see getDisplayStatusAttribute)
+     */
+    public function scopeWhereDisplayStatus($query, $status)
+    {
+        $today = Carbon::today()->format('Y-m-d');
+        $isActive = function ($q) {
+            $q->whereNull('status')->orWhere('status', '')->orWhere('status', 'Active');
+        };
+
+        if ($status === self::STATUS_RECALIBRATE) {
+            return $query->where($isActive)->where('calibration_due_date', '<', $today);
+        }
+
+        if ($status === 'Active') {
+            return $query->where($isActive)->where(function ($q) use ($today) {
+                $q->whereNull('calibration_due_date')->orWhere('calibration_due_date', '>=', $today);
+            });
+        }
+
+        return $query->where('status', $status);
+    }
+
+    /**
      * Due date = calibration date + interval, or null when the interval is not a known one
      */
     public static function computeDueDate($calibrationDate, $interval)
@@ -128,30 +189,5 @@ class EquipmentControlledList extends Model
         }
 
         return $label;
-    }
-
-    /**
-     * Determine dynamic alarm status if not explicitly set
-     */
-    public function getComputedAlarmAttribute()
-    {
-        if (!empty($this->recalibration_alarm)) {
-            return $this->recalibration_alarm;
-        }
-
-        if (!$this->calibration_due_date) {
-            return 'N/A';
-        }
-
-        $dueDate = Carbon::parse($this->calibration_due_date);
-        $today = Carbon::today();
-
-        if ($dueDate->isPast()) {
-            return 'Overdue / Re-Calibrate';
-        } elseif ($dueDate->diffInDays($today) <= 30) {
-            return 'Due Soon';
-        }
-
-        return 'Calibrated';
     }
 }

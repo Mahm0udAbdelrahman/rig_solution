@@ -237,6 +237,7 @@ Route::group(
                 Route::get('tool/getDataForDataTable', [App\Http\Controllers\Dashboard\GeneralInfo\ToolController::class, 'getDataForDataTable'])->name('getDataForDataTable.tool');
                 Route::resource('tool', App\Http\Controllers\Dashboard\GeneralInfo\ToolController::class);
                 Route::get('equipment-controlled-list/getDataForDataTable', [App\Http\Controllers\Dashboard\GeneralInfo\EquipmentControlledListController::class, 'getDataForDataTable'])->name('getDataForDataTable.equipment-controlled-list');
+                Route::get('equipment-controlled-list/export/{format}', [App\Http\Controllers\Dashboard\GeneralInfo\EquipmentControlledListController::class, 'export'])->whereIn('format', ['pdf', 'excel'])->name('equipment-controlled-list.export');
                 Route::post('equipment-controlled-list/{equipment_controlled_list}/certificate', [App\Http\Controllers\Dashboard\GeneralInfo\EquipmentControlledListController::class, 'uploadCertificate'])->name('equipment-controlled-list.certificate');
                 Route::resource('equipment-controlled-list', App\Http\Controllers\Dashboard\GeneralInfo\EquipmentControlledListController::class);
                 Route::get('specification/getDataForDataTable', [App\Http\Controllers\Dashboard\GeneralInfo\SpecificationController::class, 'getDataForDataTable'])->name('getDataForDataTable.specification');
