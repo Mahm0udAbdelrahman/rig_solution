@@ -42,6 +42,7 @@ class DrillPipeController extends Controller
                       AND dp2.code = drill_pipes.code
                 )'
             )
+            ->with(['job_request.client', 'job_request.supplier', 'job_request.clientDepartment', 'report'])
             ->withAggregate('job_request','code')
             ->orderBy('job_request_code', 'Desc');
 
@@ -133,10 +134,23 @@ class DrillPipeController extends Controller
             })
             
             ->filterColumn('code', function ($query, $keyword) {
-                $query->whereRaw("code like ?", ["%{$keyword}%"])
-                    ->orWhereHas('job_request', function ($row) use (&$keyword) {
-                        $row->where("code", "like", ["%{$keyword}%"]);
+                $keyword = trim((string) $keyword);
+                if (str_contains($keyword, '/')) {
+                    [$jobCode, $pipeCode] = explode('/', $keyword, 2);
+                    $query->where(function ($q) use ($jobCode, $pipeCode) {
+                        $q->where('drill_pipes.code', 'like', "%{$pipeCode}%")
+                          ->whereHas('job_request', function ($jq) use ($jobCode) {
+                              $jq->where('code', 'like', "%{$jobCode}%");
+                          });
                     });
+                } else {
+                    $query->where(function ($q) use ($keyword) {
+                        $q->where('drill_pipes.code', 'like', "%{$keyword}%")
+                          ->orWhereHas('job_request', function ($jq) use ($keyword) {
+                              $jq->where('code', 'like', "%{$keyword}%");
+                          });
+                    });
+                }
             })
             ->filterColumn('deploc', function ($query, $keyword) {
                 $query->whereHas('job_request', function ($row) use (&$keyword) {

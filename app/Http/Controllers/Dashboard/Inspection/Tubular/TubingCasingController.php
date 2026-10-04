@@ -42,6 +42,7 @@ class TubingCasingController extends Controller
                       AND tc2.code = tubing_casings.code
                 )'
             )
+            ->with(['job_request.client', 'job_request.supplier', 'job_request.clientDepartment', 'report'])
             ->withAggregate('job_request','code')
             ->orderBy('job_request_code', 'Desc');
 

@@ -114,7 +114,7 @@
 				}
 				var useFilterRow = datatableOptions.hasOwnProperty('useFilterRow') ? !!datatableOptions.useFilterRow : true;
 				var fixedHeaderOptions = datatableOptions.hasOwnProperty('fixedHeader') ? datatableOptions.fixedHeader : false;
-				var filterDebounceMs = datatableOptions.hasOwnProperty('filterDebounceMs') ? parseInt(datatableOptions.filterDebounceMs, 10) : 220;
+				var filterDebounceMs = datatableOptions.hasOwnProperty('filterDebounceMs') ? parseInt(datatableOptions.filterDebounceMs, 10) : 450;
 				var searchDelayMs = datatableOptions.hasOwnProperty('searchDelay') ? parseInt(datatableOptions.searchDelay, 10) : null;
 				var columnFilterTimers = {};
 

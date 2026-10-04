@@ -42,6 +42,7 @@ class DrillCollarController extends Controller
                       AND dc2.code = drill_collars.code
                 )'
             )
+            ->with(['job_request.client', 'job_request.supplier', 'job_request.clientDepartment', 'report'])
             ->withAggregate('job_request','code')
             ->orderBy('job_request_code', 'Desc');
 

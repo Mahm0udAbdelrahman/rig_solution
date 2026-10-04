@@ -47,6 +47,7 @@ class TubingStringController extends Controller
                       AND ts2.code = tubing_strings.code
                 )'
             )
+            ->with(['job_request.client', 'job_request.supplier', 'job_request.clientDepartment', 'report'])
             ->withAggregate('job_request','code')
             ->orderBy('job_request_code', 'Desc');
 

@@ -34,6 +34,7 @@ class PipesSummaryReportController extends Controller
 //        $t= PipesSummaryReport::all()->first();
         $data = PipesSummaryReport::query()
             ->has('report')
+            ->with(['job_request.client', 'job_request.supplier', 'job_request.clientDepartment', 'report'])
             ->withAggregate('job_request','code')
             ->orderBy('job_request_code', 'Desc');
 
