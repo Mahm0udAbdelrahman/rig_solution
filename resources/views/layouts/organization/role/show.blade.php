@@ -16,6 +16,11 @@
                         <div class="col-12 col-sm-6">
                             <h5 class="mb-1"><i class="ft-user mr-25"></i>Role Info</h5>
                         </div>
+                        @can('update', $role)
+                            <div class="col-12 col-sm-6 text-sm-right">
+                                <a href="{{ route('role.edit', $role->id) }}" class="btn btn-info btn-sm"><i class="la la-pencil"></i> Edit permissions</a>
+                            </div>
+                        @endcan
                     </div>
                     <div class="row">
                         <div class="col-12">

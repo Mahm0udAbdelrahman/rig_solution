@@ -949,7 +949,7 @@ class CustomController extends Controller
                 if ($roles != '') {
                     foreach (json_decode($roles) as $role) {
                         if (strtolower($after) === $role->modules) {
-                            echo 'checked';
+                            echo ' checked';
                         }
                     }
 
@@ -975,7 +975,7 @@ class CustomController extends Controller
                             if (strtolower($after) === $role_bottom->modules) {
                                 foreach ($role_bottom->roles as $module) {
                                     if ($module === 'approve') {
-                                        echo 'checked';
+                                        echo ' checked';
                                     }
                                 }
                             }
@@ -1001,7 +1001,7 @@ class CustomController extends Controller
                         if (strtolower($after) === $role_bottom->modules) {
                             foreach ($role_bottom->roles as $module) {
                                 if ($module === 'all') {
-                                    echo 'checked';
+                                    echo ' checked';
                                 }
                             }
                         }
@@ -1023,7 +1023,7 @@ class CustomController extends Controller
                         if (strtolower($after) === $role_bottom->modules) {
                             foreach ($role_bottom->roles as $module) {
                                 if ($module === 'show') {
-                                    echo 'checked';
+                                    echo ' checked';
                                 }
                             }
                         }
@@ -1045,7 +1045,7 @@ class CustomController extends Controller
                         if (strtolower($after) === $role_bottom->modules) {
                             foreach ($role_bottom->roles as $module) {
                                 if ($module === 'create') {
-                                    echo 'checked';
+                                    echo ' checked';
                                 }
                             }
                         }
@@ -1067,7 +1067,7 @@ class CustomController extends Controller
                         if (strtolower($after) === $role_bottom->modules) {
                             foreach ($role_bottom->roles as $module) {
                                 if ($module === 'edit') {
-                                    echo 'checked';
+                                    echo ' checked';
                                 }
                             }
                         }
@@ -1089,7 +1089,7 @@ class CustomController extends Controller
                         if (strtolower($after) === $role_bottom->modules) {
                             foreach ($role_bottom->roles as $module) {
                                 if ($module === 'delete') {
-                                    echo 'checked';
+                                    echo ' checked';
                                 }
                             }
                         }
@@ -1113,7 +1113,7 @@ class CustomController extends Controller
                                 if (strtolower($after) === $role_bottom->modules) {
                                     foreach ($role_bottom->roles as $module) {
                                         if ($module === 'physical-delete') {
-                                            echo 'checked';
+                                            echo ' checked';
                                         }
                                     }
                                 }
@@ -1141,7 +1141,7 @@ class CustomController extends Controller
                                     if (strtolower($after) === $role_bottom->modules) {
                                         foreach ($role_bottom->roles as $module) {
                                             if ($module === $customRole) {
-                                                echo 'checked';
+                                                echo ' checked';
                                             }
                                         }
                                     }

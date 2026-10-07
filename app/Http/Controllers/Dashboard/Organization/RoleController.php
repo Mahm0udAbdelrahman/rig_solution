@@ -94,7 +94,7 @@ class RoleController extends Controller
     {
         $store_role = Role::create([
             'name' => $request->uname,
-            'roles' => $request->permissions,
+            'roles' => self::normalizePermissions($request->permissions),
         ]);
         if ($store_role)
         {
@@ -143,7 +143,7 @@ class RoleController extends Controller
     {
       $update = Role::where('id', $role->id)->update([
         'name' => $request->uname,
-        'roles' => $request->permissions,
+        'roles' => self::normalizePermissions($request->permissions),
       ]);
 
       if($update){
@@ -167,5 +167,35 @@ class RoleController extends Controller
               'success' => $this->action_message(2, $this->page_name)
           ]);
       }
+    }
+
+    /**
+     * Merge duplicate module entries and repeated actions so each module is stored once.
+     */
+    public static function normalizePermissions($permissions)
+    {
+        $decoded = json_decode((string) $permissions);
+        if (!is_array($decoded)) {
+            return $permissions;
+        }
+
+        $merged = [];
+        foreach ($decoded as $permission) {
+            if (!isset($permission->modules)) {
+                continue;
+            }
+
+            $merged[$permission->modules] = array_values(array_unique(array_merge(
+                $merged[$permission->modules] ?? [],
+                (array) ($permission->roles ?? [])
+            )));
+        }
+
+        $normalized = [];
+        foreach ($merged as $module => $roles) {
+            $normalized[] = ['modules' => $module, 'roles' => $roles];
+        }
+
+        return json_encode($normalized);
     }
 }
