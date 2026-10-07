@@ -14,6 +14,9 @@
     RewriteCond %{REQUEST_URI} (.+)/$
     RewriteRule ^ %1 [L,R=301]
 
+    # Block direct access to any PHP file except the front controller
+    RewriteRule ^(?!index\.php$).*\.(php\d?|phtml|phar|pht)$ - [F,NC,L]
+
     # Send Requests To Front Controller...
     RewriteCond %{REQUEST_FILENAME} !-d
     RewriteCond %{REQUEST_FILENAME} !-f
