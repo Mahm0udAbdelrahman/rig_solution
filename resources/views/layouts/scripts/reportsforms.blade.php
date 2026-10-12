@@ -95,7 +95,9 @@
         dateFormat: 'dd-mm-yy',
         constrainInput: false,
       }).on("change", function () {
-        var date = new Date($(this).datepicker("getDate").toISOString());
+        var picked = $(this).datepicker("getDate");
+        if (!picked) return; // field cleared or not a date
+        var date = new Date(picked.toISOString());
         date.setMonth(date.getMonth() + pop);
         date.setDate(date.getDate() - 1);
         $('#lcr_7').val(('0' + date.getDate()).slice(-2) + '-' + ('0' + (date.getMonth() + 1)).slice(-2) + '-' + date.getFullYear());

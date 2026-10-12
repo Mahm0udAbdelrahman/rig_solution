@@ -68,7 +68,7 @@
 				<div class="card donw">
 						<div class="card-content">
 								<div class="card-body">
-									@if(Route::currentRouteName() != "drawingInspection.show") <!-- drawing inspection has its own header on its show blade -->
+									@if(Route::currentRouteName() != "drawingInspection.show" && empty($custom_certificate_layout)) <!-- drawing inspection and custom certificates (e.g. pressure gauge calibration) render their own header -->
 										<div class="row header-top mb-1" style="padding-top: 5px;">
 												<div class="col-3 pl-0">
 													@if ($model->inspection_logo)
@@ -101,6 +101,7 @@
 										</div>
 									@endif
 										@stack('page_content')
+									@if(empty($custom_certificate_layout))
 									<div class="row" style="font-size: 12px; color: black; font-weight: 600; margin-top: 3px;">
 										<div class="col-1 bg-dark p-0 border-dark">
 											<span style="margin-left: 3px;">Form No</span>
@@ -140,11 +141,15 @@
 										</div>
 										<div class="col-1 p-0 pl-1 border-dark">{{$page_number}}</div>
 									</div>
+									@endif
 										<div class="row mt-1 text-center" style="font-size: 8.5px; font-weight: 700; color: #000; justify-content: center; width: 100%;">
 												<div class="col-12 text-center">
 														<p class="mb-0" style="white-space: nowrap; font-size: 8.5px; font-weight: 700;">
 																{!! $footerAddress->getPartsHtml() !!}
 														</p>
+														@if(!empty($custom_certificate_layout))
+															<p class="mb-0" style="font-size: 11px; font-weight: 600;">Page {{ $page_number }}</p>
+														@endif
 												</div>
 										</div>
 								</div>
@@ -265,7 +270,13 @@
 												useCORS: true,
 												scrollX: 0,
 												scrollY: 0,
-												logging: false
+												logging: false,
+												// certificates keep their stamp / QR hidden on screen until the PDF is uploaded: the uploaded PDF carries them
+												onclone: function (clonedDoc) {
+														clonedDoc.querySelectorAll('.stamp-on-upload').forEach(function (el) {
+																el.classList.remove('stamp-on-upload');
+														});
+												}
 										}).then(function (canvas) {
 												var jpegData = canvas.toDataURL('image/jpeg', 0.85);
 												images.push(jpegData);

@@ -15,6 +15,5 @@
     <!----------------------------------->
 		@include('layouts.inspection.calibration.partials.show.type2')
     <!----------------------------------->
-    @include('layouts.styles.reportfooter-v2')
     @include('layouts.scripts.approve', ['table' => 'inspection_reports', 'id' => $model->report->id])
 @endpush

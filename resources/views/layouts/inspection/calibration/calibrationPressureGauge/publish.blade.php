@@ -8,7 +8,7 @@
 		<div class="col-12">
 			{!! Form::model($model, ['route' => ['calibrationPressureGauge.publishSubmit', $model->id], 'method' => 'PATCH', 'class'=> 'steps-validation wizard-circle']) !!}
 			{{ csrf_field() }}
-			@include('layouts.inspection.calibration.calibrationPressureGauge.form');
+			@include('layouts.inspection.calibration.calibrationPressureGauge.form')
 			{!! Form::close() !!}
 		</div>
 	</div>

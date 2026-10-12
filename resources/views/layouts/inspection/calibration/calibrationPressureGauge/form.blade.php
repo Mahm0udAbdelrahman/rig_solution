@@ -192,9 +192,46 @@
 				</div>
 			</div>
 		</div>
+    <style>
+        .due-period-switch { display: inline-flex; align-items: center; gap: .6rem; margin: 0; cursor: pointer; user-select: none; }
+        .due-period-switch input { display: none; }
+        .due-period-switch .track { position: relative; width: 46px; height: 24px; border-radius: 12px; background: #ff9149; transition: background .2s; }
+        .due-period-switch .track:after { content: ''; position: absolute; top: 3px; left: 3px; width: 18px; height: 18px; border-radius: 50%; background: #fff; transition: left .2s; }
+        .due-period-switch input:checked + .track { background: #28d094; }
+        .due-period-switch input:checked + .track:after { left: 25px; }
+        .due-period-switch .opt { font-size: .9rem; font-weight: 600; color: #98a4b8; }
+        .due-period-switch .opt.active { color: #1e2329; }
+    </style>
+    @php
+        $duePeriod = old('due_period', isset($model) && $model->due_period ? $model->due_period : 'annual');
+    @endphp
     <div class="card">
         <div class="card-content collapse show">
             <div class="card-body">
+                <div class="row">
+                    <div class="col-12 col-sm-6">
+                        <div class="form-group mb-1">
+                            <div class="controls">
+                                {{ Form::label('calibration_location', 'Calibration Location') }}
+                                {{ Form::text('calibration_location', null, ['class' => 'form-control', 'placeholder' => 'e.g. RSE, Lab']) }}
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-12 col-sm-6">
+                        <div class="form-group mb-1">
+                            <div class="controls">
+                                <label class="d-block">Calibration Interval (Due Date)</label>
+                                <input type="hidden" name="due_period" id="due_period" value="{{ $duePeriod }}">
+                                <label class="due-period-switch mt-50" for="due_period_switch">
+                                    <span class="opt" data-period="semi_annual">Semi-Annual (6 months)</span>
+                                    <input type="checkbox" id="due_period_switch" {{ $duePeriod === 'semi_annual' ? '' : 'checked' }}>
+                                    <span class="track"></span>
+                                    <span class="opt" data-period="annual">Annual (12 months)</span>
+                                </label>
+                            </div>
+                        </div>
+                    </div>
+                </div>
                 <div class="row">
                     <div class="col-12 col-sm-3">
                         <div class="form-group mb-0">
@@ -202,9 +239,7 @@
                                 <label>Receipt Date</label>
                                 <div class="input-group">
                                     <div class="input-group-prepend">
-										<span class="input-group-text">
-											<i class="ft-calendar"></i>
-										</span>
+                                        <span class="input-group-text"><i class="ft-calendar"></i></span>
                                     </div>
                                     {{ Form::text('receipt_date', null, ['class' => 'form-control datepicker-default', 'placeholder' => 'Receipt Date', 'required']) }}
                                 </div>
@@ -218,11 +253,9 @@
                                 <label>Calibration Date</label>
                                 <div class="input-group">
                                     <div class="input-group-prepend">
-										<span class="input-group-text">
-											<i class="ft-calendar"></i>
-										</span>
+                                        <span class="input-group-text"><i class="ft-calendar"></i></span>
                                     </div>
-                                    {{ Form::text('calibration_date', null, ['class' => 'form-control datepicker-default', 'placeholder' => 'Calibration Date', 'required']) }}
+                                    {{ Form::text('calibration_date', null, ['class' => 'form-control datepicker-default', 'id' => 'calibration_date', 'placeholder' => 'Calibration Date', 'required']) }}
                                 </div>
                                 <div class="help-block"></div>
                             </div>
@@ -231,14 +264,12 @@
                     <div class="col-12 col-sm-3">
                         <div class="form-group mb-0">
                             <div class="controls">
-                                <label>Due Date</label>
+                                <label>Calibration Due Date <small class="text-muted">(auto)</small></label>
                                 <div class="input-group">
                                     <div class="input-group-prepend">
-										<span class="input-group-text">
-											<i class="ft-calendar"></i>
-										</span>
+                                        <span class="input-group-text"><i class="ft-calendar"></i></span>
                                     </div>
-                                    {{ Form::text('due_date', null, ['class' => 'form-control datepicker-default', 'placeholder' => 'Due Date', 'required']) }}
+                                    {{ Form::text('due_date', null, ['class' => 'form-control datepicker-default', 'id' => 'due_date', 'placeholder' => 'Due Date', 'required']) }}
                                 </div>
                                 <div class="help-block"></div>
                             </div>
@@ -250,9 +281,7 @@
                                 <label>Issue Date</label>
                                 <div class="input-group">
                                     <div class="input-group-prepend">
-										<span class="input-group-text">
-											<i class="ft-calendar"></i>
-										</span>
+                                        <span class="input-group-text"><i class="ft-calendar"></i></span>
                                     </div>
                                     {{ Form::text('issue_date', null, ['class' => 'form-control datepicker-default', 'placeholder' => 'Issue Date', 'required']) }}
                                 </div>
@@ -260,37 +289,74 @@
                             </div>
                         </div>
                     </div>
-				</div>
-				<div class="row" style="margin-top: 40px;">
-                    <div class="col-12 col-sm-6">
-                        <div class="form-group mb-0">
+                </div>
+                <h5 class="mt-2 mb-1">Environmental Conditions During Calibration</h5>
+                <div class="row">
+                    <div class="col-12 col-sm-4">
+                        <div class="form-group mb-1">
                             <div class="controls">
                                 <label>Temperature</label>
                                 <div class="input-group">
-                                    <div class="input-group-prepend">
-										<span class="input-group-text">
-											<i class="ft-calendar"></i>
-										</span>
-                                    </div>
-                                    {{ Form::text('temperature', null, ['class' => 'form-control', 'placeholder' => 'Temperature', 'required']) }}
+                                    {{ Form::text('temperature', null, ['class' => 'form-control', 'placeholder' => '22.2', 'required']) }}
+                                    <div class="input-group-append"><span class="input-group-text">°C</span></div>
                                 </div>
                                 <div class="help-block"></div>
                             </div>
                         </div>
                     </div>
-                    <div class="col-12 col-sm-6">
+                    <div class="col-12 col-sm-4">
+                        <div class="form-group mb-1">
+                            <div class="controls">
+                                <label>Temperature Tolerance (±)</label>
+                                <div class="input-group">
+                                    <div class="input-group-prepend"><span class="input-group-text">±</span></div>
+                                    {{ Form::text('temperature_tolerance', isset($model) ? null : '1', ['class' => 'form-control', 'placeholder' => '1']) }}
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-12 col-sm-4">
+                        <div class="form-group mb-1">
+                            <div class="controls">
+                                <label>Temperature Uncertainty</label>
+                                <div class="input-group">
+                                    {{ Form::text('temperature_uncertainty', null, ['class' => 'form-control', 'placeholder' => '0.7']) }}
+                                    <div class="input-group-append"><span class="input-group-text">°C</span></div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-12 col-sm-4">
                         <div class="form-group mb-0">
                             <div class="controls">
                                 <label>Relative Humidity</label>
                                 <div class="input-group">
-                                    <div class="input-group-prepend">
-										<span class="input-group-text">
-											<i class="ft-calendar"></i>
-										</span>
-                                    </div>
-                                    {{ Form::text('relative_humidity', null, ['class' => 'form-control', 'placeholder' => 'Relative Humidity', 'required']) }}
+                                    {{ Form::text('relative_humidity', null, ['class' => 'form-control', 'placeholder' => '39.8', 'required']) }}
+                                    <div class="input-group-append"><span class="input-group-text">% RH</span></div>
                                 </div>
                                 <div class="help-block"></div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-12 col-sm-4">
+                        <div class="form-group mb-0">
+                            <div class="controls">
+                                <label>Humidity Tolerance (±)</label>
+                                <div class="input-group">
+                                    <div class="input-group-prepend"><span class="input-group-text">±</span></div>
+                                    {{ Form::text('humidity_tolerance', isset($model) ? null : '5', ['class' => 'form-control', 'placeholder' => '5']) }}
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-12 col-sm-4">
+                        <div class="form-group mb-0">
+                            <div class="controls">
+                                <label>Humidity Uncertainty</label>
+                                <div class="input-group">
+                                    {{ Form::text('humidity_uncertainty', null, ['class' => 'form-control', 'placeholder' => '0.3']) }}
+                                    <div class="input-group-append"><span class="input-group-text">% RH</span></div>
+                                </div>
                             </div>
                         </div>
                     </div>
@@ -344,17 +410,50 @@
 </fieldset>
 <h6>Step 3</h6>
 <fieldset>
+	@php
+		$defaultStatement = implode("\n", [
+			'This calibration was carried out in compliance with ISO/IEC17025:2017.',
+			'This calibration certificate refers only to the particular item submitted for calibration.',
+			'This certificate shall not be reproduced, unless written permission has been obtained from the lab.',
+			'This certificate is valid only with signature and stamp and or QR code',
+			'Traceability to international system of units (SI).',
+		]);
+	@endphp
 	<div class="card-body">
-		<h4>Statement</h4>
 		<div class="card">
 			<div class="card-content collapse show">
 				<div class="card-body">
 					<div class="row">
+						<div class="col-12 col-sm-6">
+							<div class="form-group mb-1">
+								<div class="controls">
+									{{ Form::label('specification_status', 'Result') }}
+									{{ Form::select('specification_status', ['in' => 'The instrument is in specification', 'out' => 'The instrument is out of specification'], null, ['class' => 'form-control', 'id' => 'specification_status']) }}
+									<small class="text-muted" id="specification_hint"></small>
+								</div>
+							</div>
+						</div>
+						<div class="col-12 col-sm-6">
+							<div class="form-group mb-1">
+								<div class="controls">
+									{{ Form::label('issued_by', 'Issued By (QA)') }}
+									{{ Form::text('issued_by', null, ['class' => 'form-control', 'placeholder' => 'QA name']) }}
+								</div>
+							</div>
+						</div>
+						<div class="col-12">
+							<div class="form-group mb-1">
+								<div class="controls">
+									{{ Form::label('remarks', 'Remarks') }}
+									{{ Form::text('remarks', isset($model) ? null : 'N/A', ['class' => 'form-control', 'placeholder' => 'N/A']) }}
+								</div>
+							</div>
+						</div>
 						<div class="col-12">
 							<div class="form-group">
 								<div class="controls">
-									{{ Form::label('statement', 'Statement') }}
-									{{ Form::textarea('statement', null, ['class' => 'form-control', 'style' => 'height: 24em;', 'rows' => 12, 'required' => '', 'placeholder' => 'Statement...', 'aria-invalid' => 'false', 'data-validation-required-message' => 'This field is required']) }}
+									{{ Form::label('statement', 'Statement (one line per point)') }}
+									{{ Form::textarea('statement', isset($model) ? null : $defaultStatement, ['class' => 'form-control', 'style' => 'height: 12em;', 'rows' => 6, 'required' => '', 'placeholder' => 'Statement...', 'aria-invalid' => 'false', 'data-validation-required-message' => 'This field is required']) }}
 								</div>
 							</div>
 						</div>
@@ -365,21 +464,56 @@
 	</div>
 </fieldset>
 
-<script src="{{asset('app-assets/vendors/js/forms/repeater/jquery.repeater.min.js')}}"></script>
-<!-- <script src="{{asset('app-assets/js/scripts/forms/form-repeater.js')}}"></script> -->
+@push('bottom-child-scripts')
 <script>
-	// 
+	(function () {
+		var MONTHS = { annual: 12, semi_annual: 6 };
 
-  $('.repeater').repeater({
-    show: function () {
-	  $(this).find('img').attr('src', '');
-      $(this).slideDown();
-	  $(this).slideUp(remove);
-    },
-    hide: function (remove) {
-      if (confirm('Are you sure you want to remove this item?')) {
-        $(this).slideUp(remove);
-      }
-    }
-  });
+		function pad(n) { return ('0' + n).slice(-2); }
+
+		function parseDmy(value) {
+			var m = /^(\d{1,2})-(\d{1,2})-(\d{4})$/.exec($.trim(value || ''));
+			return m ? new Date(+m[3], +m[2] - 1, +m[1]) : null;
+		}
+
+		// calibration date + period - 1 day, clamped to month end (31-08 + 6 months -> 27-02)
+		function computeDueDate(calibration, months) {
+			var target = new Date(calibration.getFullYear(), calibration.getMonth() + months, 1);
+			var lastDay = new Date(target.getFullYear(), target.getMonth() + 1, 0).getDate();
+			target.setDate(Math.min(calibration.getDate(), lastDay));
+			target.setDate(target.getDate() - 1);
+			return pad(target.getDate()) + '-' + pad(target.getMonth() + 1) + '-' + target.getFullYear();
+		}
+
+		function currentPeriod() {
+			return $('#due_period_switch').is(':checked') ? 'annual' : 'semi_annual';
+		}
+
+		function refreshSwitchLabels() {
+			var period = currentPeriod();
+			$('#due_period').val(period);
+			$('.due-period-switch .opt').each(function () {
+				$(this).toggleClass('active', $(this).data('period') === period);
+			});
+		}
+
+		function refreshDueDate() {
+			var calibration = parseDmy($('#calibration_date').val());
+			if (calibration) {
+				$('#due_date').val(computeDueDate(calibration, MONTHS[currentPeriod()]));
+			}
+		}
+
+		$(document).on('change', '#due_period_switch', function () {
+			refreshSwitchLabels();
+			refreshDueDate();
+		});
+		$(document).on('change', '#calibration_date', refreshDueDate);
+
+		refreshSwitchLabels();
+		if (!$('#due_date').val()) {
+			refreshDueDate();
+		}
+	})();
 </script>
+@endpush

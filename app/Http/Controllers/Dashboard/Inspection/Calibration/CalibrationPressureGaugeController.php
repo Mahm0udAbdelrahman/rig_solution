@@ -103,10 +103,12 @@ class CalibrationPressureGaugeController extends Controller
                 }
 
                 if ($row->report->publish != NULL) {
-                    if (Storage::disk('public')->exists('pdf/inspection/calibration/calibrationPressureGauge/' . $row->job_request->code . '/' . $row->code . '.pdf')) {
-                        $btn .= '<a class="btn btn-secondary mr-1" target="_blank" href="' . Storage::url('pdf/inspection/calibration/calibrationPressureGauge/' . $row->job_request->code . '/' . $row->code . '.pdf') . '">Download PDF</a>';
-                    } else {
-                        $btn .= '<a class="btn btn-dark mr-1" href="' . route('calibrationPressureGauge.show', $row->id) . '">Open Report</a>';
+                    $btn .= '<a class="btn btn-dark mr-1" href="' . route('calibrationPressureGauge.show', $row->id) . '">Open Report</a>';
+
+                    // The PDF carries the stamp + QR: offer it only for an approved report whose PDF was uploaded
+                    $pdfPath = 'pdf/inspection/calibration/calibrationPressureGauge/' . $row->job_request->code . '/' . $row->code . '.pdf';
+                    if (!empty($row->report->user_id_approved) && Storage::disk('public')->exists($pdfPath)) {
+                        $btn .= '<a class="btn btn-secondary mr-1" target="_blank" href="' . Storage::url($pdfPath) . '">Download PDF</a>';
                     }
 
                     if (Auth::user()->can('update', Calibration::find($row->id))  ) {
@@ -209,7 +211,7 @@ class CalibrationPressureGaugeController extends Controller
      */
     public function store(Request $request)
     {
-        $data = $request->all();
+        $data = $this->withDueDate($request->all());
         $created = Calibration::create($data);
         if ($created) {
             $created->report()->create([
@@ -248,6 +250,7 @@ class CalibrationPressureGaugeController extends Controller
         return view('layouts.inspection.calibration.calibrationPressureGauge.show', [
             'page_name' => '', //$this->page_name,
             'custom_page_name' => $this->page_name,
+            'custom_certificate_layout' => true,
             'page_text' => '',
             'model' => $calibrationPressureGauge,
             'code' => $calibrationPressureGauge->job_request->code . '/' . $calibrationPressureGauge->code,
@@ -294,7 +297,7 @@ class CalibrationPressureGaugeController extends Controller
      */
     public function update(Request $request, Calibration $calibrationPressureGauge)
     {
-        $data = $request->all();
+        $data = $this->withDueDate($request->all());
 		$inspectionData = $data['inspection_data'] ?? [];
 		$oldInspectionData = $calibrationPressureGauge->inspection_data;
 		// Handle photo file uploads
@@ -339,13 +342,24 @@ class CalibrationPressureGaugeController extends Controller
         $remove = $this->check_edited_reports_for_delete($calibrationPressureGauge);
 
         if ($remove) {
-            $pdf = 'inspection/calibration/calibrationPressureGauge/' . $calibrationPressureGauge->job_request->code . '/' . $calibration->code . '.pdf';
+            $pdf = 'inspection/calibration/calibrationPressureGauge/' . $calibrationPressureGauge->job_request->code . '/' . $calibrationPressureGauge->code . '.pdf';
             $snap = 'images/inspection/calibration/calibrationPressureGauge/' . $calibrationPressureGauge->job_request->code . '/' . $calibration->code;
             $remove_snap_shots_pdf = $this->remove_snap_shots_pdf($pdf, $snap);
             return response()->json([
                 'success' => $remove_snap_shots_pdf . $this->action_message(2, $this->page_name)
             ]);
         }
+    }
+
+    /**
+     * Fill the due date from the calibration date + annual / semi-annual period when it was left empty.
+     */
+    private function withDueDate(array $data): array
+    {
+        if (empty($data['due_date']) && !empty($data['calibration_date'])) {
+            $data['due_date'] = Calibration::computeDueDate($data['calibration_date'], $data['due_period'] ?? 'annual');
+        }
+        return $data;
     }
 
     public function publish(Calibration $calibrationPressureGauge)
@@ -361,7 +375,7 @@ class CalibrationPressureGaugeController extends Controller
 
     public function publishSubmit(Request $request, Calibration $calibrationPressureGauge)
     {
-        $data = $request->all();
+        $data = $this->withDueDate($request->all());
         $job_request = JobRequest::find($request->job_request_id);
         $code = json_decode(json_encode(CustomController::getReportData($job_request)))->original->lastcode;
         $data['code'] = $code;
