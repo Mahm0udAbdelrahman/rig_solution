@@ -36,6 +36,9 @@
 									<td>{{ $row['name'] }}</td>
 									<td>
 										<img src="{{ asset('storage/' . $row['logo']) }}" class="logo-top"/>
+										@if($row->second_logo)
+											<img src="{{ asset('storage/' . $row->second_logo) }}" class="logo-top"/>
+										@endif
 									</td>
 									<td>
 										<div class="m-1">

@@ -37,8 +37,8 @@
 	</tr>
 	<tr style="height: {{ $cert::rowHeight(31.8) }}">
 		<td colspan="2" class="lab">Contact Name:</td>
-		<td colspan="3" class="val l">{{ $model->contact_name }}</td>
+		<td colspan="3" class="val l">{{ $model->contact_name ?: $jobRequest->contactName() }}</td>
 		<td colspan="2" class="lab">Contact information:</td>
-		<td colspan="4" class="val">{{ $model->contact_info }}</td>
+		<td colspan="4" class="val">{{ $model->contact_info ?: $jobRequest->contactInfo() }}</td>
 	</tr>
 </table>

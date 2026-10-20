@@ -8,8 +8,13 @@
 	$rowCount = max(count($resultRows), 1);
 
 	$pt = fn ($points) => $cert::rowHeight($points);
-	$num = fn ($v, $decimals = 2) => (is_numeric($v) ? number_format((float) $v, $decimals, '.', '') : $v);
-	$pct = fn ($v, $decimals) => is_numeric($v) ? number_format((float) $v, $decimals, '.', '') . '%' : $v;
+	// numbers are shown exactly as typed (decimals kept)
+	$num = fn ($v) => trim((string) $v);
+	$pct = fn ($v) => is_numeric(trim((string) $v)) ? trim((string) $v) . '%' : $v;
+
+	// calibration range = lowest / highest measured UUC value of the results table
+	$rangeMin = $results['range_min'] ?? $model->range_from;
+	$rangeMax = $results['range_max'] ?? $model->range_to;
 
 	$inSpec = ($model->specification_status ?: 'in') !== 'out';
 	$statementLines = array_values(array_filter(array_map('trim', preg_split('/\r\n|\r|\n/', (string) $model->statement)), 'strlen'));
@@ -43,13 +48,13 @@
 			<td colspan="2" class="labt">Resolution:</td>
 			<td style="border-right: 0;"></td>
 			<td class="val" style="border-left: 0;">{{ $model->resolution }}</td>
-			<td colspan="2" class="val l pgx-yellow">{{ $unit }}</td>
+			<td colspan="2" class="val l">{{ $unit }}</td>
 		</tr>
 		<tr style="height: {{ $pt(39.75) }}">
 			<td colspan="2" class="labt">Serial No:</td>
 			<td colspan="3" class="val">{{ $model->serial_number }}</td>
 			<td colspan="2" class="labt">Accuracy Class:</td>
-			<td colspan="4" class="val">{{ $pct($model->type, 1) }}</td>
+			<td colspan="4" class="val">{{ $pct($model->type) }}</td>
 		</tr>
 		<tr style="height: {{ $pt(39.75) }}">
 			<td colspan="2" class="labt">Asset Number:</td>
@@ -59,7 +64,7 @@
 				<td class="val r" style="border-right: 0;">{{ $model->range_from }}</td>
 				<td class="val pgx-mid" style="border-left: 0; border-right: 0;">TO</td>
 				<td class="val l" style="border-left: 0;">{{ $model->range_to }}</td>
-				<td class="val l pgx-yellow">{{ $unit }}</td>
+				<td class="val l">{{ $unit }}</td>
 			@else
 				<td colspan="4" class="val">{{ $model->range }}</td>
 			@endif
@@ -68,7 +73,7 @@
 			<td colspan="2" class="labt">Manufacturer:</td>
 			<td colspan="3" class="val">{{ $model->manufacturer }}</td>
 			<td colspan="2" class="labt">Digital Or Analog:</td>
-			<td colspan="4" class="val pgx-amber">{{ $model->digital_analog }}</td>
+			<td colspan="4" class="val">{{ $model->digital_analog }}</td>
 		</tr>
 		<tr style="height: {{ $pt(39.75) }}">
 			<td colspan="2" class="labt">Model:</td>
@@ -92,7 +97,7 @@
 		</tr>
 		<tr style="height: {{ $pt(30) }}">
 			<td colspan="4" class="verdana c f18 pgx-dark">{{ $model->device_description }}</td>
-			<td colspan="3" class="verdana c f18 pgx-dark pgx-yellow">{{ $model->certificate_number }}</td>
+			<td colspan="3" class="verdana c f18 pgx-dark">{{ $model->certificate_number }}</td>
 			<td class="verdana c f18 pgx-dark">{{ $model->certificateDate('device_calibration_date') ?: '--' }}</td>
 			<td colspan="3" class="verdana c f18 pgx-mid">{{ $model->device_traceability }}</td>
 		</tr>
@@ -108,7 +113,7 @@
 			<td colspan="2" class="verdana c f18">{{ $model->device_manufacturer }}</td>
 			<td colspan="2" class="verdana c f18">{{ $model->device_model }}</td>
 			<td colspan="2" class="verdana c f16">{{ $model->device_range }}</td>
-			<td colspan="3" class="verdana c f18 pgx-yellow">{{ $pct($model->device_accuracy, 2) }}</td>
+			<td colspan="3" class="verdana c f18">{{ $pct($model->device_accuracy) }}</td>
 		</tr>
 	</table>
 
@@ -128,10 +133,10 @@
 		</tr>
 		<tr class="nb tnr b f18" style="height: {{ $pt(43.2) }}">
 			<td colspan="2" class="c pgx-dark">Calibration Range</td>
-			<td class="r">{{ $model->range_from }}</td>
+			<td class="r">{{ $rangeMin }}</td>
 			<td class="pgx-dark">{{ $unit }}</td>
 			<td class="c pgx-dark">TO</td>
-			<td class="r">{{ $model->range_to }}</td>
+			<td class="r">{{ $rangeMax }}</td>
 			<td class="l pgx-dark">{{ $unit }}</td>
 			<td colspan="2" class="c pgx-dark">Permissible error: &nbsp; ±</td>
 			<td class="r">{{ $model->max_permissible_error }}</td>
@@ -148,11 +153,11 @@
 			<td colspan="3" class="rh">Expanded Uncertainty</td>
 		</tr>
 		<tr style="height: {{ $pt(30) }}">
-			<td colspan="2" class="aptos b c f20 pgx-mid pgx-yellow">{{ $unit }}</td>
-			<td colspan="3" class="aptos b c f20 pgx-mid pgx-yellow">{{ $unit }}</td>
-			<td colspan="3" class="aptos b c f20 pgx-mid pgx-yellow">{{ $unit }}</td>
+			<td colspan="2" class="aptos b c f20 pgx-mid">{{ $unit }}</td>
+			<td colspan="3" class="aptos b c f20 pgx-mid">{{ $unit }}</td>
+			<td colspan="3" class="aptos b c f20 pgx-mid">{{ $unit }}</td>
 			<td class="aptos b r f20 pgx-dark g15">±</td>
-			<td colspan="2" class="aptos b l f20 pgx-mid pgx-yellow">{{ $unit }}</td>
+			<td colspan="2" class="aptos b l f20 pgx-mid">{{ $unit }}</td>
 		</tr>
 		@foreach(range(0, $rowCount - 1) as $i)
 			@php $row = $resultRows[$i] ?? []; @endphp
@@ -188,7 +193,7 @@
 		@endforeach
 	</table>
 
-	{{-- Rows 60-64: signatures --}}
+	{{-- Rows 60-64: signatures (taller than the Excel rows so the signatures and stamp have room) --}}
 	<table class="blk">
 		{!! $colgroup !!}
 		<tr style="height: {{ $pt(57) }}">
@@ -198,9 +203,9 @@
 			<td colspan="2" class="tnr b c f20 pgx-dark g25">Stamp</td>
 			<td colspan="3" class="tnr b c f20 pgx-dark g25">QR Code</td>
 		</tr>
-		<tr style="height: {{ $pt(63) }}">
+		<tr style="height: {{ $pt(90) }}">
 			<td colspan="2" class="corsiva c f24" style="border-bottom: 0;">{{ $person_make_report }}</td>
-			<td colspan="2" class="corsiva c f24" style="border-bottom: 0;">{{ $model->issued_by }}</td>
+			<td colspan="2" class="corsiva c f24" style="border-bottom: 0;">{{ optional($issuer)->name ?: $model->issued_by }}</td>
 			<td colspan="2" class="corsiva c f24" style="border-bottom: 0;">
 				@if(!empty($user_id_approved))
 					{{ optional($approvedEmployee)->name }}
@@ -208,7 +213,7 @@
 			</td>
 			<td colspan="2" rowspan="3" class="c" style="position: relative;">
 				@if($isApproved)
-					<img src="{{ asset('app-assets/images/logo/stamp.jpeg') }}" class="{{ $pdfUploaded ? '' : 'stamp-on-upload' }}" style="width: 10em; height: 7.5em;" alt="" />
+					<img src="{{ asset('app-assets/images/logo/stamp.jpeg') }}" class="{{ $pdfUploaded ? '' : 'stamp-on-upload' }}" style="width: 12.5em; height: 9.4em;" alt="" />
 					@unless($pdfUploaded)
 						<div class="stamp-pending-note no-print" data-html2canvas-ignore>Stamp &amp; QR are added when the PDF is uploaded</div>
 					@endunless
@@ -216,17 +221,29 @@
 			</td>
 			<td colspan="3" rowspan="3" class="c">
 				@if($isApproved)
-					<img src="data:image/png;base64,{{ DNS2D::getBarcodePNG(URL($pdfurl), 'QRCODE', 3, 3) }}" class="{{ $pdfUploaded ? '' : 'stamp-on-upload' }}" style="max-width: 118px; max-height: 118px;" alt="QR" />
+					<img src="data:image/png;base64,{{ DNS2D::getBarcodePNG(URL($pdfurl), 'QRCODE', 3, 3) }}" class="{{ $pdfUploaded ? '' : 'stamp-on-upload' }}" style="width: 140px; height: 140px; image-rendering: pixelated;" alt="QR" />
 				@endif
 			</td>
 		</tr>
-		<tr style="height: {{ $pt(60.6) }}">
+		<tr style="height: {{ $pt(90) }}">
 			<td colspan="2" class="c" style="border-top: 0; border-bottom: 0;">
 				@if($esign)
-					<img src="{{ Storage::url('employees/') }}{{ $esign }}" style="max-width: 130px; max-height: 40px;" alt="" />
+					<img src="{{ Storage::url('employees/') }}{{ $esign }}" style="max-width: 130px; max-height: 55px;" alt="" />
 				@endif
 			</td>
-			<td colspan="2" style="border-top: 0; border-bottom: 0;"></td>
+			<td colspan="2" class="c" style="border-top: 0; border-bottom: 0;">
+				@if($issuer)
+					@if($issuer->esign)
+						<img src="{{ Storage::url('employees/') }}{{ $issuer->esign }}" style="max-width: 130px; max-height: 55px;" alt="" />
+					@endif
+				@elseif(!$model->issued_by)
+					@if($canIssue)
+						<button type="button" id="issue" class="btn btn-warning btn-sm btn-print waves-effect waves-light"><i class="la la-check mr-50"></i>Issue (QA)</button>
+					@else
+						<span class="info verdana f16">Waiting For QA</span>
+					@endif
+				@endif
+			</td>
 			<td colspan="2" class="c" style="border-top: 0; border-bottom: 0;">
 				@if(empty($user_id_approved))
 					@if($hasPermission)
@@ -235,7 +252,7 @@
 						<span class="info verdana f16">Waiting For Approve</span>
 					@endif
 				@elseif(optional($approvedEmployee)->esign)
-					<img src="{{ Storage::url('employees/') }}{{ $approvedEmployee->esign }}" style="max-width: 130px; max-height: 40px;" alt="" />
+					<img src="{{ Storage::url('employees/') }}{{ $approvedEmployee->esign }}" style="max-width: 130px; max-height: 55px;" alt="" />
 				@endif
 			</td>
 		</tr>

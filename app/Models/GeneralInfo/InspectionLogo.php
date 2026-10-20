@@ -12,15 +12,19 @@ class InspectionLogo extends Model
     protected $fillable = [
 		'name',
         'logo',
+        'second_logo',
 		'related_inspections',
     ];
 
     /**
+     * All inspection report models grouped by section ([section => [class => label]]).
+     * Every report is listed; one already linked to another header logo is labelled with that logo's name
+     * and moves to this logo when it is ticked (see takeOverRelatedInspections).
+     *
      * @param InspectionLogo|null $logo
      * @return array
      */
-    
-    public static function getAllInspectionModels(InspectionLogo $logo = null): array
+    public static function getAllInspectionModels(?InspectionLogo $logo = null): array
     {
         $namespaces = [
             'App\Models\Inspection\Lifting',
@@ -30,42 +34,67 @@ class InspectionLogo extends Model
             'App\Models\Inspection\Calibration',
         ];
 
-        return array_merge(...array_map(function($namespace) use ($logo) {
-            return self::getModelsInNamespace($namespace, $logo);
+        // class => name of the other logo it is linked to
+        $linkedTo = [];
+        foreach (self::query()->when($logo, fn ($q) => $q->whereKeyNot($logo->getKey()))->get() as $other) {
+            foreach ($other->related_inspections ?: [] as $class) {
+                $linkedTo[$class] = $other->name;
+            }
+        }
+
+        return array_merge(...array_map(function ($namespace) use ($linkedTo) {
+            return self::getModelsInNamespace($namespace, $linkedTo);
         }, $namespaces));
     }
 
     /**
-     * Returns an array of fully qualified class names of all models in a given
-     * namespace.
+     * Returns the models of a namespace as [section => [class => label]].
      *
      * @param string $namespace
-     * @param InspectionLogo|null $logo
+     * @param array $linkedTo
      * @return array
      */
-    private static function getModelsInNamespace(string $namespace, InspectionLogo $logo = null): array
+    private static function getModelsInNamespace(string $namespace, array $linkedTo): array
     {
+        $section = array_slice(explode('\\', $namespace), -1)[0];
         $directoryPath = base_path(str_replace('App', 'app', str_replace('\\', '/', $namespace)));
         if (!is_dir($directoryPath)) {
-            return [];
+            return [$section => []];
         }
-        $files = scandir($directoryPath);
+
         $models = [];
-        $alreadySelected = InspectionLogo::pluck('related_inspections')->flatten(1)->toArray();
+        foreach (scandir($directoryPath) as $file) {
+            if (!is_file($directoryPath . DIRECTORY_SEPARATOR . $file) || !str_ends_with($file, '.php')) {
+                continue;
+            }
+            $modelName = substr($file, 0, -4);
+            $key = $namespace . '\\' . $modelName;
+            if (!class_exists($key)) {
+                continue;
+            }
+            $models[$key] = isset($linkedTo[$key]) ? $modelName . ' (now: ' . $linkedTo[$key] . ')' : $modelName;
+        }
+        asort($models);
 
-        foreach ($files as $file) {
-            if (is_file($directoryPath . DIRECTORY_SEPARATOR . $file)) {
-                $modelName = str_replace('.php', '', $file);
+        return [$section => $models];
+    }
 
-                $key = $namespace . '\\' . $modelName;
-                if (isset($logo) && in_array($key, $logo->related_inspections)) {
-                    $models[$key] = $modelName;
-                } elseif (class_exists($key) && !in_array($key, $alreadySelected)) {
-                    $models[$key] = $modelName;
-                }
+    /**
+     * A report has one header logo: remove this logo's reports from every other logo.
+     */
+    public function takeOverRelatedInspections(): void
+    {
+        $mine = $this->related_inspections ?: [];
+        if (!$mine) {
+            return;
+        }
+        foreach (self::query()->whereKeyNot($this->getKey())->get() as $other) {
+            $current = $other->related_inspections ?: [];
+            $remaining = array_values(array_diff($current, $mine));
+            if (count($remaining) !== count($current)) {
+                $other->update(['related_inspections' => $remaining]);
             }
         }
-        return [array_slice(explode('\\', $namespace), -1)[0] => $models];
     }
 
 	protected function setRelatedInspectionsAttribute($value)
@@ -75,6 +104,6 @@ class InspectionLogo extends Model
 
     protected function getRelatedInspectionsAttribute($value)
     {
-        return json_decode($value, true);
+        return json_decode((string) $value, true) ?: [];
     }
 }

@@ -15,5 +15,5 @@
     <!----------------------------------->
 		@include('layouts.inspection.calibration.partials.show.type2')
     <!----------------------------------->
-    @include('layouts.scripts.approve', ['table' => 'inspection_reports', 'id' => $model->report->id])
+    @include('layouts.scripts.approve', ['table' => 'inspection_reports', 'id' => $model->report->id, 'issueUrl' => route('calibrationPressureGauge.issue', $model->id)])
 @endpush

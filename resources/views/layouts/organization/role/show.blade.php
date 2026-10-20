@@ -77,7 +77,12 @@
                                                 <th>Show</th>
                                                 <th>Create</th>
                                                 <th>Edit</th>
-                                                <th>Remove</th>
+                                                <th>Remove</th>';
+                                                if ($key == 'inspection' && $value1 == 'Calibration')
+                                                {
+                                                    echo '<th>QA Issue</th>';
+                                                }
+                                                echo '
                                             </tr>
                                         </thead>
                                         <tbody class="controls">';

@@ -44,7 +44,18 @@
             // $('#clientDepartment').val(data?.clientDepartment?.name);
 						const purchaseOrderVal = data.purchase_order? data.purchase_order : '-';
             $('#purchaseOrder').val(purchaseOrderVal);
+            fill_jcf_contact(data, true);
           },
+        });
+      }
+
+      // Contact name / information come from the JCF contact person (calibration certificates)
+      function fill_jcf_contact(data, overwrite) {
+        [['contact_name', data.contact_name], ['contact_info', data.contact_info]].forEach(function (pair) {
+          var $input = $('.steps-validation [name="' + pair[0] + '"]');
+          if ($input.length && pair[1] && (overwrite || !$.trim($input.val()))) {
+            $input.val(pair[1]);
+          }
         });
       }
 
@@ -66,7 +77,7 @@
             // $('#clientDepartment').val(data?.clientDepartment?.name);
 						const purchaseOrderVal = data.purchase_order? data.purchase_order : '-';
             $('#purchaseOrder').val(purchaseOrderVal);
-
+            fill_jcf_contact(data, false);
           },
         });
       }

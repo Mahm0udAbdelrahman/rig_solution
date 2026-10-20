@@ -48,12 +48,17 @@ class InspectionLogoController extends Controller
      */
     public function store(Request $request)
     {
-        $data = $request->all(['name', 'related_inspections']);
+        $data = $request->all(['name']);
         if (!$request->hasFile('logo')) {
             return response()->json(['error' => 'Logo file is required'], 422);
         }
 		$data['logo'] = $request->file('logo')->store('images/inspection-logos', 'public');
-        InspectionLogo::create($data);
+		if ($request->hasFile('second_logo')) {
+			$data['second_logo'] = $request->file('second_logo')->store('images/inspection-logos', 'public');
+		}
+		$data['related_inspections'] = array_values((array) $request->input('related_inspections', []));
+        $inspectionLogo = InspectionLogo::create($data);
+        $inspectionLogo->takeOverRelatedInspections();
         return redirect()->route('inspectionLogo.index');
     }
 
@@ -94,22 +99,31 @@ class InspectionLogoController extends Controller
      */
     public function update(Request $request, InspectionLogo $inspectionLogo)
     {
-        $data = $request->all();
+        $data = $request->all(['name']);
 		if ($request->hasFile('logo')) {
 			$data['logo'] = $request->file('logo')->store('images/inspection-logos', 'public');
         }
+		if ($request->hasFile('second_logo')) {
+			$data['second_logo'] = $request->file('second_logo')->store('images/inspection-logos', 'public');
+		} elseif ($request->boolean('remove_second_logo')) {
+			$data['second_logo'] = null;
+		}
+		// unticking every report must clear the list (unchecked boxes are not submitted)
+		$data['related_inspections'] = array_values((array) $request->input('related_inspections', []));
         $inspectionLogo->update($data);
+        $inspectionLogo->takeOverRelatedInspections();
         return response()->redirectToRoute('inspectionLogo.index');
     }
 
     /**
-     * Remove the specified resource from storage.
+     * Remove the specified resource from storage: its reports go back to the default header logo.
      *
-     * @param  int  $id
+     * @param  \App\Models\GeneralInfo\InspectionLogo  $inspectionLogo
      * @return \Illuminate\Http\Response
      */
-    public function destroy($id)
+    public function destroy(InspectionLogo $inspectionLogo)
     {
-        dd($id);
+        $inspectionLogo->delete();
+        return redirect()->route('inspectionLogo.index');
     }
 }

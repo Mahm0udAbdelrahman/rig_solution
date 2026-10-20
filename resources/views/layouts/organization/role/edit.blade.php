@@ -74,6 +74,10 @@
                                                                 <th>Create</th>
                                                                 <th>Edit</th>
                                                                 <th>Remove</th>';
+                                                                if ($key == 'inspection' && $value1 == 'Calibration')
+                                                                {
+                                                                    echo '<th>QA Issue</th>';
+                                                                }
                                                                 if ($value1 == 'WorkFlow')
                                                                 {
                                                                     echo '

@@ -193,17 +193,18 @@
 			</div>
 		</div>
     <style>
-        .due-period-switch { display: inline-flex; align-items: center; gap: .6rem; margin: 0; cursor: pointer; user-select: none; }
-        .due-period-switch input { display: none; }
-        .due-period-switch .track { position: relative; width: 46px; height: 24px; border-radius: 12px; background: #ff9149; transition: background .2s; }
-        .due-period-switch .track:after { content: ''; position: absolute; top: 3px; left: 3px; width: 18px; height: 18px; border-radius: 50%; background: #fff; transition: left .2s; }
-        .due-period-switch input:checked + .track { background: #28d094; }
-        .due-period-switch input:checked + .track:after { left: 25px; }
-        .due-period-switch .opt { font-size: .9rem; font-weight: 600; color: #98a4b8; }
-        .due-period-switch .opt.active { color: #1e2329; }
+        .due-period-options { display: inline-flex; border: 1px solid #cacfe7; border-radius: .25rem; overflow: hidden; }
+        .due-period-options label { margin: 0; padding: .45rem .9rem; font-size: .85rem; font-weight: 600; color: #6b6f82; cursor: pointer; user-select: none; border-left: 1px solid #cacfe7; }
+        .due-period-options label:first-child { border-left: 0; }
+        .due-period-options input { display: none; }
+        .due-period-options label.active { background: #28d094; color: #fff; }
     </style>
     @php
         $duePeriod = old('due_period', isset($model) && $model->due_period ? $model->due_period : 'annual');
+        $duePeriodOptions = ['semi_annual' => '6 months', 'annual' => '12 months', 'manual' => 'Manual / blank'];
+        if (!isset($duePeriodOptions[$duePeriod])) {
+            $duePeriod = 'manual';
+        }
     @endphp
     <div class="card">
         <div class="card-content collapse show">
@@ -221,13 +222,13 @@
                         <div class="form-group mb-1">
                             <div class="controls">
                                 <label class="d-block">Calibration Interval (Due Date)</label>
-                                <input type="hidden" name="due_period" id="due_period" value="{{ $duePeriod }}">
-                                <label class="due-period-switch mt-50" for="due_period_switch">
-                                    <span class="opt" data-period="semi_annual">Semi-Annual (6 months)</span>
-                                    <input type="checkbox" id="due_period_switch" {{ $duePeriod === 'semi_annual' ? '' : 'checked' }}>
-                                    <span class="track"></span>
-                                    <span class="opt" data-period="annual">Annual (12 months)</span>
-                                </label>
+                                <div class="due-period-options mt-50">
+                                    @foreach($duePeriodOptions as $periodValue => $periodLabel)
+                                        <label class="{{ $duePeriod === $periodValue ? 'active' : '' }}">
+                                            <input type="radio" name="due_period" class="js-due-period" value="{{ $periodValue }}" {{ $duePeriod === $periodValue ? 'checked' : '' }}>{{ $periodLabel }}
+                                        </label>
+                                    @endforeach
+                                </div>
                             </div>
                         </div>
                     </div>
@@ -264,12 +265,12 @@
                     <div class="col-12 col-sm-3">
                         <div class="form-group mb-0">
                             <div class="controls">
-                                <label>Calibration Due Date <small class="text-muted">(auto)</small></label>
+                                <label>Calibration Due Date <small class="text-muted" id="due_date_hint"></small></label>
                                 <div class="input-group">
                                     <div class="input-group-prepend">
                                         <span class="input-group-text"><i class="ft-calendar"></i></span>
                                     </div>
-                                    {{ Form::text('due_date', null, ['class' => 'form-control datepicker-default', 'id' => 'due_date', 'placeholder' => 'Due Date', 'required']) }}
+                                    {{ Form::text('due_date', null, ['class' => 'form-control datepicker-default', 'id' => 'due_date', 'placeholder' => 'Blank']) }}
                                 </div>
                                 <div class="help-block"></div>
                             </div>
@@ -278,12 +279,13 @@
                     <div class="col-12 col-sm-3">
                         <div class="form-group mb-0">
                             <div class="controls">
-                                <label>Issue Date</label>
+                                <label>Issue Date <small class="text-muted">(auto)</small></label>
                                 <div class="input-group">
                                     <div class="input-group-prepend">
                                         <span class="input-group-text"><i class="ft-calendar"></i></span>
                                     </div>
-                                    {{ Form::text('issue_date', null, ['class' => 'form-control datepicker-default', 'placeholder' => 'Issue Date', 'required']) }}
+                                    {{-- set by the system on the day the certificate is created --}}
+                                    <input type="text" class="form-control" value="{{ isset($model) && $model->issue_date ? $model->issue_date : '' }}" placeholder="Set when the certificate is created" disabled>
                                 </div>
                                 <div class="help-block"></div>
                             </div>
@@ -318,7 +320,7 @@
                     <div class="col-12 col-sm-4">
                         <div class="form-group mb-1">
                             <div class="controls">
-                                <label>Temperature Uncertainty</label>
+                                <label>Temperature Variation</label>
                                 <div class="input-group">
                                     {{ Form::text('temperature_uncertainty', null, ['class' => 'form-control', 'placeholder' => '0.7']) }}
                                     <div class="input-group-append"><span class="input-group-text">°C</span></div>
@@ -352,7 +354,7 @@
                     <div class="col-12 col-sm-4">
                         <div class="form-group mb-0">
                             <div class="controls">
-                                <label>Humidity Uncertainty</label>
+                                <label>Humidity Variation</label>
                                 <div class="input-group">
                                     {{ Form::text('humidity_uncertainty', null, ['class' => 'form-control', 'placeholder' => '0.3']) }}
                                     <div class="input-group-append"><span class="input-group-text">% RH</span></div>
@@ -424,20 +426,12 @@
 			<div class="card-content collapse show">
 				<div class="card-body">
 					<div class="row">
-						<div class="col-12 col-sm-6">
+						<div class="col-12">
 							<div class="form-group mb-1">
 								<div class="controls">
 									{{ Form::label('specification_status', 'Result') }}
 									{{ Form::select('specification_status', ['in' => 'The instrument is in specification', 'out' => 'The instrument is out of specification'], null, ['class' => 'form-control', 'id' => 'specification_status']) }}
 									<small class="text-muted" id="specification_hint"></small>
-								</div>
-							</div>
-						</div>
-						<div class="col-12 col-sm-6">
-							<div class="form-group mb-1">
-								<div class="controls">
-									{{ Form::label('issued_by', 'Issued By (QA)') }}
-									{{ Form::text('issued_by', null, ['class' => 'form-control', 'placeholder' => 'QA name']) }}
 								</div>
 							</div>
 						</div>
@@ -486,31 +480,42 @@
 		}
 
 		function currentPeriod() {
-			return $('#due_period_switch').is(':checked') ? 'annual' : 'semi_annual';
+			return $('.js-due-period:checked').val() || 'annual';
 		}
 
-		function refreshSwitchLabels() {
+		// 6 / 12 months: the due date follows the calibration date; manual: typed by hand or left blank
+		function refreshPeriod() {
 			var period = currentPeriod();
-			$('#due_period').val(period);
-			$('.due-period-switch .opt').each(function () {
-				$(this).toggleClass('active', $(this).data('period') === period);
+			$('.js-due-period').each(function () {
+				$(this).closest('label').toggleClass('active', this.checked);
 			});
+			var manual = !MONTHS[period];
+			$('#due_date').prop('readonly', !manual);
+			$('#due_date_hint').text(manual ? '(manual, can be blank)' : '(auto)');
 		}
 
 		function refreshDueDate() {
+			var months = MONTHS[currentPeriod()];
 			var calibration = parseDmy($('#calibration_date').val());
-			if (calibration) {
-				$('#due_date').val(computeDueDate(calibration, MONTHS[currentPeriod()]));
+			if (months && calibration) {
+				$('#due_date').val(computeDueDate(calibration, months));
 			}
 		}
 
-		$(document).on('change', '#due_period_switch', function () {
-			refreshSwitchLabels();
+		$(document).on('change', '.js-due-period', function () {
+			refreshPeriod();
 			refreshDueDate();
 		});
 		$(document).on('change', '#calibration_date', refreshDueDate);
+		// keep the calendar closed while the due date is automatic
+		$(document).on('focus click', '#due_date', function () {
+			var input = this;
+			if (input.readOnly && typeof $.fn.datepicker === 'function') {
+				setTimeout(function () { $(input).datepicker('hide'); }, 0);
+			}
+		});
 
-		refreshSwitchLabels();
+		refreshPeriod();
 		if (!$('#due_date').val()) {
 			refreshDueDate();
 		}

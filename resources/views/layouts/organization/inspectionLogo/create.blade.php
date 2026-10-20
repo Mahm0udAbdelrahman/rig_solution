@@ -24,6 +24,7 @@
 
 						<div class="form-group">
 							{!! Form::label('logo', 'Logo') !!}
+							<p class="mb-50">Calibration certificates: shown in place of the EGAC logo. Other reports: the whole header logo.</p>
 							{!! Form::file('logo', ['class' => 'form-control', 'required' => true, 'onchange' => 'previewImage(this)', 'accept' => 'image/*']) !!}
 							<img src=""  class="photo_preview logo-top" />
 							<script>
@@ -37,13 +38,19 @@
 							</script>
 						</div>
 
+
+						<div class="form-group">
+							{!! Form::label('second_logo', 'Second Logo (optional)') !!}
+							<p class="mb-50">Calibration certificates: shown in place of the Rig Solution logo. Leave empty to keep the Rig Solution logo.</p>
+							{!! Form::file('second_logo', ['class' => 'form-control', 'onchange' => 'previewImage(this)', 'accept' => 'image/*']) !!}
+							<img src="" class="photo_preview logo-top" />
+						</div>
+
 						<div class="form-group">
 							{!! Form::label('related_inspections', 'Related Inspections') !!}
-							<p>This logo will be used for all the inspections that don't have a custom logo, meaning
-								that
-								any inspection that is not listed here already has a custom logo and will not be
-								affected by
-								this setting.</p>
+							<p>Tick the reports that use this header logo. Every report is listed; a report marked
+								"(now: ...)" uses another header logo and moves to this one when ticked (a report has one header logo).
+								Reports that are not ticked on any header logo use the default logo.</p>
 							<div class="row mt-2">
 								@foreach($inspectionModels as $inspectionType => $list)
 								<div class="form-check col-4">

@@ -21,4 +21,18 @@ trait HasInspectionLogo
         // Return the logo or false if no related logo is found
         return $inspectionLogo ? $inspectionLogo->logo : false;
     }
+
+    /**
+     * Optional second logo of the related Inspection Logo (replaces the Rig Solution logo on calibration certificates).
+     *
+     * @return string|bool
+     */
+    public function getInspectionSecondLogoAttribute()
+    {
+        $inspectionLogo = InspectionLogo::query()
+            ->whereJsonContains('related_inspections', get_class($this))
+            ->first();
+
+        return $inspectionLogo && $inspectionLogo->second_logo ? $inspectionLogo->second_logo : false;
+    }
 }

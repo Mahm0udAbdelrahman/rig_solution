@@ -67,6 +67,19 @@ class CalibrationCertificate
     }
 
     /**
+     * Second logo: the "Second Logo" of the header logo set in General Info > Inspection Logos when its file exists,
+     * otherwise the Rig Solution logo.
+     */
+    public static function secondLogoUrl($model): string
+    {
+        $logo = data_get($model, 'inspection_second_logo');
+
+        return ($logo && Storage::disk('public')->exists($logo))
+            ? asset('storage/' . $logo)
+            : asset(self::RIG_LOGO);
+    }
+
+    /**
      * Calibration location entered on the report, or the job request location for older reports.
      */
     public static function location($model): string

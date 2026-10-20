@@ -1,5 +1,5 @@
 {{--
-    Shared header of all calibration certificates (Excel rows 1-5): first logo (dynamic) + RIG logo | title, certificate no, issue date.
+    Shared header of all calibration certificates (Excel rows 1-5): first logo (dynamic, EGAC by default) + second logo (dynamic, RIG by default) | title, certificate no, issue date.
     @include('layouts.inspection.calibration.partials.show.certificate.header', ['model' => $model, 'code' => $code])
 --}}
 @php
@@ -11,7 +11,7 @@
 		<td colspan="5" rowspan="5" style="vertical-align: top; padding: 0;">
 			<div class="logos">
 				<img src="{{ $cert::firstLogoUrl($model) }}" class="first" alt="" />
-				<img src="{{ asset($cert::RIG_LOGO) }}" class="rig" alt="Rig Solution" />
+				<img src="{{ $cert::secondLogoUrl($model) }}" class="rig" alt="" />
 			</div>
 		</td>
 		<td colspan="6"></td>

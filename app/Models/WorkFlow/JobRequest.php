@@ -68,6 +68,35 @@ class JobRequest extends Model
       	return $this->belongsTo(ContactPerson::class, 'contact_people_id');
     }
 
+    /**
+     * Contact name of the JCF (its contact person).
+     */
+    public function contactName(): string
+    {
+        return (string) optional($this->contactPeopleShow)->name;
+    }
+
+    /**
+     * Contact information of the JCF as on the JCF page: the ticked contact ways (Phone / E-mail) of its contact person.
+     */
+    public function contactInfo(): string
+    {
+        $person = $this->contactPeopleShow;
+        if (!$person) {
+            return '';
+        }
+        $ways = json_decode((string) $this->contactway, true) ?: [];
+        $parts = [];
+        if (in_array('phone', $ways, true) && $person->tel) {
+            $parts[] = 'Phone: ' . $person->tel;
+        }
+        if (in_array('email', $ways, true) && $person->email) {
+            $parts[] = 'E-mail: ' . $person->email;
+        }
+
+        return implode(' / ', $parts);
+    }
+
     public function clientDepartment()
     {
       	return $this->belongsTo(ClientDepartment::class, 'client_department_id');

@@ -249,13 +249,13 @@
 							@foreach(range(1, $resultRows) as $index)
 								<tr class="js-pg-row">
 									@foreach(['instrument_reading' => 'uuc', 'pressure_rising' => 'rising', 'p_error_rising' => 'rising-corr', 'pressure_falling' => 'falling', 'p_error_failing' => 'falling-corr'] as $inputName => $role)
-										<td>{{ Form::text("calibration_details[results][$index][$inputName]", null, ['class' => 'form-control cell-input' . (str_ends_with($role, 'corr') ? ' calc' : ''), 'data-role' => $role, 'placeholder' => '...']) }}</td>
+										<td>{{ Form::text("calibration_details[results][$index][$inputName]", null, ['class' => 'form-control cell-input' . (str_ends_with($role, 'corr') ? ' calc' : ''), 'data-role' => $role, 'placeholder' => '...'] + (str_ends_with($role, 'corr') ? ['readonly' => 'readonly', 'tabindex' => '-1'] : [])) }}</td>
 									@endforeach
 								</tr>
 							@endforeach
 						</tbody>
 					</table>
-					<small class="text-muted">Correction = REF − UUC. It is filled automatically and can still be edited.</small>
+					<small class="text-muted">Correction = REF − UUC, calculated automatically (+ when REF is above UUC, − when below), with the decimals typed in the row.</small>
 				</div>
 			</div>
 		</div>
@@ -268,6 +268,12 @@
 		function num(v) {
 			v = $.trim(String(v || '')).replace('%', '').replace(',', '.');
 			return v !== '' && !isNaN(v) ? parseFloat(v) : null;
+		}
+
+		// decimals as typed: "4.10" -> 2, "11.9" -> 1, "12" -> 0
+		function decimals(v) {
+			var m = /[.,](\d+)$/.exec($.trim(String(v || '')));
+			return m ? m[1].length : 0;
 		}
 
 		function maxAbs(values) {
@@ -294,20 +300,26 @@
 			var rising = [], falling = [];
 			$('.js-pg-row').each(function () {
 				var $row = $(this);
-				var uuc = num($row.find('[data-role="uuc"]').val());
+				var uucText = $row.find('[data-role="uuc"]').val();
+				var uuc = num(uucText);
 				[['rising', rising], ['falling', falling]].forEach(function (pair) {
-					var ref = num($row.find('[data-role="' + pair[0] + '"]').val());
+					var refText = $row.find('[data-role="' + pair[0] + '"]').val();
+					var ref = num(refText);
 					var $corr = $row.find('[data-role="' + pair[0] + '-corr"]');
-					if (uuc !== null && ref !== null && ($corr.data('auto') || !$.trim($corr.val()))) {
-						$corr.val((ref - uuc).toFixed(2)).data('auto', true);
+					var value = '';
+					if (uuc !== null && ref !== null) {
+						value = (ref - uuc).toFixed(Math.max(decimals(uucText), decimals(refText)));
+						if (parseFloat(value) === 0) value = value.replace('-', '');
 					}
-					var c = num($corr.val());
-					if (c !== null) pair[1].push(c);
+					$corr.val(value);
+					if (value !== '') pair[1].push(value);
 				});
 			});
-			var maxR = maxAbs(rising), maxF = maxAbs(falling);
-			$('#pg_max_rising').text(maxR === null ? '-' : maxR.toFixed(2));
-			$('#pg_max_falling').text(maxF === null ? '-' : maxF.toFixed(2));
+			// max correction keeps its sign and typed decimals
+			var maxR = maxAbs(rising.map(Number)), maxF = maxAbs(falling.map(Number));
+			var pick = function (list, max) { return max === null ? '-' : list[list.map(Number).indexOf(max)]; };
+			$('#pg_max_rising').text(pick(rising, maxR));
+			$('#pg_max_falling').text(pick(falling, maxF));
 
 			var limit = num($('#pg_permissible_error').val());
 			var worst = maxAbs([maxR, maxF].filter(function (v) { return v !== null; }));
@@ -320,7 +332,6 @@
 		$(document).on('input change', '#pg_unit', refreshUnit);
 		$(document).on('input change', '#pg_accuracy_class, #pg_range_from, #pg_range_to', function () { refreshPermissibleError(false); refreshCorrections(); });
 		$(document).on('input', '#pg_permissible_error', function () { $(this).data('auto', false); refreshCorrections(); });
-		$(document).on('input', '.js-pg-row [data-role$="-corr"]', function () { $(this).data('auto', false); refreshCorrections(); });
 		$(document).on('input change', '.js-pg-row [data-role="uuc"], .js-pg-row [data-role="rising"], .js-pg-row [data-role="falling"]', refreshCorrections);
 
 		function refreshMethodText() {

@@ -212,6 +212,7 @@ class CalibrationPressureGaugeController extends Controller
     public function store(Request $request)
     {
         $data = $this->withDueDate($request->all());
+        $data['issue_date'] = now()->format('d-m-Y');
         $created = Calibration::create($data);
         if ($created) {
             $created->report()->create([
@@ -258,6 +259,8 @@ class CalibrationPressureGaugeController extends Controller
             'footerData'=> $footerData,
             'pdfurl' => 'storage/pdf/inspection/calibration/calibrationPressureGauge/' . $calibrationPressureGauge->job_request->code . '/' . $calibrationPressureGauge->code . '.pdf',
 			'hasPermission' => Auth::user()->hasPermission('calibrationpressuregauge', 'approve'),
+			'canIssue' => Auth::user()->hasPermission('calibrationpressuregauge', 'issue') || Auth::user()->isSuperAdmin(),
+			'issuer' => optional($calibrationPressureGauge->issuer)->employee,
             'imageurl' => $calibrationPressureGauge->job_request->code . '/' . $calibrationPressureGauge->code,
             'folder' => 'pdf/inspection/calibration/calibrationPressureGauge',
             'iso_number' => 'Form # RSE-RF-07 - ISSUE 07 / Jul 2023',
@@ -298,6 +301,8 @@ class CalibrationPressureGaugeController extends Controller
     public function update(Request $request, Calibration $calibrationPressureGauge)
     {
         $data = $this->withDueDate($request->all());
+        // the issue date is set when the certificate is created and does not change on edit
+        $data['issue_date'] = $calibrationPressureGauge->issue_date ?: now()->format('d-m-Y');
 		$inspectionData = $data['inspection_data'] ?? [];
 		$oldInspectionData = $calibrationPressureGauge->inspection_data;
 		// Handle photo file uploads
@@ -352,14 +357,34 @@ class CalibrationPressureGaugeController extends Controller
     }
 
     /**
-     * Fill the due date from the calibration date + annual / semi-annual period when it was left empty.
+     * Due date: calibration date + 6 / 12 months, or as typed (can be blank) for the "manual" period.
      */
     private function withDueDate(array $data): array
     {
-        if (empty($data['due_date']) && !empty($data['calibration_date'])) {
-            $data['due_date'] = Calibration::computeDueDate($data['calibration_date'], $data['due_period'] ?? 'annual');
+        $period = $data['due_period'] ?? 'annual';
+        if (isset(Calibration::DUE_PERIOD_MONTHS[$period])) {
+            if (!empty($data['calibration_date'])) {
+                $data['due_date'] = Calibration::computeDueDate($data['calibration_date'], $period);
+            }
+        } else {
+            $data['due_period'] = 'manual';
+            $data['due_date'] = trim((string) ($data['due_date'] ?? '')) ?: null;
         }
         return $data;
+    }
+
+    /**
+     * Issued By (QA): signs the certificate as the logged-in user. Needs the role permission "QA Issue" of this report.
+     */
+    public function issue(Calibration $calibrationPressureGauge)
+    {
+        $user = Auth::user();
+        if (!$user->hasPermission('calibrationpressuregauge', 'issue') && !$user->isSuperAdmin()) {
+            abort(403);
+        }
+        $calibrationPressureGauge->forceFill(['user_id_issued' => $user->id])->save();
+
+        return response()->json(['success' => 'Certificate issued successfully !']);
     }
 
     public function publish(Calibration $calibrationPressureGauge)
@@ -379,6 +404,7 @@ class CalibrationPressureGaugeController extends Controller
         $job_request = JobRequest::find($request->job_request_id);
         $code = json_decode(json_encode(CustomController::getReportData($job_request)))->original->lastcode;
         $data['code'] = $code;
+        $data['issue_date'] = now()->format('d-m-Y');
         $calibrationPressureGauge->update($data);
         $this->persistInspectionReportState($calibrationPressureGauge, [
             'code' => $code,

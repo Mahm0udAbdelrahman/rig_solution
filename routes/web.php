@@ -461,6 +461,7 @@ Route::group(
                     Route::resource('calibrationPressureGauge', CalibrationPressureGaugeController::class);
                     Route::get('calibrationPressureGauge/{calibrationPressureGauge}/publish', [CalibrationPressureGaugeController::class, 'publish'])->name('publish.calibrationPressureGauge');
                     Route::patch('calibrationPressureGauge/{calibrationPressureGauge}/publish', [CalibrationPressureGaugeController::class, 'publishSubmit'])->name('calibrationPressureGauge.publishSubmit');
+                    Route::post('calibrationPressureGauge/{calibrationPressureGauge}/issue', [CalibrationPressureGaugeController::class, 'issue'])->name('calibrationPressureGauge.issue');
 				
                     Route::get('calibrationPressureTest/getDataForDataTable', [CalibrationPressureTestController::class, 'getDataForDataTable'])->name('getDataForDataTable.calibrationPressureTest');
                     Route::resource('calibrationPressureTest', CalibrationPressureTestController::class);

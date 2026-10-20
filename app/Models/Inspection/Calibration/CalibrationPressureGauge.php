@@ -7,6 +7,7 @@ use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use App\Models\WorkFlow\JobRequest;
+use App\Models\User;
 use App\Models\Inspection\InspectionReport;
 use App\Traits\HasInspectionLogo;
 
@@ -72,7 +73,16 @@ class CalibrationPressureGauge extends Model
         'specification_status',
         'issued_by',
         'remarks',
+        // user_id_issued is not fillable: only the QA issue action (role permission "issue") sets it
     ];
+
+    protected static function booted()
+    {
+        // a duplicated certificate has to be issued by QA again
+        static::replicating(function (self $model) {
+            $model->user_id_issued = null;
+        });
+    }
 
     // Drop-down lists of the "RS-CAL-P11-F01 Pressure Gauge" Excel data entry sheet
     public const UNITS = ['Bar', 'hPa', 'kPa', 'Mpa', 'psi', 'mBar', 'Pa', 'kg/cm2', 'mmHg', 'inHg', 'mmH2O', 'inH2O'];
@@ -124,27 +134,79 @@ class CalibrationPressureGauge extends Model
         return $date->addMonthsNoOverflow($months)->subDay()->format('d-m-Y');
     }
 
+    /** Correction columns of a result row => the REF column they are calculated from */
+    public const CORRECTIONS = ['p_error_rising' => 'pressure_rising', 'p_error_failing' => 'pressure_falling'];
+
     /**
-     * Rows of the calibration results table with the max correction for the rising / falling series.
+     * Number of decimals as typed: "4.10" -> 2, "11.9" -> 1, "12" -> 0.
+     */
+    public static function typedDecimals($value): int
+    {
+        return preg_match('/[.,](\d+)$/', trim((string) $value), $m) ? strlen($m[1]) : 0;
+    }
+
+    public static function typedNumber($value): ?float
+    {
+        $value = str_replace(',', '.', trim((string) $value));
+        return is_numeric($value) ? (float) $value : null;
+    }
+
+    /**
+     * Correction = REF - UUC, signed, with the decimals typed in the row (2.00 / 0 -> -2.00, 12.00 / 11.9 -> -0.10).
+     */
+    public static function correction($uuc, $ref): ?string
+    {
+        $u = self::typedNumber($uuc);
+        $r = self::typedNumber($ref);
+        if ($u === null || $r === null) {
+            return null;
+        }
+        $decimals = max(self::typedDecimals($uuc), self::typedDecimals($ref));
+        $value = round($r - $u, $decimals);
+
+        return number_format($value == 0 ? 0 : $value, $decimals, '.', '');
+    }
+
+    /**
+     * Result row with its corrections recalculated from the typed UUC / REF values.
+     */
+    public static function withCorrections(array $row): array
+    {
+        foreach (self::CORRECTIONS as $correction => $ref) {
+            $value = self::correction($row['instrument_reading'] ?? null, $row[$ref] ?? null);
+            if ($value !== null) {
+                $row[$correction] = $value;
+            }
+        }
+        return $row;
+    }
+
+    /**
+     * Rows of the calibration results table with the max correction for the rising / falling series
+     * and the calibration range (lowest / highest measured UUC value). Values are kept as typed.
      */
     public function getCalibrationResultsAttribute(): array
     {
         $rows = collect(data_get($this->calibration_details, 'results', []))
             ->filter(fn ($row) => is_array($row) && collect($row)->filter(fn ($v) => $v !== null && $v !== '')->isNotEmpty())
+            ->map(fn ($row) => self::withCorrections($row))
             ->values();
 
-        $maxOf = function (string $key) use ($rows) {
-            $values = $rows->pluck($key)->filter(fn ($v) => is_numeric($v))->map(fn ($v) => (float) $v);
+        // the typed value of the extreme row, so the sign and decimals stay as on the table
+        $pick = function (string $key, callable $score) use ($rows) {
+            $values = $rows->pluck($key)->filter(fn ($v) => self::typedNumber($v) !== null);
             if ($values->isEmpty()) {
                 return null;
             }
-            return $values->sortByDesc(fn ($v) => abs($v))->first();
+            return trim((string) $values->sortByDesc(fn ($v) => $score(self::typedNumber($v)))->first());
         };
 
         return [
             'rows' => $rows->all(),
-            'max_rising' => $maxOf('p_error_rising'),
-            'max_falling' => $maxOf('p_error_failing'),
+            'max_rising' => $pick('p_error_rising', fn ($v) => abs($v)),
+            'max_falling' => $pick('p_error_failing', fn ($v) => abs($v)),
+            'range_min' => $pick('instrument_reading', fn ($v) => -$v),
+            'range_max' => $pick('instrument_reading', fn ($v) => $v),
         ];
     }
 
@@ -171,6 +233,12 @@ class CalibrationPressureGauge extends Model
     public function job_request()
     {
         return $this->belongsTo(JobRequest::class);
+    }
+
+    // QA user who issued the certificate
+    public function issuer()
+    {
+        return $this->belongsTo(User::class, 'user_id_issued');
     }
 
     public function report()
@@ -222,6 +290,14 @@ class CalibrationPressureGauge extends Model
 
 	public function setCalibrationDetailsAttribute($value)
     {
+        // corrections are always REF - UUC, whatever was posted
+        if (is_array($value) && is_array($value['results'] ?? null)) {
+            foreach ($value['results'] as $index => $row) {
+                if (is_array($row)) {
+                    $value['results'][$index] = self::withCorrections($row);
+                }
+            }
+        }
         $this->attributes['calibration_details'] = json_encode($value);
     }
 

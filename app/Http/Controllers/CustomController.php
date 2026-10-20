@@ -47,6 +47,9 @@ class CustomController extends Controller
         'suppliers',
     ];
 
+    /** Calibration certificates with an "Issued By (QA)" sign-off (role permission "issue") */
+    private const QA_ISSUE_MODULES = ['calibrationpressuregauge'];
+
     private const APPROVABLE_TABLES = [
         'inspection_reports',
         'qutations',
@@ -352,6 +355,8 @@ class CustomController extends Controller
                 'deploc'          => '',
                 'clientDepartment'=> null,
                 'purchase_order'  => '-',
+                'contact_name'    => '',
+                'contact_info'    => '',
             ]);
         }
 
@@ -378,6 +383,8 @@ class CustomController extends Controller
                 'deploc'          => $jobRequest->deploc ?? '',
                 'clientDepartment'=> $jobRequest->clientDepartment ?? null,
                 'purchase_order'  => $jobRequest->purchase_order ?? '-',
+                'contact_name'    => $jobRequest->contactName(),
+                'contact_info'    => $jobRequest->contactInfo(),
             ]
         );
 
@@ -1104,6 +1111,32 @@ class CustomController extends Controller
 														<label class="custom-control-label" for="'.$after.'-delete"></label>
 												</div>
 										</td>';
+                // "QA Issue": signs the "Issued By (QA)" box of the calibration certificate
+                if ($key === 'Inspection' && $key1 === 'Calibration') {
+                    if (in_array($after, self::QA_ISSUE_MODULES, true)) {
+                        echo '<td>
+												<div class="skin skin-square"><input type="checkbox" id="'.$after.'-issue" name="all" class="custom-control-input" ';
+                        if ($roles != '') {
+                            foreach (json_decode($roles) as $role_bottom) {
+                                if (strtolower($after) === $role_bottom->modules && in_array('issue', $role_bottom->roles, true)) {
+                                    echo ' checked';
+                                }
+                            }
+
+                            if ($type != '') {
+                                echo ' disabled';
+                            }
+                        }
+
+                        echo '>
+														<label class="custom-control-label" for="'.$after.'-issue"></label>
+												</div>
+										</td>';
+                    } else {
+                        echo '<td></td>';
+                    }
+                }
+
                 if ($key1 === 'WorkFlow') {
                     if ($after === 'filemanager') {
                         echo '<td>
