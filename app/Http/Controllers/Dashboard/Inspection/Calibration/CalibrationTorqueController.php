@@ -378,8 +378,9 @@ class CalibrationTorqueController extends Controller
         $worst = null;
         foreach ($analysis['directions'] as $rows) {
             foreach ($rows as $row) {
+                // W' keeps the sign of the mean error (as the workbook): compare its size with the permissible deviation
                 if ($row['W_interval'] !== null) {
-                    $worst = max($worst ?? 0, $row['W_interval']);
+                    $worst = max($worst ?? 0, abs($row['W_interval']));
                 }
             }
         }

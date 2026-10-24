@@ -4,7 +4,12 @@ namespace App\Support;
 
 /**
  * Torque wrench calibration results and measurement uncertainty according to ISO 6789-2:2017,
- * following the "Data Analysis" sheet of RS-CAL-P11-F02 Raw data-UNcert-Certificate Torque.xlsx.
+ * calculated exactly like the "Data Analysis" sheet of the lab workbook RS-CAL-P11-F02 (checked against
+ * "RS-CAL-P11-F02 - 026-786-0001.xlsx"), including its conventions:
+ *   - W' = mean relative error + W, keeping the sign of the error (sheet: J135 = G135 + I135)
+ *   - b_l = average of both loading positions - average of position 2 (sheet: D123 - E123)
+ *   - w_r, w_rep, w_od, w_int and w_l are relative to the clockwise X̄r and used for both directions
+ *     (sheet: F142 = F128 ...); the counter-clockwise X̄r is used only when no clockwise readings exist
  *
  * Input (calibration_details of a CalibrationTorque):
  *   targets            [Xa at 20%, 60%, 100%]
@@ -59,7 +64,7 @@ class TorqueCalibration
         $brep = self::spreadOfAverages($details['reproducibility'] ?? []);
         $bod = self::spreadOfAverages($details['geometric'] ?? []);
         $bint = self::spreadOfAverages($details['interface'] ?? []);
-        $bl = self::spreadOfAverages($details['loading_point'] ?? []);
+        $bl = self::loadingPointVariation($details['loading_point'] ?? []);
 
         $result = [
             'factor' => $factor,
@@ -70,26 +75,36 @@ class TorqueCalibration
             'directions' => [],
         ];
 
+        // corrected reference values per direction and point
+        $corrected = [];
         foreach (self::DIRECTIONS as $direction) {
-            if (!in_array($direction, $directions, true)) {
-                continue;
-            }
             $reference = (array) ($details['reference'][$direction] ?? []);
             $coefficients = [
                 self::number($reference['a'] ?? null) ?? 1.0,
                 self::number($reference['b'] ?? null) ?? 0.0,
                 self::number($reference['c'] ?? null) ?? 0.0,
             ];
-            $uRef = self::number($reference['u'] ?? null);
-
-            $rows = [];
             foreach (range(0, self::POINTS - 1) as $point) {
-                $xa = $targets[$point] ?? null;
                 $readings = array_values(array_filter(
                     array_map([self::class, 'number'], array_values((array) ($details['readings'][$direction][$point] ?? []))),
                     fn ($v) => $v !== null
                 ));
-                $rows[] = self::point($xa, $readings, $coefficients, $factor, $r, $uRef, $brep, $bod, $bint, $bl);
+                $corrected[$direction][$point] = self::correct($readings, $coefficients, $factor);
+            }
+        }
+
+        foreach (self::DIRECTIONS as $direction) {
+            if (!in_array($direction, $directions, true)) {
+                continue;
+            }
+            $uRef = self::number($details['reference'][$direction]['u'] ?? null);
+            $rows = [];
+            foreach (range(0, self::POINTS - 1) as $point) {
+                $values = $corrected[$direction][$point];
+                // X̄r of the shared components: clockwise when measured (as the workbook), else this direction
+                $sharedValues = in_array('cw', $directions, true) && $corrected['cw'][$point] ? $corrected['cw'][$point] : $values;
+                $sharedXr = $sharedValues ? array_sum(array_column($sharedValues, 'corrected')) / count($sharedValues) : null;
+                $rows[] = self::point($targets[$point] ?? null, $values, $sharedXr, $r, $uRef, $brep, $bod, $bint, $bl);
             }
             $result['directions'][$direction] = $rows;
         }
@@ -98,48 +113,54 @@ class TorqueCalibration
     }
 
     /**
-     * One calibration point: corrected reference values, errors and the uncertainty budget.
+     * Reference readings as taken with their corrected value: (A·x + B·x² + C·x³) in N·m, x converted from the unit.
      */
-    private static function point(?float $xa, array $readings, array $coefficients, float $factor, ?float $r, ?float $uRef, ?float $brep, ?float $bod, ?float $bint, ?float $bl): array
+    private static function correct(array $readings, array $coefficients, float $factor): array
+    {
+        [$a, $b, $c] = $coefficients;
+        return array_map(function ($reading) use ($a, $b, $c, $factor) {
+            $x = $reading / $factor;
+            return ['taken' => $reading, 'corrected' => ($a * $x + $b * $x ** 2 + $c * $x ** 3) * $factor];
+        }, $readings);
+    }
+
+    /**
+     * One calibration point: errors and the uncertainty budget.
+     */
+    private static function point(?float $xa, array $values, ?float $sharedXr, ?float $r, ?float $uRef, ?float $brep, ?float $bod, ?float $bint, ?float $bl): array
     {
         $row = ['xa' => $xa, 'xr' => null, 'mean_error' => null, 'w' => null, 'W' => null, 'W_interval' => null, 'readings' => []];
-        if ($xa === null || !$readings) {
+        if ($xa === null || !$values) {
             return $row;
         }
 
-        [$a, $b, $c] = $coefficients;
-        $corrected = array_map(function ($reading) use ($a, $b, $c, $factor) {
-            $x = $reading / $factor;
-            return ($a * $x + $b * $x ** 2 + $c * $x ** 3) * $factor;
-        }, $readings);
-
+        $corrected = array_column($values, 'corrected');
         $xr = array_sum($corrected) / count($corrected);
         $errors = [];
-        foreach ($corrected as $i => $value) {
-            $row['readings'][] = [
-                'taken' => $readings[$i],
-                'corrected' => $value,
-                'error' => $xa - $value,
-                'relative_error' => $value != 0 ? ($xa - $value) / $value * 100 : null,
-                'deviation' => $value - $xr,
+        foreach ($values as $value) {
+            $relativeError = $value['corrected'] != 0 ? ($xa - $value['corrected']) / $value['corrected'] * 100 : null;
+            $row['readings'][] = $value + [
+                'error' => $xa - $value['corrected'],
+                'relative_error' => $relativeError,
+                'deviation' => $value['corrected'] - $xr,
             ];
-            if ($value != 0) {
-                $errors[] = ($xa - $value) / $value * 100;
+            if ($relativeError !== null) {
+                $errors[] = $relativeError;
             }
         }
 
         $n = count($corrected);
         $bre = self::stdev($corrected);
-        // relative standard uncertainties (%) of the uncertainty budget
-        $relative = fn (?float $b, float $divisor) => ($b === null || $xr == 0) ? 0.0 : $b * 100 / ($xr * $divisor);
+        // relative standard uncertainties (%) of the uncertainty budget, b * 100 / (X̄r * divisor)
+        $relative = fn (?float $b, ?float $mean, float $divisor) => ($b === null || !$mean) ? 0.0 : $b * 100 / ($mean * $divisor);
         $budget = [
             'wmd' => $uRef === null ? 0.0 : $uRef / 2,
-            'wr' => $r === null ? 0.0 : $relative($r * 0.5, sqrt(3)),
-            'wrep' => $relative($brep === null ? null : $brep * 0.5, sqrt(3)),
-            'wod' => $relative($bod === null ? null : $bod * 0.5, sqrt(3)),
-            'wint' => $relative($bint === null ? null : $bint * 0.5, sqrt(3)),
-            'wl' => $relative($bl === null ? null : $bl * 0.5, sqrt(3)),
-            'wre' => $bre === null ? 0.0 : $relative($bre, sqrt($n)),
+            'wr' => $relative($r === null ? null : $r * 0.5, $sharedXr, sqrt(3)),
+            'wrep' => $relative($brep === null ? null : $brep * 0.5, $sharedXr, sqrt(3)),
+            'wod' => $relative($bod === null ? null : $bod * 0.5, $sharedXr, sqrt(3)),
+            'wint' => $relative($bint === null ? null : $bint * 0.5, $sharedXr, sqrt(3)),
+            'wl' => $relative($bl === null ? null : $bl * 0.5, $sharedXr, sqrt(3)),
+            'wre' => $relative($bre, $xr, sqrt($n)),
         ];
         $w = sqrt(array_sum(array_map(fn ($v) => $v ** 2, $budget)));
         $meanError = $errors ? array_sum($errors) / count($errors) : null;
@@ -151,9 +172,26 @@ class TorqueCalibration
             'mean_error' => $meanError,
             'w' => $w,
             'W' => 2 * $w,
-            // ISO 6789-2: W' = |mean relative measurement error| + W
-            'W_interval' => $meanError === null ? null : abs($meanError) + 2 * $w,
+            // as the workbook: W' = a̅s + W with the sign of the mean error
+            'W_interval' => $meanError === null ? null : $meanError + 2 * $w,
         ]);
+    }
+
+    /**
+     * b_l as the workbook: average of the readings of both loading positions minus the average of position 2.
+     */
+    public static function loadingPointVariation($series): ?float
+    {
+        $positions = array_map(
+            fn ($values) => array_values(array_filter(array_map([self::class, 'number'], array_values((array) $values)), fn ($v) => $v !== null)),
+            array_values((array) $series)
+        );
+        $both = array_merge($positions[0] ?? [], $positions[1] ?? []);
+        $second = $positions[1] ?? [];
+        if (!($positions[0] ?? []) || !$second) {
+            return null;
+        }
+        return array_sum($both) / count($both) - array_sum($second) / count($second);
     }
 
     /**

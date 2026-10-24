@@ -413,7 +413,7 @@
 					+ '</tr></thead><tbody>';
 				rows.forEach(function (row) {
 					var budget = row.budget ? $.map(['wmd', 'wr', 'wrep', 'wod', 'wint', 'wl', 'wre'], function (k) { return fmt(row.budget[k], 3); }).join(' / ') : '-';
-					var over = data.limit !== null && row.W_interval !== null && row.W_interval > data.limit;
+					var over = data.limit !== null && row.W_interval !== null && Math.abs(row.W_interval) > data.limit;
 					html += '<tr><td class="num">' + (row.xa === null ? '-' : row.xa) + '</td><td class="num">' + fmt(row.xr) + '</td>'
 						+ '<td class="num">' + fmt(row.mean_error) + '</td><td class="num">' + fmt(row.w, 3) + '</td><td class="num">' + fmt(row.W) + '</td>'
 						+ '<td class="num' + (over ? ' text-danger font-weight-bold' : '') + '">' + fmt(row.W_interval) + '</td>'
@@ -427,7 +427,7 @@
 
 			if (data.in_spec !== null) {
 				$('#specification_hint').text('Suggested from results: ' + (data.in_spec ? 'in specification' : 'OUT of specification')
-					+ " (largest W' " + fmt(data.worst) + ' % vs permissible deviation ±' + data.limit + ' %)');
+					+ " (largest |W'| " + fmt(data.worst) + ' % vs permissible deviation ±' + data.limit + ' %)');
 			}
 		}
 
