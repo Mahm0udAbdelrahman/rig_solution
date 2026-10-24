@@ -161,9 +161,78 @@
             </div>
         </div>
     </div>
+		<div class="card">
+			<div class="card-body">
+				<div class="row">
+					<div class="col-12 col-sm-6">
+						<div class="form-group mb-1">
+							<div class="controls">
+								{{ Form::label('contact_name', 'Contact Name', ['class' => 'form-label']) }}
+								{{ Form::text('contact_name', null, [
+								'class' => 'form-control',
+								'placeholder' => 'Contact Name',
+								]) }}
+								<div class="help-block"></div>
+							</div>
+						</div>
+					</div>
+					<div class="col-12 col-sm-6">
+						<div class="form-group mb-1">
+							<div class="controls">
+								{{ Form::label('contact_info', 'Contact Information', ['class' => 'form-label']) }}
+								{{ Form::text('contact_info', null, [
+								'class' => 'form-control',
+								'placeholder' => 'Contact Information',
+								]) }}
+								<div class="help-block"></div>
+							</div>
+						</div>
+					</div>
+	
+				</div>
+			</div>
+		</div>
+    <style>
+        .due-period-options { display: inline-flex; border: 1px solid #cacfe7; border-radius: .25rem; overflow: hidden; }
+        .due-period-options label { margin: 0; padding: .45rem .9rem; font-size: .85rem; font-weight: 600; color: #6b6f82; cursor: pointer; user-select: none; border-left: 1px solid #cacfe7; }
+        .due-period-options label:first-child { border-left: 0; }
+        .due-period-options input { display: none; }
+        .due-period-options label.active { background: #28d094; color: #fff; }
+    </style>
+    @php
+        $duePeriod = old('due_period', isset($model) && $model->due_period ? $model->due_period : 'annual');
+        $duePeriodOptions = ['semi_annual' => '6 months', 'annual' => '12 months', 'manual' => 'Manual / blank'];
+        if (!isset($duePeriodOptions[$duePeriod])) {
+            $duePeriod = 'manual';
+        }
+    @endphp
     <div class="card">
         <div class="card-content collapse show">
             <div class="card-body">
+                <div class="row">
+                    <div class="col-12 col-sm-6">
+                        <div class="form-group mb-1">
+                            <div class="controls">
+                                {{ Form::label('calibration_location', 'Calibration Location') }}
+                                {{ Form::text('calibration_location', null, ['class' => 'form-control', 'placeholder' => 'e.g. RSE, Lab']) }}
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-12 col-sm-6">
+                        <div class="form-group mb-1">
+                            <div class="controls">
+                                <label class="d-block">Calibration Interval (Due Date)</label>
+                                <div class="due-period-options mt-50">
+                                    @foreach($duePeriodOptions as $periodValue => $periodLabel)
+                                        <label class="{{ $duePeriod === $periodValue ? 'active' : '' }}">
+                                            <input type="radio" name="due_period" class="js-due-period" value="{{ $periodValue }}" {{ $duePeriod === $periodValue ? 'checked' : '' }}>{{ $periodLabel }}
+                                        </label>
+                                    @endforeach
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
                 <div class="row">
                     <div class="col-12 col-sm-3">
                         <div class="form-group mb-0">
@@ -171,9 +240,7 @@
                                 <label>Receipt Date</label>
                                 <div class="input-group">
                                     <div class="input-group-prepend">
-										<span class="input-group-text">
-											<i class="ft-calendar"></i>
-										</span>
+                                        <span class="input-group-text"><i class="ft-calendar"></i></span>
                                     </div>
                                     {{ Form::text('receipt_date', null, ['class' => 'form-control datepicker-default', 'placeholder' => 'Receipt Date', 'required']) }}
                                 </div>
@@ -187,11 +254,9 @@
                                 <label>Calibration Date</label>
                                 <div class="input-group">
                                     <div class="input-group-prepend">
-										<span class="input-group-text">
-											<i class="ft-calendar"></i>
-										</span>
+                                        <span class="input-group-text"><i class="ft-calendar"></i></span>
                                     </div>
-                                    {{ Form::text('calibration_date', null, ['class' => 'form-control datepicker-default', 'placeholder' => 'Calibration Date', 'required']) }}
+                                    {{ Form::text('calibration_date', null, ['class' => 'form-control datepicker-default', 'id' => 'calibration_date', 'placeholder' => 'Calibration Date', 'required']) }}
                                 </div>
                                 <div class="help-block"></div>
                             </div>
@@ -200,14 +265,12 @@
                     <div class="col-12 col-sm-3">
                         <div class="form-group mb-0">
                             <div class="controls">
-                                <label>Due Date</label>
+                                <label>Calibration Due Date <small class="text-muted" id="due_date_hint"></small></label>
                                 <div class="input-group">
                                     <div class="input-group-prepend">
-										<span class="input-group-text">
-											<i class="ft-calendar"></i>
-										</span>
+                                        <span class="input-group-text"><i class="ft-calendar"></i></span>
                                     </div>
-                                    {{ Form::text('due_date', null, ['class' => 'form-control datepicker-default', 'placeholder' => 'Due Date', 'required']) }}
+                                    {{ Form::text('due_date', null, ['class' => 'form-control datepicker-default', 'id' => 'due_date', 'placeholder' => 'Blank']) }}
                                 </div>
                                 <div class="help-block"></div>
                             </div>
@@ -216,54 +279,61 @@
                     <div class="col-12 col-sm-3">
                         <div class="form-group mb-0">
                             <div class="controls">
-                                <label>Issue Date</label>
+                                <label>Issue Date <small class="text-muted">(auto)</small></label>
                                 <div class="input-group">
                                     <div class="input-group-prepend">
-										<span class="input-group-text">
-											<i class="ft-calendar"></i>
-										</span>
+                                        <span class="input-group-text"><i class="ft-calendar"></i></span>
                                     </div>
-                                    {{ Form::text('issue_date', null, ['class' => 'form-control datepicker-default', 'placeholder' => 'Issue Date', 'required']) }}
-                                </div>
-                                <div class="help-block"></div>
-                            </div>
-                        </div>
-                    </div>
-				</div>
-				<div class="row" style="margin-top: 40px;">
-                    <div class="col-12 col-sm-6">
-                        <div class="form-group mb-0">
-                            <div class="controls">
-                                <label>Temperature</label>
-                                <div class="input-group">
-                                    <div class="input-group-prepend">
-										<span class="input-group-text">
-											<i class="ft-calendar"></i>
-										</span>
-                                    </div>
-                                    {{ Form::text('temperature', null, ['class' => 'form-control', 'placeholder' => 'Temperature', 'required']) }}
-                                </div>
-                                <div class="help-block"></div>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="col-12 col-sm-6">
-                        <div class="form-group mb-0">
-                            <div class="controls">
-                                <label>Relative Humidity</label>
-                                <div class="input-group">
-                                    <div class="input-group-prepend">
-										<span class="input-group-text">
-											<i class="ft-calendar"></i>
-										</span>
-                                    </div>
-                                    {{ Form::text('relative_humidity', null, ['class' => 'form-control', 'placeholder' => 'Relative Humidity', 'required']) }}
+                                    {{-- set by the system on the day the certificate is created --}}
+                                    <input type="text" class="form-control" value="{{ isset($model) && $model->issue_date ? $model->issue_date : '' }}" placeholder="Set when the certificate is created" disabled>
                                 </div>
                                 <div class="help-block"></div>
                             </div>
                         </div>
                     </div>
                 </div>
+                <h5 class="mt-2 mb-1">Environmental Conditions During Calibration</h5>
+                @foreach([
+                    ['temperature', 'Temperature', '°C', '1', ['22.8', '23.2']],
+                    ['humidity', 'Relative Humidity', '% RH', '5', ['39', '41']],
+                ] as [$envKey, $envLabel, $envUnit, $envTolerance, $envPlaceholders])
+                    <div class="row js-env" data-env="{{ $envKey }}">
+                        <div class="col-12 col-sm-3">
+                            <div class="form-group mb-1">
+                                <label>{{ $envLabel }} &mdash; Start</label>
+                                <div class="input-group">
+                                    {{ Form::text($envKey . '_start', null, ['class' => 'form-control js-env-start', 'placeholder' => $envPlaceholders[0], 'required']) }}
+                                    <div class="input-group-append"><span class="input-group-text">{{ $envUnit }}</span></div>
+                                </div>
+                                <div class="help-block"></div>
+                            </div>
+                        </div>
+                        <div class="col-12 col-sm-3">
+                            <div class="form-group mb-1">
+                                <label>{{ $envLabel }} &mdash; End</label>
+                                <div class="input-group">
+                                    {{ Form::text($envKey . '_end', null, ['class' => 'form-control js-env-end', 'placeholder' => $envPlaceholders[1]]) }}
+                                    <div class="input-group-append"><span class="input-group-text">{{ $envUnit }}</span></div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-12 col-sm-2">
+                            <div class="form-group mb-1">
+                                <label>Tolerance (±)</label>
+                                <div class="input-group">
+                                    <div class="input-group-prepend"><span class="input-group-text">±</span></div>
+                                    {{ Form::text($envKey . '_tolerance', isset($model) ? null : $envTolerance, ['class' => 'form-control', 'placeholder' => $envTolerance]) }}
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-12 col-sm-4">
+                            <div class="form-group mb-1">
+                                <label>Average / Variation <small class="text-muted">(auto)</small></label>
+                                <input type="text" class="form-control js-env-result" disabled>
+                            </div>
+                        </div>
+                    </div>
+                @endforeach
             </div>
         </div>
     </div>
@@ -313,17 +383,37 @@
 </fieldset>
 <h6>Step 3</h6>
 <fieldset>
+	@php
+		$defaultStatement = implode("\n", \App\Models\Inspection\Calibration\CalibrationTorque::DEFAULT_STATEMENT);
+	@endphp
 	<div class="card-body">
-		<h4>Statement</h4>
 		<div class="card">
 			<div class="card-content collapse show">
 				<div class="card-body">
 					<div class="row">
 						<div class="col-12">
+							<div class="form-group mb-1">
+								<div class="controls">
+									{{ Form::label('specification_status', 'Result') }}
+									{{ Form::select('specification_status', ['in' => 'The instrument is in specification', 'out' => 'The instrument is out of specification'], null, ['class' => 'form-control', 'id' => 'specification_status']) }}
+									<small class="text-muted" id="specification_hint"></small>
+								</div>
+							</div>
+						</div>
+						<div class="col-12">
+							<div class="form-group mb-1">
+								<div class="controls">
+									{{ Form::label('remarks', 'Remarks') }}
+									{{ Form::text('remarks', isset($model) ? null : 'N/A', ['class' => 'form-control', 'placeholder' => 'N/A']) }}
+								</div>
+							</div>
+						</div>
+						<div class="col-12">
 							<div class="form-group">
 								<div class="controls">
-									{{ Form::label('statement', 'Statement') }}
-									{{ Form::textarea('statement', null, ['class' => 'form-control', 'style' => 'height: 24em;', 'rows' => 12, 'required' => '', 'placeholder' => 'Statement...', 'aria-invalid' => 'false', 'data-validation-required-message' => 'This field is required']) }}
+									<small class="text-muted d-block mb-50">The conformity statement (Pass / Fail) is printed above these lines on every certificate.</small>
+									{{ Form::label('statement', 'Statement (one line per point)') }}
+									{{ Form::textarea('statement', isset($model) ? null : $defaultStatement, ['class' => 'form-control', 'style' => 'height: 12em;', 'rows' => 6, 'required' => '', 'placeholder' => 'Statement...', 'aria-invalid' => 'false', 'data-validation-required-message' => 'This field is required']) }}
 								</div>
 							</div>
 						</div>
@@ -334,21 +424,89 @@
 	</div>
 </fieldset>
 
-<script src="{{asset('app-assets/vendors/js/forms/repeater/jquery.repeater.min.js')}}"></script>
-<!-- <script src="{{asset('app-assets/js/scripts/forms/form-repeater.js')}}"></script> -->
+@push('bottom-child-scripts')
 <script>
-	// 
+	(function () {
+		var MONTHS = { annual: 12, semi_annual: 6 };
 
-  $('.repeater').repeater({
-    show: function () {
-	  $(this).find('img').attr('src', '');
-      $(this).slideDown();
-	  $(this).slideUp(remove);
-    },
-    hide: function (remove) {
-      if (confirm('Are you sure you want to remove this item?')) {
-        $(this).slideUp(remove);
-      }
-    }
-  });
+		function pad(n) { return ('0' + n).slice(-2); }
+
+		function parseDmy(value) {
+			var m = /^(\d{1,2})-(\d{1,2})-(\d{4})$/.exec($.trim(value || ''));
+			return m ? new Date(+m[3], +m[2] - 1, +m[1]) : null;
+		}
+
+		// calibration date + period - 1 day, clamped to month end (31-08 + 6 months -> 27-02)
+		function computeDueDate(calibration, months) {
+			var target = new Date(calibration.getFullYear(), calibration.getMonth() + months, 1);
+			var lastDay = new Date(target.getFullYear(), target.getMonth() + 1, 0).getDate();
+			target.setDate(Math.min(calibration.getDate(), lastDay));
+			target.setDate(target.getDate() - 1);
+			return pad(target.getDate()) + '-' + pad(target.getMonth() + 1) + '-' + target.getFullYear();
+		}
+
+		function currentPeriod() {
+			return $('.js-due-period:checked').val() || 'annual';
+		}
+
+		// 6 / 12 months: the due date follows the calibration date; manual: typed by hand or left blank
+		function refreshPeriod() {
+			var period = currentPeriod();
+			$('.js-due-period').each(function () {
+				$(this).closest('label').toggleClass('active', this.checked);
+			});
+			var manual = !MONTHS[period];
+			$('#due_date').prop('readonly', !manual);
+			$('#due_date_hint').text(manual ? '(manual, can be blank)' : '(auto)');
+		}
+
+		function refreshDueDate() {
+			var months = MONTHS[currentPeriod()];
+			var calibration = parseDmy($('#calibration_date').val());
+			if (months && calibration) {
+				$('#due_date').val(computeDueDate(calibration, months));
+			}
+		}
+
+		$(document).on('change', '.js-due-period', function () {
+			refreshPeriod();
+			refreshDueDate();
+		});
+		$(document).on('change', '#calibration_date', refreshDueDate);
+		// keep the calendar closed while the due date is automatic
+		$(document).on('focus click', '#due_date', function () {
+			var input = this;
+			if (input.readOnly && typeof $.fn.datepicker === 'function') {
+				setTimeout(function () { $(input).datepicker('hide'); }, 0);
+			}
+		});
+
+		refreshPeriod();
+		if (!$('#due_date').val()) {
+			refreshDueDate();
+		}
+
+		// average and variation (|start - end| / 2) of the environmental readings, as on the Data Input sheet
+		function envNumber(v) {
+			v = $.trim(String(v || '')).replace(',', '.');
+			return v !== '' && !isNaN(v) ? parseFloat(v) : null;
+		}
+		function refreshEnvironment() {
+			$('.js-env').each(function () {
+				var start = envNumber($(this).find('.js-env-start').val());
+				var end = envNumber($(this).find('.js-env-end').val());
+				var values = [start, end].filter(function (v) { return v !== null; });
+				var text = '';
+				if (values.length) {
+					var average = values.reduce(function (a, b) { return a + b; }, 0) / values.length;
+					text = 'Average ' + (+average.toFixed(1));
+					if (values.length === 2) text += '  /  Variation ' + (+(Math.abs(start - end) / 2).toFixed(2));
+				}
+				$(this).find('.js-env-result').val(text);
+			});
+		}
+		$(document).on('input change', '.js-env-start, .js-env-end', refreshEnvironment);
+		refreshEnvironment();
+	})();
 </script>
+@endpush

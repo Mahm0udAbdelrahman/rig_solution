@@ -8,6 +8,7 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use App\Models\WorkFlow\JobRequest;
 use App\Models\User;
+use App\Support\CalibrationCertificate;
 use App\Models\Inspection\InspectionReport;
 use App\Traits\HasInspectionLogo;
 
@@ -108,30 +109,11 @@ class CalibrationPressureGauge extends Model
         return $result;
     }
 
-    public const DUE_PERIOD_MONTHS = [
-        'annual' => 12,
-        'semi_annual' => 6,
-    ];
+    public const DUE_PERIOD_MONTHS = CalibrationCertificate::DUE_PERIOD_MONTHS;
 
-    /**
-     * Due date = calibration date + period - 1 day (e.g. 18-04-2026 annual -> 17-04-2027).
-     */
     public static function computeDueDate(?string $calibrationDate, ?string $period): ?string
     {
-        $months = self::DUE_PERIOD_MONTHS[$period] ?? null;
-        if (!$calibrationDate || !$months) {
-            return null;
-        }
-        try {
-            $date = Carbon::createFromFormat('d-m-Y', $calibrationDate);
-        } catch (\Throwable $e) {
-            try {
-                $date = Carbon::parse($calibrationDate);
-            } catch (\Throwable $e) {
-                return null;
-            }
-        }
-        return $date->addMonthsNoOverflow($months)->subDay()->format('d-m-Y');
+        return CalibrationCertificate::computeDueDate($calibrationDate, $period);
     }
 
     /** Correction columns of a result row => the REF column they are calculated from */

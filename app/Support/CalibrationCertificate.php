@@ -22,6 +22,51 @@ class CalibrationCertificate
 
     public const RIG_LOGO = 'app-assets/images/logo/rig-solution-logo.png';
 
+    /** Calibration interval options of the due date; "manual" = typed by hand or left blank */
+    public const DUE_PERIOD_MONTHS = [
+        'annual' => 12,
+        'semi_annual' => 6,
+    ];
+
+    /**
+     * Due date = calibration date + period - 1 day (e.g. 18-04-2026 annual -> 17-04-2027).
+     */
+    public static function computeDueDate(?string $calibrationDate, ?string $period): ?string
+    {
+        $months = self::DUE_PERIOD_MONTHS[$period] ?? null;
+        if (!$calibrationDate || !$months) {
+            return null;
+        }
+        try {
+            $date = Carbon::createFromFormat('d-m-Y', $calibrationDate);
+        } catch (\Throwable $e) {
+            try {
+                $date = Carbon::parse($calibrationDate);
+            } catch (\Throwable $e) {
+                return null;
+            }
+        }
+        return $date->addMonthsNoOverflow($months)->subDay()->format('d-m-Y');
+    }
+
+    /**
+     * Request data with the due date of the chosen period (calibration date + 6 / 12 months),
+     * or as typed (can be blank) for the "manual" period.
+     */
+    public static function withDueDate(array $data): array
+    {
+        $period = $data['due_period'] ?? 'annual';
+        if (isset(self::DUE_PERIOD_MONTHS[$period])) {
+            if (!empty($data['calibration_date'])) {
+                $data['due_date'] = self::computeDueDate($data['calibration_date'], $period);
+            }
+        } else {
+            $data['due_period'] = 'manual';
+            $data['due_date'] = trim((string) ($data['due_date'] ?? '')) ?: null;
+        }
+        return $data;
+    }
+
     public static function colgroup(): string
     {
         return '<colgroup>' . collect(self::COLUMN_WIDTHS)

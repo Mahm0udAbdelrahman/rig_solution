@@ -477,6 +477,8 @@ Route::group(
                     Route::resource('calibrationTorque', CalibrationTorqueController::class);
                     Route::get('calibrationTorque/{calibrationTorque}/publish', [CalibrationTorqueController::class, 'publish'])->name('publish.calibrationTorque');
                     Route::patch('calibrationTorque/{calibrationTorque}/publish', [CalibrationTorqueController::class, 'publishSubmit'])->name('calibrationTorque.publishSubmit');
+                    Route::post('calibrationTorque/preview', [CalibrationTorqueController::class, 'preview'])->name('calibrationTorque.preview');
+                    Route::post('calibrationTorque/{calibrationTorque}/issue', [CalibrationTorqueController::class, 'issue'])->name('calibrationTorque.issue');
 				
 				});
             }

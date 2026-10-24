@@ -8,6 +8,7 @@ use App\Models\Inspection\Calibration\CalibrationPressureGauge as Calibration;
 use App\Models\Persons\Client;
 use App\Models\Persons\Supplier;
 use App\Models\WorkFlow\JobRequest;
+use App\Support\CalibrationCertificate;
 use Illuminate\Http\Request;
 
 // Other
@@ -348,7 +349,7 @@ class CalibrationPressureGaugeController extends Controller
 
         if ($remove) {
             $pdf = 'inspection/calibration/calibrationPressureGauge/' . $calibrationPressureGauge->job_request->code . '/' . $calibrationPressureGauge->code . '.pdf';
-            $snap = 'images/inspection/calibration/calibrationPressureGauge/' . $calibrationPressureGauge->job_request->code . '/' . $calibration->code;
+            $snap = 'images/inspection/calibration/calibrationPressureGauge/' . $calibrationPressureGauge->job_request->code . '/' . $calibrationPressureGauge->code;
             $remove_snap_shots_pdf = $this->remove_snap_shots_pdf($pdf, $snap);
             return response()->json([
                 'success' => $remove_snap_shots_pdf . $this->action_message(2, $this->page_name)
@@ -356,21 +357,9 @@ class CalibrationPressureGaugeController extends Controller
         }
     }
 
-    /**
-     * Due date: calibration date + 6 / 12 months, or as typed (can be blank) for the "manual" period.
-     */
     private function withDueDate(array $data): array
     {
-        $period = $data['due_period'] ?? 'annual';
-        if (isset(Calibration::DUE_PERIOD_MONTHS[$period])) {
-            if (!empty($data['calibration_date'])) {
-                $data['due_date'] = Calibration::computeDueDate($data['calibration_date'], $period);
-            }
-        } else {
-            $data['due_period'] = 'manual';
-            $data['due_date'] = trim((string) ($data['due_date'] ?? '')) ?: null;
-        }
-        return $data;
+        return CalibrationCertificate::withDueDate($data);
     }
 
     /**

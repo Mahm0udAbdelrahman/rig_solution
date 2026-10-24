@@ -48,7 +48,7 @@ class CustomController extends Controller
     ];
 
     /** Calibration certificates with an "Issued By (QA)" sign-off (role permission "issue") */
-    private const QA_ISSUE_MODULES = ['calibrationpressuregauge'];
+    private const QA_ISSUE_MODULES = ['calibrationpressuregauge', 'calibrationtorque'];
 
     private const APPROVABLE_TABLES = [
         'inspection_reports',

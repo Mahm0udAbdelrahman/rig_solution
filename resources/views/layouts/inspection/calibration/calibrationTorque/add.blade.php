@@ -8,7 +8,7 @@
             <div class="col-12">
                 {!! Form::open(['url'=>route('calibrationTorque.store'), 'class' => 'steps-validation wizard-circle', 'enctype'=>'multipart/form-data']) !!}
                 {{ csrf_field() }}
-                @include('layouts.inspection.calibration.calibrationTorque.form');
+                @include('layouts.inspection.calibration.calibrationTorque.form')
                 {!! Form::close() !!}
             </div>
         </div>

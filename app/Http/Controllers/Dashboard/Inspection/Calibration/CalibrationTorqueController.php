@@ -8,6 +8,8 @@ use App\Models\Inspection\Calibration\CalibrationTorque as Calibration;
 use App\Models\Persons\Client;
 use App\Models\Persons\Supplier;
 use App\Models\WorkFlow\JobRequest;
+use App\Support\CalibrationCertificate;
+use App\Support\TorqueCalibration;
 use Illuminate\Http\Request;
 
 // Other
@@ -103,10 +105,12 @@ class CalibrationTorqueController extends Controller
                 }
 
                 if ($row->report->publish != NULL) {
-                    if (Storage::disk('public')->exists('pdf/inspection/calibration/calibrationTorque/' . $row->job_request->code . '/' . $row->code . '.pdf')) {
-                        $btn .= '<a class="btn btn-secondary mr-1" target="_blank" href="' . Storage::url('pdf/inspection/calibration/calibrationTorque/' . $row->job_request->code . '/' . $row->code . '.pdf') . '">Download PDF</a>';
-                    } else {
-                        $btn .= '<a class="btn btn-dark mr-1" href="' . route('calibrationTorque.show', $row->id) . '">Open Report</a>';
+                    $btn .= '<a class="btn btn-dark mr-1" href="' . route('calibrationTorque.show', $row->id) . '">Open Report</a>';
+
+                    // The PDF carries the stamp + QR: offer it only for an approved report whose PDF was uploaded
+                    $pdfPath = 'pdf/inspection/calibration/calibrationTorque/' . $row->job_request->code . '/' . $row->code . '.pdf';
+                    if (!empty($row->report->user_id_approved) && Storage::disk('public')->exists($pdfPath)) {
+                        $btn .= '<a class="btn btn-secondary mr-1" target="_blank" href="' . Storage::url($pdfPath) . '">Download PDF</a>';
                     }
 
                     if (Auth::user()->can('update', Calibration::find($row->id))  ) {
@@ -193,6 +197,7 @@ class CalibrationTorqueController extends Controller
         return view('layouts.inspection.calibration.calibrationTorque.add', [
             'page_name' => $this->page_name(0, $this->page_name),
             'jobrequests' => $jobrequests,
+            'previous' => $this->previousCertificate(),
             'inspection_data_template' => [
                 array_combine(array_map(function ($i) {
                     return "input_$i";
@@ -209,7 +214,8 @@ class CalibrationTorqueController extends Controller
      */
     public function store(Request $request)
     {
-        $data = $request->all();
+        $data = $this->withDueDate($request->all());
+        $data['issue_date'] = now()->format('d-m-Y');
         $created = Calibration::create($data);
         if ($created) {
             $created->report()->create([
@@ -248,6 +254,7 @@ class CalibrationTorqueController extends Controller
         return view('layouts.inspection.calibration.calibrationTorque.show', [
             'page_name' => '', //$this->page_name,
             'custom_page_name' => $this->page_name,
+            'custom_certificate_layout' => true,
             'page_text' => '',
             'model' => $calibrationTorque,
             'code' => $calibrationTorque->job_request->code . '/' . $calibrationTorque->code,
@@ -255,6 +262,8 @@ class CalibrationTorqueController extends Controller
             'footerData'=> $footerData,
             'pdfurl' => 'storage/pdf/inspection/calibration/calibrationTorque/' . $calibrationTorque->job_request->code . '/' . $calibrationTorque->code . '.pdf',
 			'hasPermission' => Auth::user()->hasPermission('calibrationtorque', 'approve'),
+			'canIssue' => Auth::user()->hasPermission('calibrationtorque', 'issue') || Auth::user()->isSuperAdmin(),
+			'issuer' => optional($calibrationTorque->issuer)->employee,
             'imageurl' => $calibrationTorque->job_request->code . '/' . $calibrationTorque->code,
             'folder' => 'pdf/inspection/calibration/calibrationTorque',
             'iso_number' => 'Form # RSE-RF-07 - ISSUE 07 / Jul 2023',
@@ -271,7 +280,7 @@ class CalibrationTorqueController extends Controller
     /**
      * Show the form for editing the specified resource.
      *
-     * @param  Calibration $calibrationTorque
+     * @param  \App\Models\Inspection\Calibration\Calibration $calibration
      * @return \Illuminate\Http\Response
      */
     public function edit(Calibration $calibrationTorque)
@@ -289,12 +298,14 @@ class CalibrationTorqueController extends Controller
      * Update the specified resource in storage.
      *
      * @param  \Illuminate\Http\Request $request
-     * @param  Calibration $calibrationTorque
+     * @param  \App\Models\Inspection\Calibration\Calibration $calibrationTorque
      * @return \Illuminate\Http\Response
      */
     public function update(Request $request, Calibration $calibrationTorque)
     {
-        $data = $request->all();
+        $data = $this->withDueDate($request->all());
+        // the issue date is set when the certificate is created and does not change on edit
+        $data['issue_date'] = $calibrationTorque->issue_date ?: now()->format('d-m-Y');
 		$inspectionData = $data['inspection_data'] ?? [];
 		$oldInspectionData = $calibrationTorque->inspection_data;
 		// Handle photo file uploads
@@ -348,6 +359,61 @@ class CalibrationTorqueController extends Controller
         }
     }
 
+    private function withDueDate(array $data): array
+    {
+        return CalibrationCertificate::withDueDate($data);
+    }
+
+    /**
+     * Live results of the form (Step 2): the same ISO 6789-2 calculation as the certificate.
+     */
+    public function preview(Request $request)
+    {
+        $details = (array) $request->input('calibration_details', []);
+        $direction = $request->input('calibration_direction', 'cw');
+        $directions = $direction === 'cad' ? ['cw', 'ccw'] : [$direction === 'ccw' ? 'ccw' : 'cw'];
+        $analysis = TorqueCalibration::analyse($details, $request->input('range_unit'), $request->input('resolution_value'), $directions);
+        $limit = TorqueCalibration::number($request->input('permissible_deviation'));
+
+        $worst = null;
+        foreach ($analysis['directions'] as $rows) {
+            foreach ($rows as $row) {
+                if ($row['W_interval'] !== null) {
+                    $worst = max($worst ?? 0, $row['W_interval']);
+                }
+            }
+        }
+
+        return response()->json([
+            'analysis' => $analysis,
+            'worst' => $worst,
+            'limit' => $limit,
+            'in_spec' => ($worst !== null && $limit !== null) ? $worst <= $limit : null,
+        ]);
+    }
+
+    /**
+     * Latest torque certificate: its reference equipment and coefficients prefill a new certificate.
+     */
+    private function previousCertificate(): ?Calibration
+    {
+        return Calibration::query()->latest('id')->first();
+    }
+
+    /**
+     * Issued By (QA): signs the certificate as the logged-in user. Needs the role permission "QA Issue" of this report.
+     */
+    public function issue(Calibration $calibrationTorque)
+    {
+        $user = Auth::user();
+        if (!$user->hasPermission('calibrationtorque', 'issue') && !$user->isSuperAdmin()) {
+            abort(403);
+        }
+        $calibrationTorque->forceFill(['user_id_issued' => $user->id])->save();
+
+        return response()->json(['success' => 'Certificate issued successfully !']);
+    }
+
     public function publish(Calibration $calibrationTorque)
     {
         $jobrequests = DB::table('job_requests')->select('id','code')->orderBy('id', 'desc')->get();
@@ -361,10 +427,11 @@ class CalibrationTorqueController extends Controller
 
     public function publishSubmit(Request $request, Calibration $calibrationTorque)
     {
-        $data = $request->all();
+        $data = $this->withDueDate($request->all());
         $job_request = JobRequest::find($request->job_request_id);
         $code = json_decode(json_encode(CustomController::getReportData($job_request)))->original->lastcode;
         $data['code'] = $code;
+        $data['issue_date'] = now()->format('d-m-Y');
         $calibrationTorque->update($data);
         $this->persistInspectionReportState($calibrationTorque, [
             'code' => $code,
